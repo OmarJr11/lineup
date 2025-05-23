@@ -4,15 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-console.log(
-  process.env.DB_HOST,
-  process.env.DB_PORT,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
-  process.env.DB_NAME,
-  process.env.DB_ENTITIES,
-  process.env.DB_MIGRATIONS,
-)
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({

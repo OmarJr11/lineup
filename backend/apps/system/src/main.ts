@@ -9,7 +9,6 @@ async function bootstrap() {
   initializeTransactionalContext();
   patchTypeORMRepositoryWithBaseRepository();
   const app = await NestFactory.create(SystemModule);
-  
   await app.listen(process.env.PORT_SYSTEM ?? 3001);
   module.exports = app;
 }

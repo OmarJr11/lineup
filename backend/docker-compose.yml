@@ -12,24 +12,30 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  backend:
+  backend-public:
     build: .
-    command: npm run start:prod
+    command: npm run start:dev:public
     ports:
       - "3000:3000"
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: 123
-      DB_NAME: lineup
-      DB_ENTITIES: core/entities/*.entity.js
-      DB_MIGRATIONS: core/migrations/*.js
+    env_file:
+      - .env
     depends_on:
       - db
     volumes:
       - .:/app
     restart: always
 
+  backend-system:
+    build: .
+    command: npm run start:dev:system
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    restart: always
 volumes:
   pgdata:

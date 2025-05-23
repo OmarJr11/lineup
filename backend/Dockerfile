@@ -14,8 +14,8 @@ COPY . .
 # Build the NestJS app
 RUN npm run build
 
-# Expose the port (ajusta si usas otros)
+# Expose the ports for both apps
 EXPOSE 3000 3001
 
-# Start the app (ajusta si tu entrypoint es otro)
-CMD ["npm", "run", "start:prod"]
+# Comando por defecto: levantar ambas apps en producción
+CMD ["npm", "run", "start:all:dev"]
