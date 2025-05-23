@@ -1,10 +1,20 @@
 import { Module } from '@nestjs/common';
-import { PublicController } from './public.controller';
-import { PublicService } from './public.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [],
-  controllers: [PublicController],
-  providers: [PublicService],
+  imports: [
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: false,
+      }),
+    }),
+  ],
 })
 export class PublicModule {}
