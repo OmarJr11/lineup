@@ -1,0 +1,1 @@
+export { userResponses } from './users.response';

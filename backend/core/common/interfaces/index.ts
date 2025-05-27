@@ -1,0 +1,10 @@
+export { ITokenGenerate } from './token-generate.interface';
+export { IUserReq } from './user-req.interface';
+export { ILoginResponse } from './login-response.interface';
+export { ILogin, ILoginReturn } from './login.interface';
+export { ReqWithCookies } from './req-with-cookies.interface';
+export { IExtraDataToSave } from './extra-data-to-save.interface';
+export { IInfiniteScroll } from './infinite-scroll.interface';
+export { IRefreshToken, IGoogleLogin } from './refresh-token.interface';
+export { IResponse, IResponseWithData } from './response.interface';
+export { CookieInterceptor } from './cookie.interceptor';

@@ -10,5 +10,6 @@ export default new DataSource({
   database: process.env.DB_NAME || 'lineup',
   entities: [process.env.DB_ENTITIES || 'core/entities/*.entity.ts'],
   migrations: [process.env.DB_MIGRATIONS || 'core/migrations/*.ts'],
-  synchronize: false,
+  synchronize: true,
+  logging: false,
 });
