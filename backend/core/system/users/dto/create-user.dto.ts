@@ -2,12 +2,14 @@ import { Transform } from 'class-transformer';
 import {
     IsEmail,
     IsEmpty,
+    IsEnum,
     IsNotEmpty,
     IsOptional,
     IsString,
     MaxLength,
 } from 'class-validator';
 import { ImageCode, toLowerCase } from '../../../common/transforms';
+import { RolesEnum } from '../../../common/enum';
 
 export class CreateUserDto {
     @IsOptional()
@@ -35,6 +37,11 @@ export class CreateUserDto {
     @IsEmail()
     @Transform(toLowerCase)
     mail: string;
+
+    @IsNotEmpty()
+    @IsEnum(RolesEnum)
+    @IsString()
+    role: RolesEnum;
 
     @IsOptional()
     @MaxLength(50)

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
-import { Token, User } from '../../../core/entities';
+import { Role, Token, User } from '../../../core/entities';
 
 dotenv.config();
 
@@ -20,14 +20,15 @@ dotenv.config();
           database: process.env.DB_NAME,
           entities: [
             User,
-            Token
+            Token,
+            Role,
           ],
           synchronize: true,
           logging: false,
         };
       },
     }),
-    UsersModule
+    UsersModule,
   ],
 })
 export class SystemModule {}

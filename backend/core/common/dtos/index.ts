@@ -1,0 +1,1 @@
+export { InfinityScrollDto } from './infinity-scroll.dto';

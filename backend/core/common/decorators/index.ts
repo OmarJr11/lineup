@@ -1,0 +1,1 @@
+export { ValidateOrder } from './validate-order.decorator';
