@@ -1,20 +1,19 @@
 import { ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger, NotAcceptableException, Scope } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { BasicService, TransactionService } from '../../common/services';
+import { BasicService } from '../../common/services';
 import { User } from '../../entities';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IProviderSocialMedia } from '../../common/interfaces/login-response.interface';
 import { ProviderEnum, StatusEnum } from '../../common/enum';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
-import { IUserReq } from '../../common/interfaces';
 import { UserUniqueFieldsDto } from './dto/unique.dto';
 import { userResponses } from '../../common/responses';
 import * as argon2 from 'argon2';
-import { MyTransactional } from '../../common/services/my-transactional.decorator';
-import { LogError } from 'core/common/helpers/logger.helper';
+import { LogError } from '../../common/helpers/logger.helper';
+import { RolesService } from '../roles/roles.service';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
     private readonly logger = new Logger(UsersService.name);
@@ -27,14 +26,14 @@ export class UsersService extends BasicService<User> {
         private readonly userRequest: Request,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
-        private readonly transactionService: TransactionService,
+        private readonly rolesService: RolesService,
         //private readonly userRolesService: UserRolesService,
         //private readonly usersGettersService: UsersGettersService,
     ) {
         super(userRepository, userRequest);
     }
 
-    @MyTransactional()
+    @Transactional()
     async create(
         data: CreateUserDto,
         isSocial?: boolean
@@ -78,6 +77,8 @@ export class UsersService extends BasicService<User> {
             throw new InternalServerErrorException(this.rCreate.error);
         });
         delete user.password;
+
+        const role = await this.rolesService.findByCode(data.role);
         /*
         if (!isSocial) {
             await this.sendEmailCode(user, lang ? lang : user.language);

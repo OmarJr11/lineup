@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 export const userResponses = {
     login: {
         wrongData: {
@@ -297,48 +296,6 @@ export const userResponses = {
             message: 'The validate email has successfully validated.',
         },
     },
-    codeSecurity: {
-        noPermission: {
-            code: 101200,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        userNotExists: {
-            code: 101203,
-            status: false,
-            message: 'User not exists.',
-        },
-        codeNotValid: {
-            code: 101004,
-            status: false,
-            message: 'Invalid code security',
-        },
-        codeExpired: {
-            code: 101005,
-            status: false,
-            message: 'Expired code security',
-        },
-        phoneNumber: {
-            code: 101006,
-            status: false,
-            message: 'You do not have a phone number added',
-        },
-        error: {
-            code: 101299,
-            status: false,
-            message: 'An error has occurred sending security code.',
-        },
-        success: {
-            code: 111200,
-            status: true,
-            message: 'The security code has successfully sent.',
-        },
-        successValidation: {
-            code: 111201,
-            status: true,
-            message: 'The security code has successfully validated.',
-        },
-    },
     refreshToken: {
         cookieNotSent: {
             code: 101000,
@@ -454,69 +411,5 @@ export const userResponses = {
             status: true,
             message: 'The mail has been successfully deleted.',
         },
-    },
-    antiPhishing: {
-        noPermission: {
-            code: 101300,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        error: {
-            code: 101399,
-            status: false,
-            message: 'An error has occurred.',
-        },
-        successAdd: {
-            code: 101300,
-            status: true,
-            message: 'The Anti Phishing has been successfully added.',
-        },
-        success: {
-            code: 101300,
-            status: true,
-            message: 'The Anti Phishing has been successfully listed.',
-        },
-    },
-    auth2fa: {
-        noPermission: {
-            code: 101400,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        userWithNotFound: {
-            code: 101401,
-            status: false,
-            message: 'User with 2FA not found.',
-        },
-        codeDoesNotMatch: {
-            code: 101401,
-            status: false,
-            message: 'The code does not match.',
-        },
-        error: {
-            code: 101499,
-            status: false,
-            message: 'An error has occurred.',
-        },
-        success: {
-            code: 111400,
-            status: true,
-            message: 'The 2FA has been successfully generated.',
-        },
-        successVerify: {
-            code: 111401,
-            status: true,
-            message: 'The 2FA has been successfully verified.',
-        },
-        successList: {
-            code: 111402,
-            status: true,
-            message: 'The 2FA has been successfully listed.',
-        },
-        successDelete: {
-            code: 111403,
-            status: true,
-            message: 'The 2FA has been successfully deleted.',
-        },
-    },
+    }
 };

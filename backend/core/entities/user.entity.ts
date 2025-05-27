@@ -6,7 +6,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { StatusEnum } from '../common/enum';
-import { Token } from '.';
+import { Role, Token } from '.';
 
 @Entity('users', { schema: 'system' })
 export class User {
@@ -76,4 +76,10 @@ export class User {
 
     @OneToMany(() => Token, (token) => token.user)
     tokens?: Token[];
+
+    @OneToMany(() => Role, (role) => role.creationUser)
+    createdRoles?: Role[];
+
+    @OneToMany(() => Role, (role) => role.creationUser)
+    modifiedRoles?: Role[];
 }

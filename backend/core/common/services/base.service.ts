@@ -21,8 +21,8 @@ export class BasicService<Entity extends ObjectLiteral> {
     private _manager: EntityManager | undefined;
 
     constructor(
-        private readonly repository: Repository<Entity>,
-        private readonly _request?: Request,
+        protected readonly repository: Repository<Entity>,
+        protected readonly _request?: Request,
     ) {}
 
     async find(conditions: any) {
@@ -106,10 +106,10 @@ export class BasicService<Entity extends ObjectLiteral> {
         data.idCreationUser = user
             ? Number(user.userId)
             : !this._request
-              ? null
-              : this._request.user
-                ? +this._request.user['userId']
-                : null;
+                ? null
+                : this._request.user
+                    ? +this._request.user['userId']
+                    : null;
 
         data.status = extraData?.status || data.status || StatusEnum.ACTIVE;
         return this.cleanObjects(
@@ -212,10 +212,10 @@ export class BasicService<Entity extends ObjectLiteral> {
         data.modificationUser = user
             ? Number(user.userId)
             : !this._request
-              ? null
-              : this._request.user
-                ? +this._request.user['userId']
-                : null;
+                ? null
+                : this._request.user
+                    ? +this._request.user['userId']
+                    : null;
         data.modificationDate = new Date();
         data = this.cleanDataBeforeInsert(data);
 

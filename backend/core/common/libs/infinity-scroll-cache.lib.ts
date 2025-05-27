@@ -9,9 +9,6 @@ export function generateInfinityScrollCacheLib(entities: any[], options: Infinit
     const order = options.order;
     const minPrice = Number(options.minPrice);
     const maxPrice = Number(options.maxPrice);
-    const category = Number(options.category);
-    const state = Number(options.state);
-    const municipality = Number(options.municipality);
 
     if (orderBy) {
         entities = _.orderBy(entities, [orderBy], [order === 'ASC' ? 'asc' : 'desc']);
@@ -23,26 +20,6 @@ export function generateInfinityScrollCacheLib(entities: any[], options: Infinit
 
     if (maxPrice) {
         entities = entities.filter((entity) => Number(entity.price) >= Number(maxPrice));
-    }
-
-    if (category) {
-        entities = entities.filter(
-            (entity) =>
-                Number(entity.category.id) === Number(category) ||
-                Number(entity.category.idParent.id) === Number(category)
-        );
-    }
-
-    if (state) {
-        entities = entities.filter(
-            (entity) => Number(entity.locations[0].idState) === Number(state)
-        );
-    }
-
-    if (municipality) {
-        entities = entities.filter(
-            (entity) => Number(entity.locations[0].idMunicipality) === Number(municipality)
-        );
     }
 
     return entities.slice((page - 1) * limit, page * limit);
