@@ -14,6 +14,9 @@ import * as argon2 from 'argon2';
 import { LogError } from '../../common/helpers/logger.helper';
 import { RolesService } from '../roles/roles.service';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { UserRolesService } from '../user-roles/user-roles.service';
+import { IUserReq } from '../../common/interfaces';
+
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
     private readonly logger = new Logger(UsersService.name);
@@ -27,7 +30,7 @@ export class UsersService extends BasicService<User> {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         private readonly rolesService: RolesService,
-        //private readonly userRolesService: UserRolesService,
+        private readonly userRolesService: UserRolesService,
         //private readonly usersGettersService: UsersGettersService,
     ) {
         super(userRepository, userRequest);
@@ -79,6 +82,8 @@ export class UsersService extends BasicService<User> {
         delete user.password;
 
         const role = await this.rolesService.findByCode(data.role);
+        const userReq: IUserReq = { userId: user.id, username: user.username }
+        await this.userRolesService.create(user.id, role.id, userReq);
         /*
         if (!isSocial) {
             await this.sendEmailCode(user, lang ? lang : user.language);

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
-import { Role, Token, User } from '../../../core/entities';
+import { Role, Token, User, UserRole } from '../../../core/entities';
 
 dotenv.config();
 
@@ -22,8 +22,9 @@ dotenv.config();
             User,
             Token,
             Role,
+            UserRole,
           ],
-          synchronize: true,
+          synchronize: false,
           logging: false,
         };
       },
