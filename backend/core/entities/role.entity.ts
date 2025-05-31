@@ -3,12 +3,12 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
-    Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from './user.entity';
 import { RolesEnum, StatusEnum } from '../common/enum';
+import { User, UserRole } from '.';
 
 @Entity('roles', { schema: 'system' })
 export class Role {
@@ -50,8 +50,8 @@ export class Role {
     @JoinColumn([{ name: 'id_modification_user', referencedColumnName: 'id' }])
     modificationUser: User;
 
-    /*@OneToMany(() => UserRole, (userRoles) => userRoles.role)
-    userRoles: UserRole[];*/
+    @OneToMany(() => UserRole, (userRoles) => userRoles.role)
+    userRoles: UserRole[];
 
     @Column('character varying', { name: 'creation_ip', length: 50, select: false, nullable: true })
     creationIp?: string;
