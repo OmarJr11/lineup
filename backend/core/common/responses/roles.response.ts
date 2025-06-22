@@ -1,78 +1,78 @@
 export const roleResponses = {
     create: {
         noPermission: {
-            code: 200100,
+            code: 400100,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         cantAssignRole: {
-            code: 200101,
+            code: 400101,
             status: false,
             message: 'An error occurred while saving the Role',
         },
         error: {
-            code: 200199,
+            code: 400199,
             status: false,
             message: 'The Role could not be created, an error has occurred.',
         },
         success: {
-            code: 210100,
+            code: 410100,
             status: true,
             message: 'The Role has been successfully created.',
         },
     },
     update: {
         noPermission: {
-            code: 200200,
+            code: 400400,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 200299,
+            code: 400299,
             status: false,
             message: 'The Role could not be updated, an error has occurred.',
         },
         success: {
-            code: 210200,
+            code: 410400,
             status: true,
             message: 'The Role has been successfully updated.',
         },
     },
     list: {
         noPermission: {
-            code: 200300,
+            code: 400300,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         roleNotFound: {
-            code: 200301,
+            code: 400301,
             status: false,
             message: 'The Role could not be found.',
         },
         error: {
-            code: 200399,
+            code: 400399,
             status: false,
             message: 'The Role(s) could not be listed, an error has occurred.',
         },
         success: {
-            code: 210300,
+            code: 410300,
             status: true,
             message: 'The Role(s) has been successfully listed.',
         },
     },
     delete: {
         noPermission: {
-            code: 200600,
+            code: 400600,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 200699,
+            code: 400699,
             status: false,
             message: 'The Role could not be deleted, an error has occurred.',
         },
         success: {
-            code: 210600,
+            code: 410600,
             status: true,
             message: 'The Role has been successfully deleted.',
         },

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
-import { OrderEnum } from '../enum';
+import { OrderEnum } from '../enums';
 
 @ValidatorConstraint({ name: 'ValidateOrder', async: true })
 @Injectable()

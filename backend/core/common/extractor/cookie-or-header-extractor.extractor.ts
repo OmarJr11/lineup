@@ -8,7 +8,7 @@ export const cookieOrHeaderExtractor = (req) => {
     }
 
     if (!req.headers.token) {
-        throw new UnauthorizedException(userResponses.refreshToken.cookieNotSent);
+        throw new UnauthorizedException(userResponses.token.cookieNotSent);
     }
 
     return token;

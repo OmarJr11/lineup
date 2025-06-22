@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { User } from '../../entities';
+import { User } from '../../../core/entities';
 import { IUserReq } from '../interfaces';
 
 export const LogError = (

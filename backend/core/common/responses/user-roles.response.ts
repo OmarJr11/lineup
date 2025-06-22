@@ -1,68 +1,68 @@
 export const userRolesResponses = {
     create: {
         noPermission: {
-            code: 300100,
+            code: 500100,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 300199,
+            code: 500199,
             status: false,
             message: 'The User rol could not be created, an error has occurred.',
         },
         success: {
-            code: 310100,
+            code: 510100,
             status: true,
             message: 'The User rol has been successfully created.',
         },
     },
     update: {
         noPermission: {
-            code: 300200,
+            code: 500200,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 300299,
+            code: 500299,
             status: false,
             message: 'The User rol could not be updated, an error has occurred.',
         },
         success: {
-            code: 310200,
+            code: 510200,
             status: true,
             message: 'The User rol has been successfully updated.',
         },
     },
     list: {
         noPermission: {
-            code: 300300,
+            code: 500500,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 300399,
+            code: 500399,
             status: false,
             message: 'The User rol(es) could not be listed, an error has occurred.',
         },
         success: {
-            code: 310300,
+            code: 510500,
             status: true,
             message: 'The User rol(es) has been successfully listed.',
         },
     },
     delete: {
         noPermission: {
-            code: 300600,
+            code: 500600,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
         error: {
-            code: 300699,
+            code: 500699,
             status: false,
             message: 'The User rol could not be deleted, an error has occurred.',
         },
         success: {
-            code: 310600,
+            code: 510600,
             status: true,
             message: 'The User rol has been successfully deleted.',
         },

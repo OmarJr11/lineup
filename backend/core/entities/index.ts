@@ -1,4 +1,7 @@
-export { Token } from './token.entity';
 export { User } from './user.entity';
 export { Role } from './role.entity';
 export { UserRole } from './user-role.entity';
+export { Token } from './token.entity';
+export { Permission } from './permission.entity';
+export { RolePermission } from './role-permission.entity';
+export { File } from './file.entity';

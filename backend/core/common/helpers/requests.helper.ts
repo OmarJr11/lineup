@@ -1,12 +1,12 @@
 import { Request } from 'express';
-import { ReqWithCookies } from '../interfaces';
+import { IReqWithCookies } from '../interfaces';
 
 export function invalidReferersRequest(req: Request): boolean {
     let referers: string[] = [];
 
     try {
-        referers = String(process.env.REQUEST_REFERER).split(',');
-    } catch {}
+        referers = process.env.REQUEST_REFERER.split(',');
+    } catch { }
 
     let result: boolean = true;
     let index = 0;
@@ -32,12 +32,11 @@ export function getAcceptableDomains(): string[] {
     let domain: string[] = [];
 
     try {
-        domain = (String(process.env.COOKIE_DOMAIN)).split(',');
-    } catch {}
+        domain = process.env.COOKIE_DOMAIN.split(',');
+    } catch { }
 
     return domain.map((d) => d.trim());
 }
-
 
 /**
  * Get agent to sign cookie
@@ -46,7 +45,7 @@ export function getAcceptableDomains(): string[] {
  * @param {string[]} domains - Acceptable domains
  * @returns {string} - agent to use to sign the cookie
  */
-export function getRequestAgent(req: ReqWithCookies, domains: string[]): string {
+export function getRequestAgent(req: IReqWithCookies, domains: string[]): string {
     let agent = 'localhost';
 
     for (const d of domains) {

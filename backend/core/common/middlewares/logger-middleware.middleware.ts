@@ -2,14 +2,14 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import { Environments } from '../enum';
+import { EnvironmentsEnum } from '../enums';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
     private excludedFields = ['password'];
 
     use(request: Request, res: Response, next: NextFunction) {
-        if (process.env.NODE_ENV !== Environments.TEST) {
+        if (process.env.NODE_ENV !== EnvironmentsEnum.Test) {
             const currentHour = new Date();
 
             let body = request.body;

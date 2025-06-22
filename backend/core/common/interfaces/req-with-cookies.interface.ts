@@ -1,6 +1,6 @@
 import { CookieOptions, Request } from 'express';
 
-export interface ReqWithCookies extends Request {
+export interface IReqWithCookies extends Request {
     _cookies: {
         name: string;
         val: string;

@@ -1,25 +1,21 @@
-import {
-    Column,
-    Entity,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
-import { StatusEnum } from '../common/enum';
-import { Role, Token, UserRole } from '.';
+import { StatusEnum } from '../common/enums/status.enum';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity } from './base.entity';
+import { ProvidersEnum } from '../common/enums';
+import { File, Role, Token, UserRole } from './';
 
-@Entity('users', { schema: 'system' })
-export class User {
-    @PrimaryGeneratedColumn({ type: 'int8', name: 'id' })
+@Entity({ schema: 'system', name: 'users' })
+export class User extends BaseEntity {
+    @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
-    
-    @Column('character varying', { name: 'mail', unique: true, length: 50 })
-    mail: string;
+
+    @Column('character varying', { unique: true, length: 50 })
+    email: string;
 
     @Column('boolean', { name: 'email_validated' })
     emailValidated?: boolean;
 
-    @Column('character varying', { name: 'username', unique: true, length: 50 })
+    @Column('character varying', { unique: true, length: 50 })
     username: string;
 
     @Column('character varying', { name: 'first_name', length: 255 })
@@ -28,61 +24,30 @@ export class User {
     @Column('character varying', { name: 'last_name', length: 255 })
     lastName: string;
 
-    @Column({ name: 'status', type: 'enum', enum: StatusEnum })
+    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
-    @Column('text', { name: 'phone', nullable: true })
-    phone?: string;
+    @Column({ type: 'enum', enum: ProvidersEnum })
+    provider: ProvidersEnum;
 
-    // Provider to login (google, mail)
-    @Column('character varying', { name: 'provider', length: 50 })
-    provider: string;
-
-    // Provider to login (google, mail)
-    @Column('character varying', { name: 'img_code', length: 50, nullable: true })
-    imgCode?: string;
-
-    @Column('character varying', { name: 'password', length: 200, select: false })
+    @Column('character varying', { length: 200, select: false })
     password: string;
-
-    @Column('date', { name: 'birthday', nullable: true })
-    birthday?: Date;
-
-    @Column('timestamp with time zone', {
-        name: 'creation_date',
-        default: () => 'CURRENT_TIMESTAMP',
-        select: false,
-    })
-    creationDate: Date;
-
-    @UpdateDateColumn({
-        type: 'timestamp with time zone',
-        name: 'modification_date',
-        nullable: true,
-        select: false,
-    })
-    modificationDate?: Date;
-
-    @Column('character varying', { name: 'creation_ip', length: 50, select: false, nullable: true })
-    creationIp?: string;
-
-    @Column('character varying', {
-        name: 'modification_ip',
-        length: 50,
-        select: false,
-        nullable: true,
-    })
-    modificationIp?: string;
-
-    @OneToMany(() => Token, (token) => token.user)
-    tokens?: Token[];
 
     @OneToMany(() => Role, (role) => role.creationUser)
     createdRoles?: Role[];
 
-    @OneToMany(() => Role, (role) => role.creationUser)
+    @OneToMany(() => Role, (role) => role.modificationUser)
     modifiedRoles?: Role[];
 
-    @OneToMany(() => UserRole, (userRoles) => userRoles.user)
-    userRoles: UserRole[];
+    @OneToMany(() => UserRole, (role) => role.creationUser)
+    createdUserRoles?: UserRole[];
+
+    @OneToMany(() => UserRole, (user) => user.user)
+    userRoles?: UserRole[];
+
+    @OneToMany(() => Token, (token) => token.user)
+    tokens?: Token[];
+
+    @OneToMany(() => File, (file) => file.creationUser)
+    files?: File[];
 }

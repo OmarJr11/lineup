@@ -1,1 +1,1 @@
-export { InfinityScrollDto } from './infinity-scroll.dto';
+export * from './infinity-scroll.dto';
