@@ -1,9 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import { StatusEnum } from '../../common/enum';
 import { cookieOrHeaderExtractor } from '../../common/extractor/cookie-or-header-extractor.extractor';
-import { UsersService } from '../../system/users/users.service';
+import { StatusEnum } from '../enums';
+import { UsersService } from '../../modules/users/users.service';
 
 @Injectable()
 export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
@@ -13,7 +13,7 @@ export class WsJwtStrategy extends PassportStrategy(Strategy, 'ws-jwt') {
         super({
             jwtFromRequest: cookieOrHeaderExtractor,
             ignoreExpiration: false,
-            secretOrKey: process.env.SECRET,
+            secretOrKey: process.env.JWT_SECRET,
         });
     }
 

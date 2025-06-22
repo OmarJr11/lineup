@@ -7,14 +7,14 @@ import {
     getRequestAgent,
     invalidReferersRequest,
 } from '../helpers/requests.helper';
-import { ReqWithCookies } from '../interfaces/req-with-cookies.interface';
+import { IReqWithCookies } from '../interfaces/req-with-cookies.interface';
 
 @Injectable()
-export class CookieInterceptor implements NestInterceptor {
-    constructor() {}
+export class ICookieInterceptor implements NestInterceptor {
+    constructor() { }
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        const req = context.switchToHttp().getRequest<ReqWithCookies>();
+        const req = context.switchToHttp().getRequest<IReqWithCookies>();
         const res = context.switchToHttp().getResponse<Response>();
 
         return next.handle().pipe(

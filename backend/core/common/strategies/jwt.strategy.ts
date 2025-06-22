@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: cookieOrHeaderExtractor,
             ignoreExpiration: false,
-            secretOrKey: process.env.SECRET,
+            secretOrKey: process.env.JWT_SECRET,
         });
     }
 

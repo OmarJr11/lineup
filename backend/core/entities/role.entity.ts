@@ -1,43 +1,22 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
-import { RolesEnum, StatusEnum } from '../common/enum';
-import { User, UserRole } from '.';
+import { RolesCodesEnum, StatusEnum } from '../common/enums';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from './user.entity';
+import { BaseEntity } from './base.entity';
+import { UserRole, RolePermission } from './';
 
-@Entity('roles', { schema: 'system' })
-export class Role {
-    @PrimaryGeneratedColumn({ type: 'int8', name: 'id' })
+@Entity({ schema: 'system', name: 'roles' })
+export class Role extends BaseEntity {
+    @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
 
-    @Column({ enum: RolesEnum, type: 'enum', name: 'code', unique: true })
-    code: RolesEnum;
+    @Column({ type: 'enum', enum: RolesCodesEnum, unique: true })
+    code: RolesCodesEnum;
 
-    @Column('character varying', { name: 'name', length: 255 })
-    name: string;
+    @Column('character varying', { length: 100 })
+    description: string;
 
-    @Column({ name: 'status', type: 'enum', enum: StatusEnum })
+    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
-
-    @Column('timestamp with time zone', {
-        name: 'creation_date',
-        default: () => 'CURRENT_TIMESTAMP',
-        select: false,
-    })
-    creationDate: Date;
-
-    @UpdateDateColumn({
-        type: 'timestamp with time zone',
-        name: 'modification_date',
-        nullable: true,
-        select: false,
-    })
-    modificationDate?: Date;
 
     @Column('int8', { name: 'id_creation_user' })
     idCreationUser: number;
@@ -50,17 +29,9 @@ export class Role {
     @JoinColumn([{ name: 'id_modification_user', referencedColumnName: 'id' }])
     modificationUser: User;
 
-    @OneToMany(() => UserRole, (userRoles) => userRoles.role)
+    @OneToMany(() => UserRole, (user) => user.role)
     userRoles: UserRole[];
 
-    @Column('character varying', { name: 'creation_ip', length: 50, select: false, nullable: true })
-    creationIp?: string;
-
-    @Column('character varying', {
-        name: 'modification_ip',
-        length: 50,
-        select: false,
-        nullable: true,
-    })
-    modificationIp?: string;
+    @OneToMany(() => RolePermission, (user) => user.role)
+    rolePermissions: RolePermission[];
 }

@@ -8,9 +8,3 @@ export interface ILogin {
     status?: boolean;
     code?: number;
 }
-
-export interface ILoginReturn {
-    user: User;
-    token?: string;
-    refreshToken?: string;
-}

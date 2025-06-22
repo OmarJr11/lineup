@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 export const userResponses = {
     login: {
         wrongData: {
@@ -47,20 +48,10 @@ export const userResponses = {
             status: false,
             message: 'An error occurred while saving the user role',
         },
-        cantCreateWallet: {
-            code: 100102,
-            status: false,
-            message: 'An error occurred while saving the user wallet',
-        },
         mailExists: {
             code: 100103,
             status: false,
             message: 'The mail is already registered.',
-        },
-        documentExists: {
-            code: 100104,
-            status: false,
-            message: 'The identification document is already registered.',
         },
         usernameExists: {
             code: 100105,
@@ -99,11 +90,6 @@ export const userResponses = {
             status: false,
             message: 'The mail is already registered.',
         },
-        documentExists: {
-            code: 100202,
-            status: false,
-            message: 'The identification document is already registered.',
-        },
         usernameExists: {
             code: 100203,
             status: false,
@@ -136,6 +122,26 @@ export const userResponses = {
             status: false,
             message: 'User not found.',
         },
+        mailExists: {
+            code: 100302,
+            status: false,
+            message: 'The mail is already registered.',
+        },
+        usernameExists: {
+            code: 100303,
+            status: false,
+            message: 'The username is already registered.',
+        },
+        usernameNotValid: {
+            code: 100304,
+            status: false,
+            message: 'username not valid',
+        },
+        userNotActive: {
+            code: 100305,
+            status: false,
+            message: 'User is not active.',
+        },
         error: {
             code: 100399,
             status: false,
@@ -146,23 +152,8 @@ export const userResponses = {
             status: true,
             message: 'The User(s) has been successfully listed.',
         },
-        successReferences: {
-            code: 110301,
-            status: true,
-            message: 'The Reference(s) has been successfully listed.',
-        },
-        successReel: {
-            code: 110302,
-            status: true,
-            message: 'The Reel has been successfully listed.',
-        },
-        successFullname: {
-            code: 110303,
-            status: true,
-            message: 'The full name has been checked.',
-        },
     },
-    disable: {
+    inactive: {
         noPermission: {
             code: 100400,
             status: false,
@@ -179,7 +170,7 @@ export const userResponses = {
             message: 'The User has been successfully disabled.',
         },
     },
-    enable: {
+    active: {
         noPermission: {
             code: 100500,
             status: false,
@@ -257,46 +248,7 @@ export const userResponses = {
             message: 'Logout Successfully.',
         },
     },
-    acceptBeDriver: {
-        noPermission: {
-            code: 100900,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        error: {
-            code: 100999,
-            status: false,
-            message: 'An error has occurred accepting terms and conditions.',
-        },
-        success: {
-            code: 110900,
-            status: true,
-            message: 'The user has accepted terms and conditions associated with being a driver.',
-        },
-    },
-    validateEmail: {
-        noPermission: {
-            code: 101100,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        error: {
-            code: 101199,
-            status: false,
-            message: 'An error has occurred validating email.',
-        },
-        success: {
-            code: 111100,
-            status: true,
-            message: 'The validate email has successfully created.',
-        },
-        successValidation: {
-            code: 111101,
-            status: true,
-            message: 'The validate email has successfully validated.',
-        },
-    },
-    refreshToken: {
+    token: {
         cookieNotSent: {
             code: 101000,
             status: false,
@@ -338,78 +290,4 @@ export const userResponses = {
             message: 'Successful token refresh',
         },
     },
-    telephone: {
-        noPermission: {
-            code: 101300,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        alreadyExist: {
-            code: 101301,
-            status: false,
-            message: 'Phone already exist.',
-        },
-        notExist: {
-            code: 101302,
-            status: false,
-            message: 'Phone not exist.',
-        },
-        error: {
-            code: 101399,
-            status: false,
-            message: 'An error has occurred.',
-        },
-        successAdd: {
-            code: 111300,
-            status: true,
-            message: 'The Phone has been successfully added.',
-        },
-        successEdit: {
-            code: 111300,
-            status: true,
-            message: 'The Phone has been successfully edited.',
-        },
-        successDelete: {
-            code: 111300,
-            status: true,
-            message: 'The Phone has been successfully deleted.',
-        },
-    },
-    mail: {
-        noPermission: {
-            code: 101300,
-            status: false,
-            message: 'You do not have the necessary permissions to perform this action.',
-        },
-        alreadyExist: {
-            code: 101301,
-            status: false,
-            message: 'mail already exist.',
-        },
-        notExist: {
-            code: 101302,
-            status: false,
-            message: 'mail not exist.',
-        },
-        error: {
-            code: 101399,
-            status: false,
-            message: 'An error has occurred.',
-        },
-        successAdd: {
-            code: 111300,
-            status: true,
-            message: 'The mail has been successfully added.',
-        },
-        successEdit: {
-            code: 111300,
-            status: true,
-            message: 'The mail has been successfully edited.',
-        },
-        successDelete: {
-            code: 111300,
-            status: true,
-            message: 'The mail has been successfully deleted.',
-        },
-    }
 };

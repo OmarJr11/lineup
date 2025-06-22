@@ -3,22 +3,22 @@
   "collection": "@nestjs/schematics",
   "monorepo": true,
   "projects": {
-    "public": {
+    "admin": {
       "type": "application",
-      "root": "apps/public",
+      "root": "apps/admin",
       "entryFile": "main",
-      "sourceRoot": "apps/public/src",
+      "sourceRoot": "apps/admin/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/public/tsconfig.app.json"
+        "tsConfigPath": "apps/admin/tsconfig.app.json"
       }
     },
-    "system": {
+    "lineup": {
       "type": "application",
-      "root": "apps/system",
+      "root": "apps/lineup",
       "entryFile": "main",
-      "sourceRoot": "apps/system/src",
+      "sourceRoot": "apps/lineup/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/system/tsconfig.app.json"
+        "tsConfigPath": "apps/lineup/tsconfig.app.json"
       }
     }
   }
