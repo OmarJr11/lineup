@@ -5,13 +5,19 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TokensModule } from '../token/token.module';
 import { JwtStrategy, WsJwtStrategy } from '../../common/strategies';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     TokensModule,
-    JwtModule.register({ secret: process.env.JWT_SECRET }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+    }),
   ],
   providers: [AuthService, JwtStrategy, WsJwtStrategy],
   exports: [AuthService],

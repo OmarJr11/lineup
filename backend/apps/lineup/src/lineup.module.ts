@@ -6,18 +6,30 @@ import { AuthModule } from './auth/auth.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { UsersModule } from './users/users.module';
+import { FilesModule } from './files/files.module';
+import { BusinessesModule } from './businesses/businesses.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { configuration, ValidatingEnv } from '../../../core/common/config';
+import { EnvironmentsEnum } from '../../../core/common/enums';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+        ignoreEnvFile: false,
+        isGlobal: true,
+        load: [configuration],
+        validationSchema: ValidatingEnv,
+    }),
     TypeOrmModule.forRootAsync({
-      useFactory() {
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
         return {
-          type: 'postgres',
-          host: process.env.DB_HOST,
-          port: Number(process.env.DB_PORT),
-          username: String(process.env.DB_USERNAME),
-          password: String(process.env.DB_PASSWORD),
-          database: process.env.DB_NAME,
+          type: configService.get<'postgres'>('DB_TYPE'),
+          host: configService.get<string>('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME'),
           entities: entities,
           synchronize: false,
           logging: false,
@@ -27,8 +39,8 @@ import { UsersModule } from './users/users.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
-      playground: process.env.NODE_ENV !== 'production',
-      debug: process.env.NODE_ENV !== 'production',
+      playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
+      debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       sortSchema: true,
       introspection: true,
       context: ({ req }) => ({ req }),
@@ -36,6 +48,8 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     UsersModule,
+    FilesModule,
+    BusinessesModule,
   ],
 })
 export class LineupModule implements NestModule {

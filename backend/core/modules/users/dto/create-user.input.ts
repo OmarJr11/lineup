@@ -13,7 +13,7 @@ import { RolesCodesEnum } from '../../../common/enums';
 import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
-export class CreateUserDto {
+export class CreateUserInput {
     @Field({ nullable: true })
     @IsOptional()
     @MaxLength(50)

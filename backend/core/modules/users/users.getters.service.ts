@@ -7,7 +7,7 @@ import { User } from '../../entities';
 import { userResponses } from '../../common/responses';
 import { UserUniqueFieldsDto } from './dto/unique.dto';
 import { LogError } from '../../common/helpers/logger.helper';
-import { InfinityScrollDto } from '../../common/dtos';
+import { InfinityScrollInput } from '../../common/dtos';
 
 
 @Injectable()
@@ -25,10 +25,10 @@ export class UsersGettersService extends BasicService<User> {
 
     /**
      * Get all Users
-     * @param {InfinityScrollDto} query - query parameters for pagination
+     * @param {InfinityScrollInput} query - query parameters for pagination
      * @returns {Promise<User[]>}
      */
-    async findAll(query: InfinityScrollDto): Promise<User[]> {
+    async findAll(query: InfinityScrollInput): Promise<User[]> {
         const page = query.page || 1;
         const limit = query.limit || 10;
         const skip = (page - 1) * limit;

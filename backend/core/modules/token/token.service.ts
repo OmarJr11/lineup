@@ -19,6 +19,7 @@ import { BasicService } from '../../common/services/base.service';
 import { Token, User } from '../../entities';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import { userResponses } from '../../common/responses';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TokensService extends BasicService<Token> {
@@ -30,7 +31,8 @@ export class TokensService extends BasicService<Token> {
     private readonly userRequest: Request,
     private readonly jwtService: JwtService,
     @InjectRepository(Token)
-    private readonly tokenRepository: Repository<Token>
+    private readonly tokenRepository: Repository<Token>,
+    private readonly configService: ConfigService
   ) {
     super(tokenRepository, userRequest);
   }
@@ -86,8 +88,8 @@ export class TokensService extends BasicService<Token> {
    * @returns {string}
    */
   generateTokenJwt(data: ITokenGenerate): string {
-    const min = Number(process.env.EXPIRED_TOKEN_MIN);
-    const max = Number(process.env.EXPIRED_TOKEN_MAX);
+    const min = Number(this.configService.get<string>('EXPIRED_TOKEN_MIN'));
+    const max = Number(this.configService.get<string>('EXPIRED_TOKEN_MAX'));
     const randomExpired = Math.floor(Math.random() * (max - min + 1)) + min;
     return this.jwtService.sign(data, { expiresIn: randomExpired });
   }

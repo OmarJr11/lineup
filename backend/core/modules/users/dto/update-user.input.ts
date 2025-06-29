@@ -1,10 +1,16 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ImageCode } from '../../../common/transforms';
 
 @InputType()
-export class UpdateUserDto {
+export class UpdateUserInput {
+    @Field(() => Number)
+    @IsNotEmpty()
+    @Type(() => Number)
+    @IsNumber()
+    id: number;
+
     @Field({ nullable: true })
     @IsOptional()
     @MaxLength(50)

@@ -18,8 +18,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 export class FilesService extends BasicService<File> {
   private logger: Logger = new Logger(FilesService.name);
   private client: S3Client;
-  private bucketName: string = process.env.AWS_BUCKET_NAME;
-  private s3_region: string = process.env.AWS_BUCKET_REGION;
+  private bucketName: string;
+  private s3_region: string;
 
   private readonly rUpload = filesResponses.upload;
 
@@ -31,7 +31,8 @@ export class FilesService extends BasicService<File> {
     private readonly configService: ConfigService,
   ) {
     super(filesRepository, userRequest);
-
+    this.bucketName = this.configService.get<string>('S3_BUCKET_NAME');
+    this.s3_region = this.configService.get<string>('AWS_BUCKET_REGION');
     if (!this.s3_region || !this.bucketName) {
       throw new Error('S3_REGION or S3_BUCKET_NAME not found in environment variables');
     }

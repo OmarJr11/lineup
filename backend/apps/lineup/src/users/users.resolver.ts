@@ -1,22 +1,23 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
 import { toUserSchema } from '../../../../core/common/functions';
-import { CreateUserDto } from '../../../../core/modules/users/dto/create-user.dto';
+import { CreateUserInput } from '../../../../core/modules/users/dto/create-user.input';
 import { UsersService } from '../../../../core/modules/users/users.service';
 import { UserSchema } from '../../../../core/schemas';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { UpdateUserDto } from '../../../../core/modules/users/dto/update-user.dto';
+import { UpdateUserInput } from '../../../../core/modules/users/dto/update-user.input';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { UserDec, Permissions } from '../../../../core/common/decorators';
 
+@UsePipes(new ValidationPipe())
 @Resolver(() => UserSchema)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
   @Mutation(() => UserSchema, { name: 'createUser' })
   async createUser(
-    @Args('data') data: CreateUserDto
+    @Args('data') data: CreateUserInput
   ): Promise<UserSchema> {
     const user = await this.usersService.create(data, ProvidersEnum.LineUp);
     return toUserSchema(user);
@@ -35,7 +36,7 @@ export class UsersResolver {
   @Permissions(UsersPermissionsEnum.USRLISOWN)
   async updateUser(
     @Args('id', { type: () => Int }) id: number,
-    @Args('data') data: UpdateUserDto,
+    @Args('data') data: UpdateUserInput,
     @UserDec() user: IUserReq
   ): Promise<UserSchema> {
     const updatedUser = await this.usersService.update(id, data, user);

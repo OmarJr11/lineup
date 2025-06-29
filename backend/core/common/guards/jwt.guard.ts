@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { LogWarn } from '../helpers/logger.helper';
 import { EnvironmentsEnum } from '../enums';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Customized guard to return predefined response when token is not valid
@@ -10,6 +11,13 @@ import { EnvironmentsEnum } from '../enums';
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
     private readonly logger = new Logger(JwtAuthGuard.name);
+
+    constructor(
+        private readonly configService: ConfigService
+    ) {
+        super();
+    }
+
     canActivate(context: ExecutionContext) {
         return super.canActivate(context);
     }
@@ -36,7 +44,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             });
         }
 
-        if (process.env.NODE_ENV !== EnvironmentsEnum.Test) {
+        if (this.configService.get<string>('NODE_ENV') !== EnvironmentsEnum.Test) {
             this.logger.log(`user => ${JSON.stringify(user)}`);
         }
         return user;
