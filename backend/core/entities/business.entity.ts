@@ -1,7 +1,8 @@
 import { StatusEnum } from '../common/enums/status.enum';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { File, User } from './';
+import { BusinessRole, File, Role } from './';
+import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
 export class Business extends BaseEntity {
@@ -10,6 +11,15 @@ export class Business extends BaseEntity {
 
     @Column('character varying', { unique: true, length: 50 })
     email: string;
+
+    @Column('boolean', { name: 'email_validated' })
+    emailValidated?: boolean;
+
+    @Column({ type: 'enum', enum: ProvidersEnum })
+    provider: ProvidersEnum;
+
+    @Column('character varying', { length: 200, select: false })
+    password: string;
 
     @Column('character varying', { length: 30, nullable: true })
     telephone?: string;
@@ -36,14 +46,15 @@ export class Business extends BaseEntity {
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
-    @Column('int8', { name: 'id_creation_user' })
-    idCreationUser: number;
+    @OneToMany(() => Role, (role) => role.creationUser)
+    createdRoles?: Role[];
 
-    @ManyToOne(() => User, (users) => users.createdRoles)
-    @JoinColumn([{ name: 'id_creation_user', referencedColumnName: 'id' }])
-    creationUser: User;
+    @OneToMany(() => Role, (role) => role.modificationUser)
+    modifiedRoles?: Role[];
 
-    @ManyToOne(() => User, (users) => users.modifiedRoles)
-    @JoinColumn([{ name: 'id_modification_user', referencedColumnName: 'id' }])
-    modificationUser: User;
+    @OneToMany(() => BusinessRole, (role) => role.creationBusiness)
+    createdUserRoles?: BusinessRole[];
+
+    @OneToMany(() => BusinessRole, (user) => user.business)
+    businessRoles?: BusinessRole[];
 }

@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
-import { IUserReq } from '../../common/interfaces';
+import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { Business } from '../../entities';
 import { businessesResponses } from '../../common/responses';
@@ -26,12 +26,11 @@ export class BusinessesSettersService extends BasicService<Business> {
     /**
      * Create Business
      * @param {CreateBusinessInput} data - The data to create a new business
-     * @param {IUserReq} user - The user making the request
      * @returns {Promise<Business>}
      */
-    async create(data: CreateBusinessInput, user: IUserReq): Promise<Business> {
-        return await this.save(data, user).catch((error) => {
-            LogError(this.logger, error, this.create.name, user);
+    async create(data: CreateBusinessInput): Promise<Business> {
+        return await this.save(data).catch((error) => {
+            LogError(this.logger, error, this.create.name);
             throw new InternalServerErrorException(this._uCreate.error);
         });
     }
@@ -40,16 +39,16 @@ export class BusinessesSettersService extends BasicService<Business> {
      * Update Business
      * @param {UpdateBusinessInput} data - The data to update the Business
      * @param {Business} business - The Business to update
-     * @param {IUserReq} user - The logged user
+     * @param {IBusinessReq} businessReq - The logged business
      * @returns {Promise<Business>}
      */
     async update(
         data: UpdateBusinessInput,
         business: Business,
-        user: IUserReq
+        businessReq: IBusinessReq
     ): Promise<Business> {
-        return await this.updateEntity(data, business, user).catch((error) => {
-            LogError(this.logger, error, this.update.name, user);
+        return await this.updateEntity(data, business, businessReq).catch((error) => {
+            LogError(this.logger, error, this.update.name, businessReq);
             throw new InternalServerErrorException(this._ucUpdate.error);
         });
     }
@@ -57,11 +56,11 @@ export class BusinessesSettersService extends BasicService<Business> {
     /**
      * Remove User
      * @param {Business} business - The business to remove
-     * @param {IUserReq} user - The logged user
+     * @param {IBusinessReq} businessReq - The logged business
      */
-    async remove(business: Business, user: IUserReq) {
-        await this.deleteEntityByStatus(business, user).catch((error) => {
-            LogError(this.logger, error, this.remove.name, user);
+    async remove(business: Business, businessReq: IBusinessReq) {
+        await this.deleteEntityByStatus(business, businessReq).catch((error) => {
+            LogError(this.logger, error, this.remove.name, businessReq);
             throw new InternalServerErrorException(this._ucDelete.error);
         });
     }

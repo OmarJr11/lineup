@@ -6,14 +6,17 @@ import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
 import { Business } from '../../entities';
 import { BasicService } from '../../common/services';
-import { businessesResponses } from '../../common/responses';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked/dist/Transactional';
-import { LogError } from '../../common/helpers/logger.helper';
-import { IUserReq } from '../../common/interfaces';
+import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { BusinessesGettersService } from './businesses-getters.service';
 import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
+import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
+import * as argon2 from 'argon2';
+import { ProvidersEnum } from 'core/common/enums';
+import { RolesService } from '../roles/roles.service';
+import { BusinessRolesService } from '../business-roles/business-roles.service';
 
 @Injectable()
 export class BusinessesService extends BasicService<Business> {
@@ -25,7 +28,9 @@ export class BusinessesService extends BasicService<Business> {
     @InjectRepository(Business)
     private readonly businessRepository: Repository<Business>,
     private readonly businessesGettersService: BusinessesGettersService,
-    private readonly businessSettersService: BusinessesSettersService
+    private readonly businessSettersService: BusinessesSettersService,
+    private readonly rolesService: RolesService,
+    private readonly businessRolesService: BusinessRolesService,
   ) {
     super(businessRepository, userRequest);
   }
@@ -37,11 +42,34 @@ export class BusinessesService extends BasicService<Business> {
    * @return {Promise<Business>} - The saved business entity
    * */
   @Transactional()
-  async create(data: CreateBusinessInput, user: IUserReq): Promise<Business> {
+  async create(
+    data: CreateBusinessInput,
+    provider: ProvidersEnum,
+  ): Promise<Business> {
     data.path = await this.checkBusinessPathExists(
       data.name.toLocaleLowerCase().replace(/\s+/g, '-')
     );
-    const business = await this.businessSettersService.create(data, user);
+    data.email = data.email.toLocaleLowerCase();
+
+    if (!data.password) {
+      data.password = generateRandomCodeByLength(20);
+    }
+    data.password = await argon2.hash(data.password, {
+      type: argon2.argon2id, // recomendado
+      memoryCost: 2 ** 16,   // 65536 KB
+      timeCost: 5,           // 5 iteraciones
+      parallelism: 1,        // 1 hilo
+    });
+    data.emailValidated = provider === ProvidersEnum.GOOGLE
+      || provider === ProvidersEnum.META
+      || provider === ProvidersEnum.APPLE;
+    data.provider = provider;
+    
+    const business = await this.businessSettersService.create(data);
+    delete business.password;
+    const role = await this.rolesService.findByCode(data.role);
+    const userReq: IBusinessReq = { businessId: business.id, path: business.path };
+    await this.businessRolesService.create(business.id, role.id, userReq);
     return business;
   }
 
@@ -76,14 +104,14 @@ export class BusinessesService extends BasicService<Business> {
    * Update a business
    * @param {number} id - The ID of the business to update
    * @param {UpdateBusinessInput} data - The data to update the business
-   * @param {IUserReq} user - The user making the request
+   * @param {IBusinessReq} business - The business making the request
    * @returns {Promise<Business>} - The updated business entity
    */
   @Transactional()
   async update(
     id: number,
     data: UpdateBusinessInput,
-    user: IUserReq
+    businessReq: IBusinessReq
   ): Promise<Business> {
     const business = await this.businessesGettersService.findOne(id);
     if(data.path) {
@@ -91,7 +119,7 @@ export class BusinessesService extends BasicService<Business> {
         data.path.toLocaleLowerCase().replace(/\s+/g, '-')
       );
     }
-    await this.businessSettersService.update(data, business, user);
+    await this.businessSettersService.update(data, business, businessReq);
     return await this.businessesGettersService.findOne(id);
   }
 
@@ -101,9 +129,9 @@ export class BusinessesService extends BasicService<Business> {
    * @returns {Promise<boolean>}
    */
   @Transactional()
-  async remove(id: number, user: IUserReq): Promise<boolean> {
+  async remove(id: number, businessReq: IBusinessReq): Promise<boolean> {
     const business = await this.businessesGettersService.findOne(id);
-    await this.businessSettersService.remove(business, user);
+    await this.businessSettersService.remove(business, businessReq);
     return true;
   }
 

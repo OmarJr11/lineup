@@ -30,7 +30,7 @@ export class UsersSettersService extends BasicService<User> {
      */
     async create(data: CreateUserInput): Promise<User> {
         return await this.save(data).catch((error) => {
-            LogError(this.logger, error, this._uCreate.error.message);
+            LogError(this.logger, error, this.create.name);
             throw new InternalServerErrorException(this._uCreate.error);
         });
     }
@@ -44,7 +44,7 @@ export class UsersSettersService extends BasicService<User> {
      */
     async update(data: UpdateUserInput, user: User, userLogged: IUserReq): Promise<User> {
         return await this.updateEntity(data, user, userLogged).catch((error) => {
-            LogError(this.logger, error, this._ucUpdate.error.message);
+            LogError(this.logger, error, this.update.name);
             throw new InternalServerErrorException(this._ucUpdate.error);
         });
     }
@@ -56,7 +56,7 @@ export class UsersSettersService extends BasicService<User> {
      */
     async remove(user: User, userLogged: IUserReq) {
         await this.deleteEntityByStatus(user, userLogged).catch((error) => {
-            LogError(this.logger, error, this._ucDelete.error.message);
+            LogError(this.logger, error, this.remove.name);
             throw new InternalServerErrorException(this._ucDelete.error);
         });
     }

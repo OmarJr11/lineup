@@ -1,16 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AdminModule } from './admin.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import {
-  initializeTransactionalContext,
-  patchTypeORMRepositoryWithBaseRepository,
-} from 'typeorm-transactional-cls-hooked';
-import { createConnection } from 'typeorm';
+import { BusinessesModule } from './businesses.module';
+import { initializeTransactionalContext, patchTypeORMRepositoryWithBaseRepository } from 'typeorm-transactional-cls-hooked';
 import { join } from 'path';
+import { createConnection } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { EnvironmentsEnum } from '../../../core/common/enums';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
-
 dotenv.config();
 
 async function bootstrap() {
@@ -28,22 +22,12 @@ async function bootstrap() {
     entities: [entities],
     synchronize: false,
   });
-  const app = await NestFactory.create(AdminModule);
+
+  const app = await NestFactory.create(BusinessesModule);
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
   app.enableCors();
 
-  if (process.env.NODE_ENV === EnvironmentsEnum.Development) {
-    const config = new DocumentBuilder()
-      .setTitle('Line Up API')
-      .setDescription('Line Up API Documentation')
-      .setVersion('1.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
-  }
 
-  await app.listen(process.env.PORT_ADMIN ?? 3003);
+  await app.listen(process.env.PORT_BUSINESS ?? 3001);
 }
 bootstrap();
-
-

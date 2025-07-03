@@ -1,9 +1,9 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { BusinessesPermissionsEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
+import { BusinessesPermissionsEnum, ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
 import { BusinessSchema } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { IUserReq } from '../../../../core/common/interfaces';
+import { IBusinessReq, IUserReq } from '../../../../core/common/interfaces';
 import { UserDec, Permissions } from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from 'core/modules/businesses/dto/create-business.input';
@@ -16,13 +16,8 @@ export class BusinessesResolver {
   constructor(private readonly businessesService: BusinessesService) {}
 
   @Mutation(() => BusinessSchema, { name: 'createBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(BusinessesPermissionsEnum.BURCREALL)
-  async createBusiness(
-    @Args('data') data: CreateBusinessInput,
-    @UserDec() user: IUserReq
-  ) {
-    const business = await this.businessesService.create(data, user);
+  async createBusiness(@Args('data') data: CreateBusinessInput) {
+    const business = await this.businessesService.create(data, ProvidersEnum.LineUp);
     return toBusinessSchema(business);
   }
 
@@ -32,23 +27,23 @@ export class BusinessesResolver {
   }
 
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard) //FIX GUARDS
   @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   async updateBusiness(
     @Args('data') data: UpdateBusinessInput,
-    @UserDec() user: IUserReq
+    @UserDec() businessReq: IBusinessReq
   ) {
-    const business = await this.businessesService.update(data.id, data, user);
+    const business = await this.businessesService.update(data.id, data, businessReq);
     return toBusinessSchema(business);
   }
 
   @Mutation(() => BusinessSchema, { name: 'removeBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard) //FIX GUARDS
   @Permissions(BusinessesPermissionsEnum.BURDELOWN)
   async removeBusiness(
     @Args('id', { type: () => Int }) id: number,
-    @UserDec() user: IUserReq
+    @UserDec() businessReq: IBusinessReq
   ) {
-    return await this.businessesService.remove(id, user);
+    return await this.businessesService.remove(id, businessReq);
   }
 }

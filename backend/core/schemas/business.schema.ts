@@ -1,7 +1,8 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
-import { UserSchema } from './user.schema';
+import { ProvidersEnum } from '../common/enums';
+import { BusinessRoleSchema, RoleSchema } from '.';
 
 @ObjectType()
 export class BusinessSchema {
@@ -35,12 +36,18 @@ export class BusinessSchema {
   @Field(() => StatusEnum)
   status: StatusEnum;
 
-  @Field(() => Int)
-  idCreationUser: number;
+  @Field(() => ProvidersEnum)
+  provider: ProvidersEnum;
 
-  @Field(() => UserSchema, { nullable: true })
-  creationUser?: UserSchema;
+  @Field(() => [RoleSchema], { nullable: true })
+  createdRoles?: RoleSchema[];
 
-  @Field(() => UserSchema, { nullable: true })
-  modificationUser?: UserSchema;
+  @Field(() => [RoleSchema], { nullable: true })
+  modifiedRoles?: RoleSchema[];
+
+  @Field(() => [BusinessRoleSchema], { nullable: true })
+  createdBusinessRoles?: BusinessRoleSchema[];
+
+  @Field(() => [BusinessRoleSchema], { nullable: true })
+  businessRoles?: BusinessRoleSchema[];
 }

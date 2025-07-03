@@ -6,3 +6,4 @@ export { Permission } from './permission.entity';
 export { RolePermission } from './role-permission.entity';
 export { File } from './file.entity';
 export { Business } from './business.entity';
+export { BusinessRole } from './business-role.entity';

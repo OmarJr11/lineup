@@ -12,13 +12,22 @@
         "tsConfigPath": "apps/admin/tsconfig.app.json"
       }
     },
-    "lineup": {
+    "businesses": {
       "type": "application",
-      "root": "apps/lineup",
+      "root": "apps/businesses",
       "entryFile": "main",
-      "sourceRoot": "apps/lineup/src",
+      "sourceRoot": "apps/businesses/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/lineup/tsconfig.app.json"
+        "tsConfigPath": "apps/businesses/tsconfig.app.json"
+      }
+    },
+    "users": {
+      "type": "application",
+      "root": "apps/users",
+      "entryFile": "main",
+      "sourceRoot": "apps/users/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/users/tsconfig.app.json"
       }
     }
   }

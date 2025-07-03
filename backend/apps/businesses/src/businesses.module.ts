@@ -1,3 +1,4 @@
+import { BusinessesController } from './businesses.controller';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
@@ -5,9 +6,8 @@ import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middle
 import { AuthModule } from './auth/auth.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
-import { BusinessesModule } from './businesses/businesses.module';
+import { BusinessesModule as BusinessesModuleCore } from './businesses/businesses.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
@@ -47,12 +47,12 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
       installSubscriptionHandlers: true,
     }),
     AuthModule,
-    UsersModule,
     FilesModule,
-    BusinessesModule,
+    BusinessesModuleCore,
   ],
+  controllers: [BusinessesController],
 })
-export class LineupModule implements NestModule {
+export class BusinessesModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('');
   }

@@ -13,7 +13,7 @@ import {
     SelectQueryBuilder,
 } from 'typeorm';
 import { getEntityManagerOrTransactionManager } from 'typeorm-transactional-cls-hooked';
-import { ILogin, ILoginReturn } from '../interfaces';
+import { IBusinessReq, ILogin, ILoginReturn, IUserOrBusinessReq } from '../interfaces';
 import { StatusEnum, OrderEnum } from '../enums';
 import { invalidReferersRequest } from '../helpers/requests.helper';
 import {
@@ -197,31 +197,48 @@ export class BasicService<Entity extends ObjectLiteral> {
      * @param {IUserReq} [user] - User who executed the action
      * @param {IExtraDataToSave} [extraData] - Extra data to save
      */
-    async save(data: any, user?: IUserReq, extraData?: IExtraDataToSave) {
+    async save(data: any, userOrBusiness?: IUserOrBusinessReq, extraData?: IExtraDataToSave) {
         if (this._request?.headers) {
             const { ip, coordinate } = this.getIpAndCoordinate();
             data.creationIp = ip;
             data.creationCoordinate = coordinate;
         }
-        data.creationUser = user
-            ? Number(user.userId)
-            : !this._request
-                ? null
-                : this._request.user
-                    ? +this._request.user['userId']
-                    : null;
-        data.idCreationUser = user
-            ? Number(user.userId)
-            : !this._request
-                ? null
-                : this._request.user
-                    ? +this._request.user['userId']
-                    : null;
+        if(userOrBusiness.userId) {
+            data.creationUser = userOrBusiness
+                ? Number(userOrBusiness.userId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['userId']
+                        : null;
+            data.idCreationUser = userOrBusiness
+                ? Number(userOrBusiness.userId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['userId']
+                        : null;
+        } else {
+            data.creationBusiness = userOrBusiness
+                ? Number(userOrBusiness.businessId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['businessId']
+                        : null;
+            data.idCreationBusiness = userOrBusiness
+                ? Number(userOrBusiness.businessId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['businessId']
+                        : null;
+        }
 
         data.status = extraData?.status || data.status || StatusEnum.ACTIVE;
         return this.cleanObjects(
             await this.repository.save(this.cleanDataBeforeInsert(data), {
-                data: extraData ? { ...user, extraData } : user,
+                data: extraData ? { ...userOrBusiness, extraData } : userOrBusiness,
             })
         );
     }
@@ -238,7 +255,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      */
     async saveAndGetRelations(
         data: any,
-        user: IUserReq,
+        user: IUserOrBusinessReq,
         relations: string[],
         status?: string
     ): Promise<Entity> {
@@ -281,7 +298,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      * @param {IUserReq} user - User who executed the action
      * @returns {Promise<any>}
      */
-    protected async activateEntity(entity: Entity | Entity[], user: IUserReq): Promise<any> {
+    protected async activateEntity(entity: Entity | Entity[], user: IUserOrBusinessReq): Promise<any> {
         return this.updateEntity({ disabled: false }, entity, user);
     }
 
@@ -293,7 +310,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      */
     protected async activateEntityByStatus(
         entity: Entity | Entity[],
-        user: IUserReq
+        user: IUserOrBusinessReq
     ): Promise<any> {
         return this.updateEntity({ status: StatusEnum.ACTIVE }, entity, user);
     }
@@ -317,9 +334,11 @@ export class BasicService<Entity extends ObjectLiteral> {
     protected cleanObjects(data: Entity): Entity {
         delete data.creationDate;
         delete data.creationUser;
+        delete data.creationBusiness;
         delete data.creationCoordinate;
         delete data.modificationDate;
         delete data.modificationUser;
+        delete data.modificationBusiness;
         delete data.modificationCoordinate;
         delete data.creationIp;
         delete data.modificationIp;
@@ -396,7 +415,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      * @param {IUserReq} user User who executed the action
      * @returns {Promise<any>}
      */
-    protected async deleteEntityByStatus(entity: Entity | Entity[], user: IUserReq): Promise<any> {
+    protected async deleteEntityByStatus(entity: Entity | Entity[], user: IUserOrBusinessReq): Promise<any> {
         return this.updateEntity({ status: StatusEnum.DELETED }, entity, user);
     }
 
@@ -406,8 +425,8 @@ export class BasicService<Entity extends ObjectLiteral> {
      * @param {IUserReq} [user]
      * @returns {Promise<any>}
      */
-    protected async disableEntity(entity: Entity | Entity[], user?: IUserReq): Promise<any> {
-        return this.updateEntity({ disabled: true }, entity, user);
+    protected async disableEntity(entity: Entity | Entity[], userOrBusiness?: IUserOrBusinessReq): Promise<any> {
+        return this.updateEntity({ disabled: true }, entity, userOrBusiness);
     }
 
     /**
@@ -417,7 +436,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      * @param {IUserReq} user User who executed the action
      * @returns {Promise<any>}
      */
-    protected async disableEntityByStatus(entity: Entity | Entity[], user: IUserReq): Promise<any> {
+    protected async disableEntityByStatus(entity: Entity | Entity[], user: IUserOrBusinessReq): Promise<any> {
         return this.updateEntity({ status: StatusEnum.INACTIVE }, entity, user);
     }
 
@@ -630,7 +649,7 @@ export class BasicService<Entity extends ObjectLiteral> {
     protected async updateAndGetRelations(
         data: any,
         entity: Entity,
-        user: IUserReq,
+        user: IUserOrBusinessReq,
         relations: string[]
     ) {
         const updatedEntity = await this.updateEntity(data, entity, user);
@@ -653,20 +672,31 @@ export class BasicService<Entity extends ObjectLiteral> {
     protected async updateEntity(
         data: any,
         entity: Entity | Entity[],
-        user?: IUserReq
+        userOrBusiness?: IUserOrBusinessReq
     ): Promise<any> {
         if (this._request !== undefined) {
             const { ip, coordinate } = this.getIpAndCoordinate();
             data.modificationIp = ip;
             data.modificationCoordinate = coordinate;
         }
-        data.modificationUser = user
-            ? Number(user.userId)
-            : !this._request
-                ? null
-                : this._request.user
-                    ? +this._request.user['userId']
-                    : null;
+
+        if(userOrBusiness.userId) {
+            data.modificationUser = userOrBusiness
+                ? Number(userOrBusiness.userId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['userId']
+                        : null;
+        } else {
+            data.modificationBusiness = userOrBusiness
+                ? Number(userOrBusiness.businessId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['businessId']
+                        : null;
+        }
         data.modificationDate = new Date();
         data = this.cleanDataBeforeInsert(data);
 
@@ -675,7 +705,7 @@ export class BasicService<Entity extends ObjectLiteral> {
                 this.repository.merge(deepEntity, data);
             }
 
-            const entities = await this.repository.save(entity, { data: user });
+            const entities = await this.repository.save(entity, { data: userOrBusiness });
 
             entities.forEach((element) => {
                 this.cleanObjects(element);
@@ -685,7 +715,7 @@ export class BasicService<Entity extends ObjectLiteral> {
         }
 
         this.repository.merge(this.cleanDataBeforeInsert(entity), data);
-        return this.cleanObjects(await this.repository.save(entity, { data: user }));
+        return this.cleanObjects(await this.repository.save(entity, { data: userOrBusiness }));
     }
 
     /**

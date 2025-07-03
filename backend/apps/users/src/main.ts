@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
+import { UsersModule } from './users.module';
 import { initializeTransactionalContext, patchTypeORMRepositoryWithBaseRepository } from 'typeorm-transactional-cls-hooked';
 import { join } from 'path';
 import { createConnection } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
-import { LineupModule } from './lineup.module';
-
 dotenv.config();
 
 async function bootstrap() {
@@ -24,11 +23,11 @@ async function bootstrap() {
     synchronize: false,
   });
 
-  const app = await NestFactory.create(LineupModule);
+  const app = await NestFactory.create(UsersModule);
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
   app.enableCors();
 
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT_USER ?? 3000);
 }
 bootstrap();

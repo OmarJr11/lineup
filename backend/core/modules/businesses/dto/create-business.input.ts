@@ -1,8 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsEmpty, IsNotEmpty } from 'class-validator';
-import { IsOptional } from 'class-validator/types/decorator/common/IsOptional';
-import { MaxLength } from 'class-validator/types/decorator/string/MaxLength';
-import { IsString } from 'class-validator/types/decorator/typechecker/IsString';
+import { IsEmpty, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { RolesCodesEnum } from '../../../common/enums';
 
 @InputType()
 export class CreateBusinessInput {
@@ -17,6 +16,18 @@ export class CreateBusinessInput {
   @MaxLength(100)
   @IsString()
   name: string;
+
+  @Field()
+  @IsNotEmpty()
+  @MaxLength(200)
+  @IsString()
+  password: string;
+
+  @Field(() => RolesCodesEnum)
+  @IsNotEmpty()
+  @IsString()
+  @IsEnum(RolesCodesEnum)
+  role: RolesCodesEnum;
 
   @Field({ nullable: true })
   @IsOptional()
@@ -42,4 +53,11 @@ export class CreateBusinessInput {
   @Field({ nullable: true })
   @IsEmpty()
   path?: string;
-}
+
+  @Field({ nullable: true })
+  @IsEmpty()
+  emailValidated?: boolean;
+
+  @Field({ nullable: true })
+  @IsEmpty()
+  provider?: string;}
