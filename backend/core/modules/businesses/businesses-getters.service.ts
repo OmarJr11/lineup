@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
+import { Injectable, Logger, NotAcceptableException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
@@ -99,5 +99,32 @@ export class BusinessesGettersService extends BasicService<Business> {
             .where('b.status <> :status', { status: StatusEnum.DELETED })
             .andWhere('b.path iLIKE :path', { path: `%${path}%` })
             .getMany();
+    }
+
+    /**
+     * Find a user by mail
+     * @param {string} email - email
+     * @returns {Promise<User>}
+     */
+    async findOneByEmailWithPassword(email: string): Promise<Business> {
+        const business = await this.businessRepository
+            .createQueryBuilder('business')
+            .addSelect('business.password')
+            .leftJoinAndSelect('business.businessRoles', 'businessRoles')
+            .leftJoinAndSelect('businessRoles.role', 'role')
+            .leftJoinAndSelect('role.rolePermissions', 'rolePermissions')
+            .leftJoinAndSelect('rolePermissions.permission', 'permission')
+            .where('LOWER(business.email) = LOWER(:email)', { email })
+            .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
+            .getOneOrFail()
+            .catch((error) => {
+                LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+                throw new UnauthorizedException(this._uList.businessNotFound);
+            });
+        if (!business) {
+            LogError(this.logger, this._uList.businessNotFound, this.findOneByEmailWithPassword.name);
+            throw new UnauthorizedException(this._uList.businessNotFound);
+        }
+        return business;
     }
 }

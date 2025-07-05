@@ -203,7 +203,7 @@ export class BasicService<Entity extends ObjectLiteral> {
             data.creationIp = ip;
             data.creationCoordinate = coordinate;
         }
-        if(userOrBusiness.userId) {
+        if(userOrBusiness && userOrBusiness.userId) {
             data.creationUser = userOrBusiness
                 ? Number(userOrBusiness.userId)
                 : !this._request
@@ -700,13 +700,22 @@ export class BasicService<Entity extends ObjectLiteral> {
         data.modificationDate = new Date();
         data = this.cleanDataBeforeInsert(data);
 
+        const entityColumns = this.repository.metadata.columns.map(col => col.propertyName);
+        Object.keys(data).forEach(key => {
+            if (!entityColumns.includes(key)) {
+                delete data[key];
+            }
+        });
+
+
         if (entity instanceof Array) {
             for (const deepEntity of entity) {
-                this.repository.merge(deepEntity, data);
+                await this.repository.update(deepEntity.id, data);
             }
-
-            const entities = await this.repository.save(entity, { data: userOrBusiness });
-
+            const ids: Number[] = entity.map((e) => Number(e.id));
+            const entities = await this.repository.find(
+                { where: { id: In(ids) } as any }
+            )
             entities.forEach((element) => {
                 this.cleanObjects(element);
             });
@@ -714,8 +723,8 @@ export class BasicService<Entity extends ObjectLiteral> {
             return entities;
         }
 
-        this.repository.merge(this.cleanDataBeforeInsert(entity), data);
-        return this.cleanObjects(await this.repository.save(entity, { data: userOrBusiness }));
+        await this.repository.update(entity.id, data);
+        return this.cleanObjects(await this.repository.findOneOrFail({ where: { id: entity.id } as any }));
     }
 
     /**

@@ -1,6 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsEmpty, IsEnum, IsNotEmpty } from 'class-validator';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmpty, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { RolesCodesEnum } from '../../../common/enums';
 
 @InputType()
@@ -25,7 +24,6 @@ export class CreateBusinessInput {
 
   @Field(() => RolesCodesEnum)
   @IsNotEmpty()
-  @IsString()
   @IsEnum(RolesCodesEnum)
   role: RolesCodesEnum;
 
@@ -41,13 +39,15 @@ export class CreateBusinessInput {
   @IsString()
   telephone?: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field()
+  @IsNotEmpty()
   @MaxLength(50)
   @IsString()
-  imageCode?: string;
+  imageCode: string;
 
   @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsString({ each: true })
   tags?: string[];
 
   @Field({ nullable: true })
@@ -60,4 +60,5 @@ export class CreateBusinessInput {
 
   @Field({ nullable: true })
   @IsEmpty()
-  provider?: string;}
+  provider?: string;
+}

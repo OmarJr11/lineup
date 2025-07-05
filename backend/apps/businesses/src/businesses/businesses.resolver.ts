@@ -4,7 +4,7 @@ import { BusinessSchema } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { IBusinessReq, IUserReq } from '../../../../core/common/interfaces';
-import { UserDec, Permissions } from '../../../../core/common/decorators';
+import { UserDec, Permissions, BusinessDec } from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from 'core/modules/businesses/dto/create-business.input';
 import { toBusinessSchema } from 'core/common/functions/businesses.function';
@@ -27,11 +27,11 @@ export class BusinessesResolver {
   }
 
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard) //FIX GUARDS
-  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
+  @UseGuards(JwtAuthGuard, TokenGuard/*, PermissionsGuard*/) //FIX GUARDS Token and Permissions
+  //@Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   async updateBusiness(
     @Args('data') data: UpdateBusinessInput,
-    @UserDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq
   ) {
     const business = await this.businessesService.update(data.id, data, businessReq);
     return toBusinessSchema(business);

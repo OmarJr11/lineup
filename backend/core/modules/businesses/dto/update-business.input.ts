@@ -10,13 +10,13 @@ export class UpdateBusinessInput {
   @IsNumber()
   id: number;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   @MaxLength(50)
   @IsString()
   email?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   @MaxLength(100)
   @IsString()

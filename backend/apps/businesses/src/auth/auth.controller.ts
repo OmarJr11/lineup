@@ -9,12 +9,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
 
-  @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({ status: 201, description: 'User logged.' })
+  @ApiOperation({ summary: 'Login Business' })
+  @ApiResponse({ status: 201, description: 'Business logged.' })
   @UsePipes(new ValidationPipe())
   @UseInterceptors(TokenHeaderInterceptor)
   @Post('login')
-  async loginUser(@Body() login: LoginDto) {
-    return await this.authService.validateUser(login);
+  async loginBusiness(@Body() login: LoginDto) {
+    return await this.authService.validateBusiness(login);
   }
 }

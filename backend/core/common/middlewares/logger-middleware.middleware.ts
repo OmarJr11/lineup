@@ -31,8 +31,6 @@ export class LoggerMiddleware implements NestMiddleware {
                     : request.ip.split(':').pop(),
                 request.method,
                 request['_parsedUrl']['pathname'],
-                JSON.stringify(this.cleanObject(_.cloneDeep(request.query))),
-                JSON.stringify(this.cleanObject(_.cloneDeep(body)))
             );
         }
         next();

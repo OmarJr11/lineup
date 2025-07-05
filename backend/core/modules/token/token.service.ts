@@ -16,10 +16,11 @@ import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
 import { IRefreshToken, IResponse, IResponseWithData, ITokenGenerate, IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services/base.service';
-import { Token, User } from '../../entities';
+import { Business, Token, User } from '../../entities';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import { userResponses } from '../../common/responses';
 import { ConfigService } from '@nestjs/config';
+import { CreateTokenDto } from './dto/create-token.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class TokensService extends BasicService<Token> {
@@ -71,13 +72,24 @@ export class TokensService extends BasicService<Token> {
    * @param {*} user - Logged user
    * @returns {Promise<string>}
    */
-  async generateToken(user: User): Promise<string> {
-    return this.generateTokenJwt({
-      username: user.username,
-      email: user.email,
-      sub: user.id,
-      status: user.status,
-    });
+  async generateToken(user: User | Business): Promise<string> {
+    if(user['username']) {
+      return this.generateTokenJwt({
+        username: user['username'],
+        email: user.email,
+        sub: user.id,
+        status: user.status,
+        isBusiness: false
+      });
+    } else {
+      return this.generateTokenJwt({
+        path: user['path'],
+        email: user.email,
+        sub: user.id,
+        status: user.status,
+        isBusiness: true
+      });
+    }
   }
 
   /**
@@ -99,7 +111,7 @@ export class TokensService extends BasicService<Token> {
    *
    * @param {RefreshToken} refreshToken - refresh token to be saved ?
    */
-  async saveRefreshToken(refreshToken: Token) {
+  async saveRefreshToken(refreshToken: CreateTokenDto) {
     await this.tokenRepository.save(refreshToken).catch((error) => {
       LogError(this.logger, error, this.saveRefreshToken.name);
       throw new InternalServerErrorException(this.rToken.error);
@@ -108,20 +120,20 @@ export class TokensService extends BasicService<Token> {
 
   /**
    *  Save the new refresh token
-   * @param {User} user - Logged user
+   * @param {User | Business} user - Logged user
    * @returns {Promise<IRefreshToken>}
    */
-  async generateTokens(user: User): Promise<IRefreshToken> {
+  async generateTokens(user: User | Business): Promise<IRefreshToken> {
     // generate the new token
     const newToken = await this.generateToken(user);
     // Generate new refresh Token
     const newRefreshToken = await this.generateRefreshToken();
     // Generate new Refresh token and saved it in db.
-    const newRt: Token = {
-      idUser: user.id,
+    const newRt: CreateTokenDto = {
+      idUser: user['username'] ? Number(user.id) : null,
+      idBusiness: user['name'] ? Number(user.id) : null,
       token: newToken,
       refresh: newRefreshToken,
-      user,
       creationDate: new Date(),
     };
 

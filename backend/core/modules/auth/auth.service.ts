@@ -4,11 +4,12 @@ import { JwtService } from '@nestjs/jwt';
 import { TokensService } from '../token/token.service';
 import { ILoginResponse, IResponse } from '../../common/interfaces';
 import { UsersGettersService } from '../users/users.getters.service';
-import { Role, User } from '../../entities';
+import { Business, Role, User } from '../../entities';
 import { LogError, LogWarn } from '../../common/helpers/logger.helper';
 import * as argon2 from 'argon2';
 import { userResponses } from '../../common/responses';
 import { AdminPermission, RolesCodesEnum, StatusEnum } from '../../common/enums';
+import { BusinessesGettersService } from '../businesses/businesses-getters.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     private readonly usersGettersService: UsersGettersService,
     private readonly jwtService: JwtService,
     private readonly tokenService: TokensService,
+    private readonly businessesGettersService: BusinessesGettersService
   ) { }
 
   /**
@@ -38,6 +40,25 @@ export class AuthService {
     }
     await argon2.verify(user.password, password).catch((error) => {
       LogWarn(this.logger, 'User not exist or wrong password', this.validateUser.name, user);
+      throw new UnauthorizedException(this.rLogin.wrongData);
+    });
+  }
+
+  /**
+   * Validate Business
+   * @param {Business} business
+   * @param {string} password
+   */
+  async checkBusinessLogged(
+    business: Business,
+    password: string
+  ) {
+    if (!business) {
+      LogWarn(this.logger, 'Business not exist or wrong password', this.validateUser.name, business);
+      throw new UnauthorizedException(this.rLogin.wrongData);
+    }
+    await argon2.verify(business.password, password).catch((error) => {
+      LogWarn(this.logger, 'Business not exist or wrong password', this.validateUser.name, business);
       throw new UnauthorizedException(this.rLogin.wrongData);
     });
   }
@@ -125,6 +146,21 @@ export class AuthService {
    * @param {LoginDto} body - Login data
    * @returns {Promise<ILoginResponse>}
    */
+  async validateBusiness(body: LoginDto): Promise<IResponse> {
+    const business = await this.businessesGettersService.findOneByEmailWithPassword(body.email);
+    await this.checkBusinessLogged(business, body.password);
+    // Check user status
+    this.checkStatus(business.status);
+    delete business.password;
+    return await this.generateToken(business);
+  }
+
+  /**
+   *  Function that validates the username (or email) and password,
+   *  if both are correct, generates session token
+   * @param {LoginDto} body - Login data
+   * @returns {Promise<ILoginResponse>}
+   */
   async validateUserAdmin(body: LoginDto): Promise<ILoginResponse> {
     const user = await this.usersGettersService.findOneByEmailWithPassword(body.email);
     const roles = (user.userRoles.filter(
@@ -147,13 +183,18 @@ export class AuthService {
 
   /**
    * Generate token
-   * @param {User} user
+   * @param {User | Business} user
    * @returns {Promise<ILoginResponse>}
    **/
-  private async generateToken(user: User): Promise<ILoginResponse> {
+  private async generateToken(user: User | Business): Promise<ILoginResponse> {
     // Generate token
     const tokenDB = await this.tokenService.generateTokens(user);
-    return { ...this.rToken.success, user, ...tokenDB };
+    const isBusiness = user['username'] ? false : true;
+    const business = isBusiness ? user as Business : null;
+    const userResponse = isBusiness ? null : user as User;
+    return isBusiness
+      ? { ...this.rToken.success, ...tokenDB, business }
+      : { ...this.rToken.success, ...tokenDB, user: userResponse };
   }
 
   /**

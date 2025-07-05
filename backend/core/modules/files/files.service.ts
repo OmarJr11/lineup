@@ -31,10 +31,10 @@ export class FilesService extends BasicService<File> {
     private readonly configService: ConfigService,
   ) {
     super(filesRepository, userRequest);
-    this.bucketName = this.configService.get<string>('S3_BUCKET_NAME');
+    this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
     this.s3_region = this.configService.get<string>('AWS_BUCKET_REGION');
     if (!this.s3_region || !this.bucketName) {
-      throw new Error('S3_REGION or S3_BUCKET_NAME not found in environment variables');
+      throw new Error('AWS_BUCKET_REGION or AWS_BUCKET_NAME not found in environment variables');
     }
     this.client = new S3Client({
       region: this.s3_region,

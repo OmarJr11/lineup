@@ -5,9 +5,6 @@ import { LogWarn } from '../helpers/logger.helper';
 import { EnvironmentsEnum } from '../enums';
 import { ConfigService } from '@nestjs/config';
 
-/**
- * Customized guard to return predefined response when token is not valid
- */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
     private readonly logger = new Logger(JwtAuthGuard.name);
@@ -18,11 +15,22 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         super();
     }
 
+    getRequest(context: ExecutionContext) {
+        // Soporta HTTP y GraphQL
+        const ctx = context.switchToHttp();
+        if (ctx.getRequest()) {
+            return ctx.getRequest();
+        }
+        // Para GraphQL
+        const gqlCtx = context.getArgByIndex(2);
+        return gqlCtx?.req;
+    }
+
     canActivate(context: ExecutionContext) {
         return super.canActivate(context);
     }
 
-    handleRequest(err, user, info): any {
+    handleRequest(err, data, info): any {
         if (info instanceof TokenExpiredError) {
             throw new UnauthorizedException({
                 status: false,
@@ -35,8 +43,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             throw err;
         }
 
-        if (!user) {
-            LogWarn(this.logger, 'user not found in token', this.handleRequest.name);
+        if (!data) {
+            LogWarn(this.logger, 'user or business not found in token', this.handleRequest.name);
             throw new UnauthorizedException({
                 code: 1,
                 status: false,
@@ -45,8 +53,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         }
 
         if (this.configService.get<string>('NODE_ENV') !== EnvironmentsEnum.Test) {
-            this.logger.log(`user => ${JSON.stringify(user)}`);
+            this.logger.log(`data => ${JSON.stringify(data)}`);
         }
-        return user;
+
+        if(data.userId) {
+            const user = data;
+            return user;
+        } else {
+            const business = data;
+            return business;
+        }
     }
 }

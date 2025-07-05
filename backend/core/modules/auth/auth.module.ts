@@ -6,12 +6,14 @@ import { PassportModule } from '@nestjs/passport';
 import { TokensModule } from '../token/token.module';
 import { JwtStrategy, WsJwtStrategy } from '../../common/strategies';
 import { ConfigService } from '@nestjs/config';
+import { BusinessesModule } from '../businesses/businesses.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     TokensModule,
+    BusinessesModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

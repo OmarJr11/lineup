@@ -64,7 +64,6 @@ export class BusinessesService extends BasicService<Business> {
       || provider === ProvidersEnum.META
       || provider === ProvidersEnum.APPLE;
     data.provider = provider;
-    
     const business = await this.businessSettersService.create(data);
     delete business.password;
     const role = await this.rolesService.findByCode(data.role);

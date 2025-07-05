@@ -2,7 +2,8 @@ import * as Joi from 'joi';
 import { EnvironmentsEnum } from '../enums';
 
 export const ValidatingEnv = Joi.object({
-    PORT: Joi.number().required(),
+    PORT_BUSINESS: Joi.number().required(),
+    PORT_USER: Joi.number().required(),
     PORT_ADMIN: Joi.number().required(),
 
     NODE_ENV: Joi.string()
