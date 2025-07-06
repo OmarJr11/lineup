@@ -14,7 +14,7 @@ import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import * as argon2 from 'argon2';
-import { ProvidersEnum } from 'core/common/enums';
+import { ProvidersEnum } from '../../common/enums';
 import { RolesService } from '../roles/roles.service';
 import { BusinessRolesService } from '../business-roles/business-roles.service';
 
