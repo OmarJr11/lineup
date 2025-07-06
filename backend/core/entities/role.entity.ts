@@ -2,7 +2,7 @@ import { RolesCodesEnum, StatusEnum } from '../common/enums';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
 import { BaseEntity } from './base.entity';
-import { UserRole, RolePermission } from './';
+import { UserRole, RolePermission, BusinessRole } from './';
 
 @Entity({ schema: 'system', name: 'roles' })
 export class Role extends BaseEntity {
@@ -31,6 +31,9 @@ export class Role extends BaseEntity {
 
     @OneToMany(() => UserRole, (user) => user.role)
     userRoles: UserRole[];
+
+    @OneToMany(() => BusinessRole, (business) => business.role)
+    businessRoles: BusinessRole[];
 
     @OneToMany(() => RolePermission, (user) => user.role)
     rolePermissions: RolePermission[];

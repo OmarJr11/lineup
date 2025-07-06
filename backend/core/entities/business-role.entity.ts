@@ -22,7 +22,7 @@ export class BusinessRole {
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
     creationBusiness: Business;
 
-    @ManyToOne(() => Role, (role) => role.userRoles)
+    @ManyToOne(() => Role, (role) => role.businessRoles)
     @JoinColumn([{ name: 'id_role', referencedColumnName: 'id' }])
     role: Role;
 

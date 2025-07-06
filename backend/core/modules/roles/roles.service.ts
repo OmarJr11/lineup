@@ -47,7 +47,7 @@ export class RolesService extends BasicService<Role> {
   /**
    * Check if user has certain permissions in the system
    *
-   * @param {IUserReq} idUser - id of the user to verify permissions
+   * @param {number} idUser - id of the user to verify permissions
    * @param {string[]} codes - permissions code to verify
    * @returns {Promise<boolean>}
    */
@@ -57,6 +57,26 @@ export class RolesService extends BasicService<Role> {
         .select(['R.id'])
         .innerJoin('R.userRoles', 'UR')
         .where('UR.user = :idUser', { idUser })
+        .getMany()
+    ).map((r) => r.id);
+
+    return roles.length > 0
+      ? await this.hasAnyPermission(roles, codes) : false;
+  }
+
+  /**
+   * Check if business has certain permissions in the system
+   *
+   * @param {number} idBusiness - id of the business to verify permissions
+   * @param {string[]} codes - permissions code to verify
+   * @returns {Promise<boolean>}
+   */
+  async businessHasPermission(idBusiness: number, codes: string[]): Promise<boolean> {
+    const roles = (
+      await this.createQueryBuilder('R')
+        .select(['R.id'])
+        .innerJoin('R.businessRoles', 'BR')
+        .where('BR.business = :idBusiness', { idBusiness })
         .getMany()
     ).map((r) => r.id);
 

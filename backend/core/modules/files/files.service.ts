@@ -11,7 +11,7 @@ import { filesResponses } from '../../common/responses';
 import { ConfigService } from '@nestjs/config';
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { IFileUploadInterface } from '../../common/interfaces/file.interface';
-import { LogError } from 'core/common/helpers/logger.helper';
+import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable({ scope: Scope.REQUEST })

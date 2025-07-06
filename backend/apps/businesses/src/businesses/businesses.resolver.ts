@@ -1,14 +1,14 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
-import { BusinessesPermissionsEnum, ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
+import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
 import { BusinessSchema } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { IBusinessReq, IUserReq } from '../../../../core/common/interfaces';
+import { IBusinessReq } from '../../../../core/common/interfaces';
 import { UserDec, Permissions, BusinessDec } from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
-import { CreateBusinessInput } from 'core/modules/businesses/dto/create-business.input';
-import { toBusinessSchema } from 'core/common/functions/businesses.function';
-import { UpdateBusinessInput } from 'core/modules/businesses/dto/update-business.input';
+import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
+import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
+import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessSchema)
@@ -27,8 +27,8 @@ export class BusinessesResolver {
   }
 
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard/*, PermissionsGuard*/) //FIX GUARDS Token and Permissions
-  //@Permissions(BusinessesPermissionsEnum.BURUPDOWN)
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   async updateBusiness(
     @Args('data') data: UpdateBusinessInput,
     @BusinessDec() businessReq: IBusinessReq
@@ -38,7 +38,7 @@ export class BusinessesResolver {
   }
 
   @Mutation(() => BusinessSchema, { name: 'removeBusiness' })
-  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard) //FIX GUARDS
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(BusinessesPermissionsEnum.BURDELOWN)
   async removeBusiness(
     @Args('id', { type: () => Int }) id: number,

@@ -1,5 +1,5 @@
-import { Role } from 'core/entities';
-import { RoleSchema } from 'core/schemas';
+import { Role } from '../../entities';
+import { RoleSchema } from '../../schemas';
 
 export function toRoleSchema(role: Role): RoleSchema {
     return {
