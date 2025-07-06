@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { cookieOrHeaderExtractor } from '../../common/extractor/cookie-or-header-extractor.extractor';
+import { IUserOrBusinessReq } from '../interfaces';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,10 +14,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: { sub: string | number | Date; username: any }) {
-        return {
-            userId: payload.sub,
-            username: payload.username,
-        };
+    async validate(
+        payload: { 
+            isBusiness: boolean;
+            sub: string | number | Date;
+            username: string,
+            path: string
+        }
+    ): Promise<IUserOrBusinessReq> {
+        return payload.isBusiness 
+            ? {
+                businessId: Number(payload.sub),
+                path: payload.path,
+              } 
+            : {
+                userId: Number(payload.sub),
+                username: payload.username,
+             };
     }
 }

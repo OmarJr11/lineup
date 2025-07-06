@@ -37,7 +37,6 @@ export class RolePermissionsService extends BasicService<RolePermission> {
       .select('p.code', 'code')
       .where('rp.idRole IN (:...roleIds)', { roleIds })
       .getRawMany();
-    // Combine and return unique codes
     return Array.from(new Set([...directPermissions.map((p) => p.code)]));
   }
 }

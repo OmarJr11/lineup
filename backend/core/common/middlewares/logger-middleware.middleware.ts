@@ -3,13 +3,18 @@ import { NextFunction, Request, Response } from 'express';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 import { EnvironmentsEnum } from '../enums';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
     private excludedFields = ['password'];
 
+    constructor(
+        private readonly configService: ConfigService
+    ) {}
+
     use(request: Request, res: Response, next: NextFunction) {
-        if (process.env.NODE_ENV !== EnvironmentsEnum.Test) {
+        if (this.configService.get<string>('NODE_ENV') !== EnvironmentsEnum.Test) {
             const currentHour = new Date();
 
             let body = request.body;
@@ -26,8 +31,6 @@ export class LoggerMiddleware implements NestMiddleware {
                     : request.ip.split(':').pop(),
                 request.method,
                 request['_parsedUrl']['pathname'],
-                JSON.stringify(this.cleanObject(_.cloneDeep(request.query))),
-                JSON.stringify(this.cleanObject(_.cloneDeep(body)))
             );
         }
         next();

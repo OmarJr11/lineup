@@ -4,9 +4,9 @@ export enum ProvidersEnum {
     GOOGLE = 'google',
     META = 'meta',
     APPLE = 'apple',
-    LineUp = 'lineUp',
-    LineUp_ADMIN = 'lineUp_admin',
-    LineUp_APP = 'lineUp_app',
+    LineUp = 'lineup',
+    LineUp_ADMIN = 'lineup_admin',
+    LineUp_APP = 'lineup_app',
 }
 
 registerEnumType(ProvidersEnum, { name: 'ProvidersEnum' });

@@ -23,25 +23,49 @@ export class PermissionsGuard implements CanActivate {
         if (!permissions) return true;
         const response = this._reflector
             .get<[{}]>('response', context.getHandler());
-        const request = context.switchToHttp().getRequest();
+        const request = context.switchToHttp().getRequest()
+            ? context.switchToHttp().getRequest()
+            : context.getArgByIndex(2)?.req;
         const user = request.user;
-        return this.checkPermission(Number(user.userId), permissions, response);
+        return user.userId 
+            ? this.checkPermissionForUser(Number(user.userId), permissions, response)
+            : this.checkPermissionForBusiness(Number(user.businessId), permissions, response);
     }
 
     /**
      * Check if user has certain permissions in the system
      *
-     * @param {IUserReq} idUser - id of the user to verify permissions
+     * @param {number} idUser - id of the user to verify permissions
      * @param {string[]} permissions - permissions code to verify
      * @param {[{}]} response - response to retrieve in case of error
      * @returns {Promise<boolean>}
      */
-    async checkPermission(idUser: number, permissions: string[], response: [{}]): Promise<boolean> {
+    async checkPermissionForUser(idUser: number, permissions: string[], response: [{}]): Promise<boolean> {
         if (!(await this._rolesService.userHasPermission(idUser, permissions))) {
             LogWarn(
                 this.logger,
                 'user has no permission to perform this request',
-                this.checkPermission.name
+                this.checkPermissionForUser.name
+            );
+            throw new ForbiddenException(response[0]['noPermission']);
+        }
+        return true;
+    }
+
+    /**
+     * Check if business has certain permissions in the system
+     *
+     * @param {number} idBusiness - id of the business to verify permissions
+     * @param {string[]} permissions - permissions code to verify
+     * @param {[{}]} response - response to retrieve in case of error
+     * @returns {Promise<boolean>}
+     */
+    async checkPermissionForBusiness(idBusiness: number, permissions: string[], response: [{}]): Promise<boolean> {
+        if (!(await this._rolesService.businessHasPermission(idBusiness, permissions))) {
+            LogWarn(
+                this.logger,
+                'business has no permission to perform this request',
+                this.checkPermissionForBusiness.name
             );
             throw new ForbiddenException(response[0]['noPermission']);
         }

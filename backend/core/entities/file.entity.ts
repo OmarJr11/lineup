@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
+import { Business } from '.';
 
 @Entity({ name: 'files', schema: 'system' })
 export class File extends BaseEntity {
@@ -25,7 +26,10 @@ export class File extends BaseEntity {
 
     /*@Column('jsonb', { name: 'thumbnails', nullable: true })
     thumbnails?: ThumbnailsInterface;
+    */
+    @Column({ type: 'simple-array', nullable: true })
+    tags: string[];
 
-    @Column('jsonb', { name: 'tags', nullable: true })
-    tags?: any;*/
+    @OneToMany(() => Business, (business) => business.image)
+    businessFiles?: Business[];
 }

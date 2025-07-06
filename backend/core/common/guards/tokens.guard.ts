@@ -13,7 +13,11 @@ export class TokenGuard implements CanActivate {
     constructor(private readonly _tokenService: TokensService) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest();
+        let request = context.switchToHttp().getRequest();
+        if (!request) {
+            const gqlCtx = context.getArgByIndex(2);
+            request = gqlCtx?.req;
+        }
         const token = request.headers['token']; // Get the token from the header
         return await this.checkIfTokenIsValid(token);
     }

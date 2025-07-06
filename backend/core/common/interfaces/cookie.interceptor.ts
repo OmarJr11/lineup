@@ -8,10 +8,13 @@ import {
     invalidReferersRequest,
 } from '../helpers/requests.helper';
 import { IReqWithCookies } from '../interfaces/req-with-cookies.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ICookieInterceptor implements NestInterceptor {
-    constructor() { }
+    constructor(
+        private readonly configService: ConfigService,
+    ) { }
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         const req = context.switchToHttp().getRequest<IReqWithCookies>();
@@ -37,8 +40,8 @@ export class ICookieInterceptor implements NestInterceptor {
                     cookies.forEach((cookie) => {
                         res.cookie(cookie.name, cookie.val, {
                             domain: agent,
-                            secure: agent.includes(process.env.MAIN_DOMAIN),
-                            httpOnly: agent.includes(process.env.MAIN_DOMAIN),
+                            secure: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
+                            httpOnly: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
                             expires: new Date(expires),
                         });
                     });

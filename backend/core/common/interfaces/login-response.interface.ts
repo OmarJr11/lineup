@@ -1,11 +1,12 @@
-import { User } from '../../entities';
+import { Business, User } from '../../entities';
 import { ProvidersEnum, StatusEnum } from '../enums';
 
 export interface ILoginResponse {
     code: number;
     status: boolean;
     message: string;
-    user: User;
+    user?: User;
+    business?: Business;
     token?: string;
     refreshToken?: string;
     auth2fa?: boolean;
