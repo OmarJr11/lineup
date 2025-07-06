@@ -1,16 +1,12 @@
-import { Inject, Injectable, InternalServerErrorException, Logger, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Request } from 'express';
 import { Repository } from 'typeorm';
-import { Transactional } from 'typeorm-transactional-cls-hooked';
-import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { User } from '../../entities';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserInput } from './dto/create-user.input';
+import { UpdateUserInput } from './dto/update-user.input';
 import { userResponses } from '../../common/responses';
 
 
@@ -29,26 +25,26 @@ export class UsersSettersService extends BasicService<User> {
     }
     /**
      * Create User
-     * @param {CreateUserDto} data - The data to create a new user 
+     * @param {CreateUserInput} data - The data to create a new user 
      * @returns {Promise<User>} 
      */
-    async create(data: CreateUserDto): Promise<User> {
+    async create(data: CreateUserInput): Promise<User> {
         return await this.save(data).catch((error) => {
-            LogError(this.logger, error, this._uCreate.error.message);
+            LogError(this.logger, error, this.create.name);
             throw new InternalServerErrorException(this._uCreate.error);
         });
     }
 
     /**
      * Update User
-     * @param {UpdateUserDto} data - The data to update the user
+     * @param {UpdateUserInput} data - The data to update the user
      * @param {User} user - The user to update
      * @param {IUserReq} userLogged - The logged user
      * @returns {Promise<User>}
      */
-    async update(data: UpdateUserDto, user: User, userLogged: IUserReq): Promise<User> {
+    async update(data: UpdateUserInput, user: User, userLogged: IUserReq): Promise<User> {
         return await this.updateEntity(data, user, userLogged).catch((error) => {
-            LogError(this.logger, error, this._ucUpdate.error.message);
+            LogError(this.logger, error, this.update.name);
             throw new InternalServerErrorException(this._ucUpdate.error);
         });
     }
@@ -60,7 +56,7 @@ export class UsersSettersService extends BasicService<User> {
      */
     async remove(user: User, userLogged: IUserReq) {
         await this.deleteEntityByStatus(user, userLogged).catch((error) => {
-            LogError(this.logger, error, this._ucDelete.error.message);
+            LogError(this.logger, error, this.remove.name);
             throw new InternalServerErrorException(this._ucDelete.error);
         });
     }

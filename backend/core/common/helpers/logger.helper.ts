@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
-import { User } from '../../../core/entities';
-import { IUserReq } from '../interfaces';
+import { Business, User } from '../../../core/entities';
+import { IUserOrBusinessReq, IUserReq } from '../interfaces';
 
 export const LogError = (
     logger: Logger,
     error: string | Record<string, unknown>,
     functionWithError: string,
-    user?: IUserReq | User
+    user?: IUserOrBusinessReq
 ) => {
     if (error instanceof Error) {
         logger.error(
@@ -32,7 +32,7 @@ export const LogWarn = (
     logger: Logger,
     warn: string | Record<string, unknown>,
     functionWithError: string,
-    user?: IUserReq | User
+    user?: IUserOrBusinessReq | User | Business
 ) => {
     if (warn instanceof Error) {
         logger.warn(

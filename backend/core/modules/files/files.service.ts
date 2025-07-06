@@ -11,15 +11,15 @@ import { filesResponses } from '../../common/responses';
 import { ConfigService } from '@nestjs/config';
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { IFileUploadInterface } from '../../common/interfaces/file.interface';
-import { LogError } from 'core/common/helpers/logger.helper';
+import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable({ scope: Scope.REQUEST })
 export class FilesService extends BasicService<File> {
   private logger: Logger = new Logger(FilesService.name);
   private client: S3Client;
-  private bucketName: string = process.env.AWS_BUCKET_NAME;
-  private s3_region: string = process.env.AWS_BUCKET_REGION;
+  private bucketName: string;
+  private s3_region: string;
 
   private readonly rUpload = filesResponses.upload;
 
@@ -31,9 +31,10 @@ export class FilesService extends BasicService<File> {
     private readonly configService: ConfigService,
   ) {
     super(filesRepository, userRequest);
-
+    this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
+    this.s3_region = this.configService.get<string>('AWS_BUCKET_REGION');
     if (!this.s3_region || !this.bucketName) {
-      throw new Error('S3_REGION or S3_BUCKET_NAME not found in environment variables');
+      throw new Error('AWS_BUCKET_REGION or AWS_BUCKET_NAME not found in environment variables');
     }
     this.client = new S3Client({
       region: this.s3_region,

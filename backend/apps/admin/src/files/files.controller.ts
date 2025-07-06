@@ -26,7 +26,7 @@ export class FilesController {
       })
   )
   @Bind(UploadedFile())
-  @UseGuards(JwtAuthGuard, TokenGuard)
+  //@UseGuards(JwtAuthGuard, TokenGuard)
   async uploadFile(
     file: IFileInterface,
     @Body() data: UploadFileDto,

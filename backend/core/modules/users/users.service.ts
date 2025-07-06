@@ -4,11 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
-import { IInfiniteScroll, IUserReq } from '../../common/interfaces';
+import { IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { User } from '../../entities';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserInput } from './dto/create-user.input';
+import { UpdateUserInput } from './dto/update-user.input';
 import { UsersSettersService } from './users.setters.service';
 import { UsersGettersService } from './users.getters.service';
 import { userResponses } from '../../common/responses';
@@ -18,7 +18,7 @@ import * as argon2 from 'argon2';
 import { LogError } from '../../common/helpers/logger.helper';
 import { RolesService } from '../roles/roles.service';
 import { UserRolesService } from '../user-roles/user-roles.service';
-import { InfinityScrollDto } from '../../common/dtos';
+import { InfinityScrollInput } from '../../common/dtos';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
@@ -41,14 +41,14 @@ export class UsersService extends BasicService<User> {
 
   /**
    * Create User
-   * @param {CreateUserDto} data - The data to create a new user 
+   * @param {CreateUserInput} data - The data to create a new user 
    * @param {ProvidersEnum} provider - The provider of the user (e.g., Google, Meta, Apple)
    * @param {boolean} isAdmin - Indicates if the user is an admin
    * @returns {Promise<User>} 
    */
   @Transactional()
   async create(
-    data: CreateUserDto,
+    data: CreateUserInput,
     provider: ProvidersEnum,
     isAdmin?: boolean
   ): Promise<User> {
@@ -115,11 +115,10 @@ export class UsersService extends BasicService<User> {
   /**
    * Find all Users
    * @param {InfinityScrollDto} query - The query parameters for pagination and filtering
-   * @returns {Promise<IInfiniteScroll>} 
+   * @returns {Promise<User[]>} 
    */
-  async findAll(query: InfinityScrollDto): Promise<IInfiniteScroll> {
-    const users = await this.usersGettersService.findAll(query);
-    return this.paginateForInfiniteScroll(users, query.page);
+  async findAll(query: InfinityScrollInput): Promise<User[]> {
+    return await this.usersGettersService.findAll(query);
   }
 
   /**
@@ -134,11 +133,11 @@ export class UsersService extends BasicService<User> {
   /**
    * Update User
    * @param {number} id - The ID of the user to update
-   * @param {UpdateUserDto} data - The data to update the user
+   * @param {UpdateUserInput} data - The data to update the user
    * @param {IUserReq} user - The user making the request
    * @returns {Promise<User>} 
    */
-  async update(id: number, data: UpdateUserDto, user: IUserReq): Promise<User> {
+  async update(id: number, data: UpdateUserInput, user: IUserReq): Promise<User> {
     const userToUpdate = await this.usersGettersService.findOne(id);
     await this.validateUserId(id, user);
 

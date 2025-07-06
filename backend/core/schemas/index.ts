@@ -5,3 +5,7 @@ export * from './user.schema';
 export * from './token.schema';
 export * from './role-permission.schema';
 export * from './permission.schema';
+export * from './business.schema';
+export * from './paginated.schema';
+export * from './business-role.schema';
+export * from './business.schema';
