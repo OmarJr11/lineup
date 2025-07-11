@@ -2,7 +2,15 @@
   "name": "@lineup/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "postinstall": "npx playwright install",
+    "start:dev:lineup": "nx serve lineup --host=0.0.0.0 --port=4200",
+    "start:dev:admin": "nx serve admin --host=0.0.0.0 --port=4201 --proxy-config=apps/admin/proxy.conf.json",
+    "build:prod:lineup": "nx build lineup --configuration=production",
+    "build:prod:admin": "nx build admin --configuration=production",
+    "start:prod:lineup": "npm run build:prod:lineup && npx http-server dist/apps/lineup -p 4200",
+    "start:prod:admin": "npm run build:prod:admin && npx http-server dist/apps/admin -p 4201"
+  },
   "private": true,
   "dependencies": {
     "@angular-devkit/build-angular": "~20.0.0",
