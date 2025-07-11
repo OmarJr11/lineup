@@ -1,7 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { toLowerCase } from '../../../../core/common/transforms';
+import { toLowerCase } from '../../../common/transforms';
 
 @InputType()
 export class UserUniqueFieldsDto {

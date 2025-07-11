@@ -7,7 +7,7 @@ import {
     getRequestAgent,
     invalidReferersRequest,
 } from '../helpers/requests.helper';
-import { IReqWithCookies } from '../interfaces/req-with-cookies.interface';
+import { IReqWithCookies } from './req-with-cookies.interface';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

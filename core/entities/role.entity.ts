@@ -2,7 +2,7 @@ import { RolesCodesEnum, StatusEnum } from '../common/enums';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
 import { BaseEntity } from './base.entity';
-import { UserRole, RolePermission, BusinessRole } from './';
+import { UserRole, RolePermission, BusinessRole } from '.';
 
 @Entity({ schema: 'system', name: 'roles' })
 export class Role extends BaseEntity {

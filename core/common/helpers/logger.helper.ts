@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Business, User } from '../../../core/entities';
+import { Business, User } from '../../entities';
 import { IUserOrBusinessReq, IUserReq } from '../interfaces';
 
 export const LogError = (

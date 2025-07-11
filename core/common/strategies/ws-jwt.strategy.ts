@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import { cookieOrHeaderExtractor } from '../../common/extractor/cookie-or-header-extractor.extractor';
+import { cookieOrHeaderExtractor } from '../extractor/cookie-or-header-extractor.extractor';
 import { StatusEnum } from '../enums';
 import { UsersService } from '../../modules/users/users.service';
 

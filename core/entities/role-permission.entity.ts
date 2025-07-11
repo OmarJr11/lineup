@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { User, Role, Permission } from './';
+import { User, Role, Permission } from '.';
 
 @Entity({ schema: 'system', name: 'role_permissions', })
 export class RolePermission extends BaseEntity {

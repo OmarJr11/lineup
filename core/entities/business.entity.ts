@@ -1,7 +1,7 @@
 import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { BusinessRole, File, Role, Token } from './';
+import { BusinessRole, File, Role, Token } from '.';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })

@@ -8,7 +8,7 @@ import {
     Token,
     User,
     UserRole
-} from './';
+} from '.';
 
 export const entities = [
     User,
