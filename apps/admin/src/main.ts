@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AdminModule } from './admin.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import {
   initializeTransactionalContext,
   patchTypeORMRepositoryWithBaseRepository,
@@ -31,17 +30,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AdminModule);
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
   app.enableCors();
-
-  if (process.env.NODE_ENV === EnvironmentsEnum.Development) {
-    const config = new DocumentBuilder()
-      .setTitle('Line Up API')
-      .setDescription('Line Up API Documentation')
-      .setVersion('1.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
-  }
-
   await app.listen(process.env.PORT_ADMIN ?? 3003);
 }
 bootstrap();

@@ -1,6 +1,9 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { BusinessSchema, UserSchema } from '.';
 import { Type } from '@nestjs/common';
+import { UserSchema } from './user.schema';
+import { BusinessSchema } from './business.schema';
+import { CatalogSchema } from './catalog.schema';
+import { ProductSchema } from './product.schema';
 
 export function PaginatedResponse<TItem>(TClass: Type<TItem>) {
   @ObjectType({ isAbstract: true })
@@ -25,3 +28,9 @@ export class PaginatedUsers extends PaginatedResponse(UserSchema) {}
 
 @ObjectType()
 export class PaginatedBusinesses extends PaginatedResponse(BusinessSchema) {}
+
+@ObjectType()
+export class PaginatedCatalogs extends PaginatedResponse(CatalogSchema) {}
+
+@ObjectType()
+export class PaginatedProducts extends PaginatedResponse(ProductSchema) {}

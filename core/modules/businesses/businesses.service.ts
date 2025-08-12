@@ -1,4 +1,4 @@
-import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -38,7 +38,7 @@ export class BusinessesService extends BasicService<Business> {
   /**
    * Save a new business
    * @param {CreateBusinessInput} data - The business data to save
-   * @param {IUserReq} user - The user making the request
+   * @param {ProvidersEnum} provider - The provider of the business
    * @return {Promise<Business>} - The saved business entity
    * */
   @Transactional()

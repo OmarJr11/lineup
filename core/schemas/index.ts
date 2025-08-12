@@ -9,3 +9,5 @@ export * from './business.schema';
 export * from './paginated.schema';
 export * from './business-role.schema';
 export * from './business.schema';
+export * from './product.schema';
+export * from './catalog.schema';
