@@ -15,7 +15,8 @@ COPY . .
 RUN npm run build
 
 # Expose the ports for both apps
-EXPOSE 3000 3001
+EXPOSE 3000 3001 3002
 
 # Comando por defecto: levantar ambas apps en producción
-CMD ["npm", "run", "start:all:dev"]
+CMD ["npm", "run", "start:all:prod"]
+

@@ -1,4 +1,3 @@
-import { UsersController } from './users.controller';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
@@ -48,7 +47,6 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
     AuthModule,
     UsersModuleCore,
   ],
-  controllers: [UsersController],
 })
 export class UsersModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

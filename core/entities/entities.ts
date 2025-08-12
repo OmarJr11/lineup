@@ -1,8 +1,10 @@
 import {
     Business,
     BusinessRole,
+    Catalog,
     File,
     Permission,
+    Product,
     Role,
     RolePermission,
     Token,
@@ -19,5 +21,7 @@ export const entities = [
     RolePermission,
     File,
     Business,
-    BusinessRole
+    BusinessRole,
+    Product,
+    Catalog
 ]
