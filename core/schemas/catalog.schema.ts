@@ -17,7 +17,7 @@ export class CatalogSchema{
     idCreationBusiness: number;
 
     @Field(() => BusinessSchema, { nullable: true })
-    creationBusiness?: BusinessSchema;
+    business?: BusinessSchema;
 
     @Field(() => BusinessSchema, { nullable: true })
     modificationBusiness?: BusinessSchema;

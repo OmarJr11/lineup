@@ -9,3 +9,4 @@ export * from './blogs.response'; //8
 export * from './business-roles.response'; //9
 export * from './catalogs.response'; //10
 export * from './products.response'; //11
+export * from './locations.response'; //12

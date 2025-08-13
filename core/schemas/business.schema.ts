@@ -2,7 +2,7 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessRoleSchema, RoleSchema } from '.';
+import { BusinessRoleSchema, CatalogSchema, LocationSchema, ProductSchema } from '.';
 
 @ObjectType()
 export class BusinessSchema {
@@ -11,6 +11,12 @@ export class BusinessSchema {
 
   @Field()
   email: string;
+
+  @Field()
+  emailValidated: boolean;
+
+  @Field(() => ProvidersEnum)
+  provider: ProvidersEnum;
 
   @Field({ nullable: true })
   telephone?: string;
@@ -36,18 +42,15 @@ export class BusinessSchema {
   @Field(() => StatusEnum)
   status: StatusEnum;
 
-  @Field(() => ProvidersEnum)
-  provider: ProvidersEnum;
-
-  @Field(() => [RoleSchema], { nullable: true })
-  createdRoles?: RoleSchema[];
-
-  @Field(() => [RoleSchema], { nullable: true })
-  modifiedRoles?: RoleSchema[];
-
-  @Field(() => [BusinessRoleSchema], { nullable: true })
-  createdBusinessRoles?: BusinessRoleSchema[];
-
   @Field(() => [BusinessRoleSchema], { nullable: true })
   businessRoles?: BusinessRoleSchema[];
+
+  @Field(() => [ProductSchema], { nullable: true })
+  products?: ProductSchema[];
+
+  @Field(() => [CatalogSchema], { nullable: true })
+  catalogs?: CatalogSchema[];
+
+  @Field(() => [LocationSchema], { nullable: true })
+  locations?: LocationSchema[];
 }

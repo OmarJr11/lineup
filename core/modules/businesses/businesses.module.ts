@@ -6,12 +6,14 @@ import { BusinessesGettersService } from './businesses-getters.service';
 import { BusinessesSettersService } from './businesses-setters.service';
 import { BusinessRolesModule } from '../business-roles/business-roles.module';
 import { RolesModule } from '../roles/roles.module';
+import { LocationsModule } from '../locations/locations.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Business]),
     BusinessRolesModule,
-    RolesModule
+    RolesModule,
+    LocationsModule,
   ],
   providers: [
     BusinessesService,
