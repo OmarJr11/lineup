@@ -1,13 +1,16 @@
 import {
     Business,
     BusinessRole,
+    Catalog,
     File,
     Permission,
+    Product,
     Role,
     RolePermission,
     Token,
     User,
-    UserRole
+    UserRole,
+    Location
 } from '.';
 
 export const entities = [
@@ -19,5 +22,8 @@ export const entities = [
     RolePermission,
     File,
     Business,
-    BusinessRole
+    BusinessRole,
+    Product,
+    Catalog,
+    Location
 ]

@@ -12,10 +12,13 @@ RUN npm install
 COPY . .
 
 # Build the NestJS app
-RUN npm run build
+RUN npm run build:prod:admin
+RUN npm run build:prod:users
+RUN npm run build:prod:businesses
 
 # Expose the ports for both apps
-EXPOSE 3000 3001
+EXPOSE 3000 3001 3002
 
 # Comando por defecto: levantar ambas apps en producción
-CMD ["npm", "run", "start:all:dev"]
+CMD ["npm", "run", "start:all:prod"]
+

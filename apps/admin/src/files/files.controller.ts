@@ -6,7 +6,6 @@ import { filesResponses } from '../../../../core/common/responses';
 import { UploadFileDto } from '../../../../core/modules/files/dto/upload-file.dto';
 import { IFileInterface, IUserReq } from '../../../../core/common/interfaces';
 import { UserDec } from '../../../../core/common/decorators';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @UsePipes(new ValidationPipe())
 @Controller('files')
@@ -15,8 +14,6 @@ export class FilesController {
 
   constructor(private readonly filesService: FilesService) {}
 
-  @ApiOperation({ summary: 'Upload file' })
-  @ApiResponse({ status: 201, description: 'File uploaded successfully.' })
   @Post('upload')
   @UseInterceptors(
       FileInterceptor('file', {
@@ -26,7 +23,7 @@ export class FilesController {
       })
   )
   @Bind(UploadedFile())
-  //@UseGuards(JwtAuthGuard, TokenGuard)
+  @UseGuards(JwtAuthGuard, TokenGuard)
   async uploadFile(
     file: IFileInterface,
     @Body() data: UploadFileDto,

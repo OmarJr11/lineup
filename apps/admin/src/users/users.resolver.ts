@@ -34,7 +34,7 @@ export class UsersResolver {
   @Permissions(UsersPermissionsEnum.USRLISALL)
   @Response(userResponses.list)
   async findAllUsers(
-    @Args('pagination', { type: () => InfinityScrollInput }) 
+    @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput
   ): Promise<PaginatedUsers> {
     const items = (await this.usersService.findAll(pagination))

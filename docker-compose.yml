@@ -1,41 +1,66 @@
-version: '3.8'
 services:
   db:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_DB: lineup
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  backend-public:
+  redis:
+    image: redis:7
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  api-users:
     build: .
-    command: npm run start:dev:public
+    command: npm run start:prod:users
     ports:
       - "3000:3000"
     env_file:
       - .env
     depends_on:
       - db
-    volumes:
-      - .:/app
+      - redis
     restart: always
 
-  backend-system:
+  api-admin:
     build: .
-    command: npm run start:dev:system
+    command: npm run start:prod:admin
     ports:
       - "3001:3001"
     env_file:
       - .env
     depends_on:
       - db
-    volumes:
-      - .:/app
+      - redis
     restart: always
+
+  api-businesses:
+    build: .
+    command: npm run start:prod:businesses
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  migrate:
+    build: .
+    command: npm run migration:run
+    env_file:
+      - .env
+    depends_on:
+      - db
+
 volumes:
   pgdata:
+  redis_data:

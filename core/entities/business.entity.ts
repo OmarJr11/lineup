@@ -1,7 +1,7 @@
 import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { BusinessRole, File, Role, Token } from '.';
+import { BusinessRole, Catalog, File, Location, Product, Role, Token } from '.';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
@@ -46,18 +46,27 @@ export class Business extends BaseEntity {
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
-    @OneToMany(() => Role, (role) => role.creationUser)
-    createdRoles?: Role[];
-
-    @OneToMany(() => Role, (role) => role.modificationUser)
-    modifiedRoles?: Role[];
-
-    @OneToMany(() => BusinessRole, (role) => role.creationBusiness)
-    createdUserRoles?: BusinessRole[];
-
     @OneToMany(() => BusinessRole, (role) => role.business)
     businessRoles?: BusinessRole[];
     
     @OneToMany(() => Token, (token) => token.business)
     tokens?: Token[];
+    
+    @OneToMany(() => Product, (product) => product.business)
+    products?: Product[];
+
+    @OneToMany(() => Product, (product) => product.modificationBusiness)
+    modifiedProducts?: Product[];
+
+    @OneToMany(() => Catalog, (catalog) => catalog.business)
+    catalogs?: Catalog[];
+
+    @OneToMany(() => Catalog, (catalog) => catalog.modificationBusiness)
+    modifiedCatalogs?: Catalog[];
+
+    @OneToMany(() => Location, (location) => location.business)
+    locations?: Location[];
+
+    @OneToMany(() => Location, (location) => location.modificationBusiness)
+    modifiedLocations?: Location[];
 }

@@ -11,6 +11,8 @@ import { BusinessesModule as BusinessesModuleCore } from './businesses/businesse
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { ProductsModule } from './products/products.module';
+import { CatalogsModule } from './catalogs/catalogs.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
     AuthModule,
     FilesModule,
     BusinessesModuleCore,
+    ProductsModule,
+    CatalogsModule,
   ],
   controllers: [BusinessesController],
 })
