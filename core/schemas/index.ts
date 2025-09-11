@@ -11,3 +11,4 @@ export * from './business-role.schema';
 export * from './business.schema';
 export * from './product.schema';
 export * from './catalog.schema';
+export * from './location.schema';

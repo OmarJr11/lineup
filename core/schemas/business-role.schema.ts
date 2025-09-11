@@ -6,9 +6,6 @@ import { BaseSchema } from './base.schema';
 @ObjectType()
 export class BusinessRoleSchema extends BaseSchema {
   @Field(() => Int)
-  idBusiness: number;
-
-  @Field(() => Int)
   idRole: number;
 
   @Field(() => StatusEnum)
@@ -18,11 +15,8 @@ export class BusinessRoleSchema extends BaseSchema {
   idCreationBusiness: number;
 
   @Field(() => BusinessSchema, { nullable: true })
-  creationBusiness?: BusinessSchema;
+  business?: BusinessSchema;
 
   @Field(() => RoleSchema, { nullable: true })
   role?: RoleSchema;
-
-  @Field(() => BusinessSchema, { nullable: true })
-  user?: BusinessSchema;
 }

@@ -17,9 +17,9 @@ export class Catalog extends BaseEntity {
     @Column('int8', { name: 'id_creation_business' })
     idCreationBusiness: number;
 
-    @ManyToOne(() => Business, (business) => business.createdCatalogs)
+    @ManyToOne(() => Business, (business) => business.catalogs)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
-    creationBusiness?: Business;
+    business?: Business;
 
     @ManyToOne(() => Business, (business) => business.modifiedCatalogs)
     @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])

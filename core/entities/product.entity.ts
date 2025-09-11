@@ -39,11 +39,11 @@ export class Product extends BaseEntity {
     @Column('int8', { name: 'id_creation_business' })
     idCreationBusiness: number;
 
-    @ManyToOne(() => Business, (business) => business.createdCatalogs)
+    @ManyToOne(() => Business, (business) => business.products)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
-    creationBusiness?: Business;
+    business?: Business;
 
-    @ManyToOne(() => Business, (business) => business.modifiedCatalogs)
+    @ManyToOne(() => Business, (business) => business.modifiedProducts)
     @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
     modificationBusiness?: Business;
 }
