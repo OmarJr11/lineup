@@ -17,7 +17,7 @@ services:
     volumes:
       - redis_data:/data
 
-  lineup-api-users:
+  api-users:
     build: .
     command: npm run start:prod:users
     ports:
@@ -29,7 +29,7 @@ services:
       - redis
     restart: always
 
-  lineup-api-admin:
+  api-admin:
     build: .
     command: npm run start:prod:admin
     ports:
@@ -41,7 +41,7 @@ services:
       - redis
     restart: always
 
-  lineup-api-businesses:
+  api-businesses:
     build: .
     command: npm run start:prod:businesses
     ports:
