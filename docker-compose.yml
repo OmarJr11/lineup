@@ -19,6 +19,7 @@ services:
 
   api-users:
     build: .
+    container_name: api-users
     command: npm run start:prod:users
     ports:
       - "3000:3000"
@@ -31,6 +32,7 @@ services:
 
   api-admin:
     build: .
+    container_name: api-admin
     command: npm run start:prod:admin
     ports:
       - "3001:3001"
@@ -43,6 +45,7 @@ services:
 
   api-businesses:
     build: .
+    container_name: api-businesses
     command: npm run start:prod:businesses
     ports:
       - "3002:3002"
