@@ -157,4 +157,58 @@ export const businessesResponses = {
             message: 'The Business has been successfully deleted.',
         },
     },
+    logout: {
+        error: {
+            code: 200899,
+            status: false,
+            message: 'User can not logout.',
+        },
+        success: {
+            code: 210800,
+            status: true,
+            message: 'Logout Successfully.',
+        },
+    },
+    token: {
+        cookieNotSent: {
+            code: 201000,
+            status: false,
+            message: 'Cookie not sent',
+        },
+        notCookies: {
+            code: 201001,
+            status: false,
+            message: 'Cookie empty or not sent',
+        },
+        idUserDontMatch: {
+            code: 201002,
+            status: false,
+            message: 'id User does not match the refreshToken user',
+        },
+        refreshNotValid: {
+            code: 201003,
+            status: false,
+            message: 'Invalid Refresh Token',
+        },
+        tokenNotValid: {
+            code: 201004,
+            status: false,
+            message: 'Invalid token',
+        },
+        refreshExpired: {
+            code: 201005,
+            status: false,
+            message: 'Expired refresh token',
+        },
+        error: {
+            code: 201099,
+            status: false,
+            message: 'Expired refresh token',
+        },
+        success: {
+            code: 201006,
+            status: true,
+            message: 'Successful token refresh',
+        },
+    },
 };
