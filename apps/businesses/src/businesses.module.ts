@@ -1,4 +1,3 @@
-import { BusinessesController } from './businesses.controller';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
@@ -55,7 +54,6 @@ import { CatalogsModule } from './catalogs/catalogs.module';
     ProductsModule,
     CatalogsModule,
   ],
-  controllers: [BusinessesController],
 })
 export class BusinessesModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

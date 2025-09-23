@@ -4,7 +4,7 @@ import { LoginDto } from '../../../../core/modules/auth/dto/login.dto';
 import { Request } from 'express';
 import { Response } from 'express';
 import { BusinessDec } from '../../../../core/common/decorators';
-import { IBusinessReq, IUserReq } from '../../../../core/common/interfaces';
+import { IBusinessReq } from '../../../../core/common/interfaces';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { businessesResponses } from '../../../../core/common/responses';
 
