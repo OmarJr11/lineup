@@ -33,8 +33,8 @@ export class Business extends BaseEntity {
     @Column('character varying', { unique: true, length: 50 })
     path: string;
 
-    @Column({ type: 'varchar', name: 'image_code', length: 50 })
-    imageCode: string;
+    @Column({ type: 'varchar', name: 'image_code', length: 50, nullable: true })
+    imageCode?: string;
 
     @ManyToOne(() => File, (files) => files.businessFiles)
     @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
