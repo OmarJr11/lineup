@@ -30,8 +30,8 @@ export class BusinessSchema {
   @Field()
   path: string;
 
-  @Field()
-  imageCode: string;
+  @Field({ nullable: true })
+  imageCode?: string;
 
   @Field(() => FileSchema, { nullable: true })
   image?: FileSchema;
