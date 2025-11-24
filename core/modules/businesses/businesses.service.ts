@@ -101,25 +101,23 @@ export class BusinessesService extends BasicService<Business> {
 
   /**
    * Update a business
-   * @param {number} id - The ID of the business to update
    * @param {UpdateBusinessInput} data - The data to update the business
    * @param {IBusinessReq} business - The business making the request
    * @returns {Promise<Business>} - The updated business entity
    */
   @Transactional()
   async update(
-    id: number,
     data: UpdateBusinessInput,
     businessReq: IBusinessReq
   ): Promise<Business> {
-    const business = await this.businessesGettersService.findOne(id);
+    const business = await this.businessesGettersService.findOne(data.id);
     if(data.path) {
       data.path = await this.checkBusinessPathExists(
         data.path.toLocaleLowerCase().replace(/\s+/g, '-')
       );
     }
     await this.businessSettersService.update(data, business, businessReq);
-    return await this.businessesGettersService.findOne(id);
+    return await this.businessesGettersService.findOne(data.id);
   }
 
   /**

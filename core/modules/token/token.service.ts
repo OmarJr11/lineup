@@ -14,7 +14,7 @@ import { Request } from 'express';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
-import { IRefreshToken, IResponse, IResponseWithData, ITokenGenerate, IUserReq } from '../../common/interfaces';
+import { IBusinessReq, IRefreshToken, IResponse, IResponseWithData, ITokenGenerate, IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services/base.service';
 import { Business, Token, User } from '../../entities';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
@@ -142,16 +142,38 @@ export class TokensService extends BasicService<Token> {
   }
 
   /**
-   *  Remove Token in DB to logout
-   *
+   *  Remove Token for user in DB to logout
    * @param {string} refreshToken - Current refreshToken
    * @param {string} token - current Token
-   * @param {*} user - Logged user
+   * @param {IUserReq} user - Logged user
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async removeToken(refreshToken: string, token: string, user: IUserReq) {
+  async removeTokenUser(refreshToken: string, token: string, user: IUserReq) {
     const rt = await this.tokenRepository.findOne({
-      where: [{ idUser: +user.userId, token, refresh: refreshToken }],
+      where: [{ 
+        idUser: Number(user.userId),
+        token,
+        refresh: refreshToken
+      }],
+    });
+
+    if (rt) {
+      await this.deleteRefreshTokenEntity(rt).catch();
+    }
+  }
+
+  /**
+   * Remove token for business in DB to logout
+   * @param {string} refreshToken - Current refreshToken
+   * @param {string} token - current Token
+   * @param {IBusinessReq} business - Logged business
+   */
+  async removeTokenBusiness(refreshToken: string, token: string, business: IBusinessReq) {
+    const rt = await this.tokenRepository.findOne({
+      where: [{ 
+        idBusiness: Number(business.businessId),
+        token,
+        refresh: refreshToken
+      }],
     });
 
     if (rt) {

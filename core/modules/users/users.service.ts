@@ -132,25 +132,24 @@ export class UsersService extends BasicService<User> {
 
   /**
    * Update User
-   * @param {number} id - The ID of the user to update
    * @param {UpdateUserInput} data - The data to update the user
    * @param {IUserReq} user - The user making the request
    * @returns {Promise<User>} 
    */
-  async update(id: number, data: UpdateUserInput, user: IUserReq): Promise<User> {
-    const userToUpdate = await this.usersGettersService.findOne(id);
-    await this.validateUserId(id, user);
-
+  async update(data: UpdateUserInput, user: IUserReq): Promise<User> {
+    const userToUpdate = await this.usersGettersService.findOne(data.id);
+    await this.validateUserId(data.id, user);
+    data.username = data.username?.toLowerCase();
+    const exist = await this.usersGettersService.findByUsername(data.username);
     if (
       data.username &&
-      await this.usersGettersService.findOneByUsername(data.username.toLocaleLowerCase())
+      !!exist
     ) {
       LogError(this.logger, this._uUpdate.usernameExists, this.update.name, user);
       throw new NotAcceptableException(this._uUpdate.usernameExists);
     }
-
     await this.usersSettersService.update(data, userToUpdate, user);
-    return await this.usersGettersService.findOne(id);
+    return await this.usersGettersService.findOne(data.id);
   }
 
   /**

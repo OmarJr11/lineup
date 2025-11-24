@@ -1,4 +1,4 @@
-import { StatusEnum } from 'core/common/enums';
+import { StatusEnum } from '../common/enums';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Business } from '.';
 import { BaseEntity } from './base.entity';

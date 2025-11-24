@@ -17,3 +17,4 @@ export * from './file.interface';
 export * from './social-medias.interface';
 export * from './business-req.interface';
 export * from './user-or-business-req.interface';
+export * from './logout.interface';

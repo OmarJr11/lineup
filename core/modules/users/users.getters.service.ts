@@ -103,11 +103,22 @@ export class UsersGettersService extends BasicService<User> {
      * @param {string} username - username
      * @returns {Promise<User>}
      */
-    async findOneByUsername(username: string): Promise<User> {
+    async findByUsername(username: string): Promise<User> {
+        return await this.findOneWithOptions({
+            where: { username, status: Not(StatusEnum.DELETED) },
+        });
+    }
+
+    /**
+     * Find User by username
+     * @param {string} username - username
+     * @returns {Promise<User>}
+     */
+    async findByUsernameOrFail(username: string): Promise<User> {
         return await this.findOneWithOptionsOrFail({
             where: { username, status: Not(StatusEnum.DELETED) },
         }).catch((error) => {
-            LogError(this.logger, error, this.findOneByUsername.name);
+            LogError(this.logger, error, this.findByUsernameOrFail.name);
             throw new NotAcceptableException(this._uList.userNotFound);
         });
     }

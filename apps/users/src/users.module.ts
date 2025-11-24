@@ -41,7 +41,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       sortSchema: true,
       introspection: true,
-      context: ({ req }) => ({ req }),
+      context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: true,
     }),
     AuthModule,

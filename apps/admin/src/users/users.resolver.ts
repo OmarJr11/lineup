@@ -63,7 +63,7 @@ export class UsersResolver {
     @Args('data') data: UpdateUserInput,
     @UserDec() user: IUserReq
   ): Promise<UserSchema> {
-    const updatedUser = await this.usersService.update(data.id, data, user);
+    const updatedUser = await this.usersService.update(data, user);
     return toUserSchema(updatedUser);
   }
 

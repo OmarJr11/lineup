@@ -1,4 +1,3 @@
-import { BusinessesController } from './businesses.controller';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
@@ -17,10 +16,10 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-        ignoreEnvFile: false,
-        isGlobal: true,
-        load: [configuration],
-        validationSchema: ValidatingEnv,
+      ignoreEnvFile: false,
+      isGlobal: true,
+      load: [configuration],
+      validationSchema: ValidatingEnv,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -47,15 +46,14 @@ import { CatalogsModule } from './catalogs/catalogs.module';
       introspection: true,
       context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: true,
-      path: '/graphql'
+      path: '/graphql',
     }),
     AuthModule,
     FilesModule,
     BusinessesModuleCore,
     ProductsModule,
     CatalogsModule,
-  ],
-  controllers: [BusinessesController],
+  ]
 })
 export class BusinessesModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

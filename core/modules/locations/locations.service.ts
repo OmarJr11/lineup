@@ -9,7 +9,7 @@ import { BasicService } from '../../common/services';
 import { Repository } from 'typeorm';
 import { IBusinessReq } from '../../common/interfaces';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
-import { InfinityScrollInput } from 'core/common/dtos';
+import { InfinityScrollInput } from '../../common/dtos';
 import { LocationsGettersService } from './locations-getters.service';
 import { LocationsSettersService } from './locations-setters.service';
 

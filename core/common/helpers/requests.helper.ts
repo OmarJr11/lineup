@@ -1,5 +1,4 @@
 import { Request } from 'express';
-import { IReqWithCookies } from '../interfaces';
 
 export function invalidReferersRequest(req: Request): boolean {
     let referers: string[] = [];
@@ -32,7 +31,7 @@ export function getAcceptableDomains(): string[] {
     let domain: string[] = [];
 
     try {
-        domain = process.env.COOKIE_DOMAIN.split(',');
+        domain = process.env.MAIN_DOMAIN.split(',');
     } catch { }
 
     return domain.map((d) => d.trim());
@@ -41,11 +40,11 @@ export function getAcceptableDomains(): string[] {
 /**
  * Get agent to sign cookie
  *
- * @param {ReqWithCookies} req - request to get information
+ * @param {Request} req - request to get information
  * @param {string[]} domains - Acceptable domains
  * @returns {string} - agent to use to sign the cookie
  */
-export function getRequestAgent(req: IReqWithCookies, domains: string[]): string {
+export function getRequestAgent(req: Request, domains: string[]): string {
     let agent = 'localhost';
 
     for (const d of domains) {

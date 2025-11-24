@@ -9,7 +9,6 @@ export interface ILoginResponse {
     business?: Business;
     token?: string;
     refreshToken?: string;
-    auth2fa?: boolean;
 }
 
 export interface IProviderSocialMedia {
