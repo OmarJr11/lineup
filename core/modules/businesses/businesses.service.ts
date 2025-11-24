@@ -49,7 +49,7 @@ export class BusinessesService extends BasicService<Business> {
     data.path = await this.checkBusinessPathExists(
       data.name.toLocaleLowerCase().replace(/\s+/g, '-')
     );
-    data.email = data.email.toLocaleLowerCase();
+    data.email = data.email.toLowerCase();
 
     if (!data.password) {
       data.password = generateRandomCodeByLength(20);

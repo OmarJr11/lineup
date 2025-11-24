@@ -4,10 +4,10 @@ import { toUserSchema } from '../../../../core/common/functions';
 import { CreateUserInput } from '../../../../core/modules/users/dto/create-user.input';
 import { UsersService } from '../../../../core/modules/users/users.service';
 import { UserSchema } from '../../../../core/schemas';
-import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { UpdateUserInput } from '../../../../core/modules/users/dto/update-user.input';
-import { IUserReq } from '../../../../core/common/interfaces';
+import { ICookieInterceptor, IUserReq } from '../../../../core/common/interfaces';
 import { UserDec, Permissions } from '../../../../core/common/decorators';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
@@ -26,6 +26,7 @@ export class UsersResolver {
     private readonly authService: AuthService,
   ) {}
 
+  @UseInterceptors(ICookieInterceptor)
   @Mutation(() => LoginResponse )
   async createUser(
     @Args('data') data: CreateUserInput,

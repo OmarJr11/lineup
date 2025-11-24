@@ -22,7 +22,7 @@ export class ICookieInterceptor implements NestInterceptor {
 
         return next.handle().pipe(
             tap(() => {
-                const cookies = req._cookies;
+                const cookies = req?._cookies;
                 const date = new Date();
 
                 // 6 months to expired the cookies
@@ -36,7 +36,7 @@ export class ICookieInterceptor implements NestInterceptor {
                 const logger: Logger = new Logger('CookieInterceptor');
                 logger.log(agent);
 
-                if (cookies?.length && invalidReferersRequest(req)) {
+                if (cookies?.length && req && res && invalidReferersRequest(req)) {
                     cookies.forEach((cookie) => {
                         res.cookie(cookie.name, cookie.val, {
                             domain: agent,

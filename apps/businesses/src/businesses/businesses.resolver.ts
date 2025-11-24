@@ -1,9 +1,9 @@
 import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
 import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
 import { BusinessSchema, LoginResponse, PaginatedBusinesses } from '../../../../core/schemas';
-import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { IBusinessReq } from '../../../../core/common/interfaces';
+import { IBusinessReq, ICookieInterceptor } from '../../../../core/common/interfaces';
 import { BusinessDec, Permissions, Response, UserDec} from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
@@ -11,8 +11,8 @@ import { toBusinessSchema } from '../../../../core/common/functions/businesses.f
 import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
 import { businessesResponses } from '../../../../core/common/responses';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
-import { TokensService } from '../../../../core/modules/token/token.service';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
+import { TokensService } from '../../../../core/modules/token/token.service';
 import { Response as ResponseExpress } from 'express';
 
 @UsePipes(new ValidationPipe())
