@@ -14,7 +14,9 @@ export function invalidReferersRequest(req: Request): boolean {
         const referer = referers[index].trim();
 
         if (referer !== '') {
-            result = result && !req.get('referer')?.includes(referer);
+            // Protect against req.get being undefined (some contexts may not provide express Request)
+            const header = typeof req?.get === 'function' ? req.get('referer') : undefined;
+            result = result && !header?.includes(referer);
         }
         index++;
     }
@@ -28,12 +30,7 @@ export function invalidReferersRequest(req: Request): boolean {
  * @returns {string[]} - Acceptable domains
  */
 export function getAcceptableDomains(): string[] {
-    let domain: string[] = [];
-
-    try {
-        domain = process.env.MAIN_DOMAIN.split(',');
-    } catch { }
-
+    let domain: string[] = process.env.MAIN_DOMAIN.split(',') || [];
     return domain.map((d) => d.trim());
 }
 
@@ -48,7 +45,9 @@ export function getRequestAgent(req: Request, domains: string[]): string {
     let agent = 'localhost';
 
     for (const d of domains) {
-        if (req.get('referer')?.includes(d)) {
+        // Protect against req.get being undefined
+        const header = typeof req?.get === 'function' ? req.get('referer') : undefined;
+        if (header?.includes(d)) {
             agent = d;
             break;
         }

@@ -18,7 +18,7 @@ import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) { }
 
-  @Mutation(() => UserSchema, { name: 'createUserAdmin' })
+  @Mutation(() => UserSchema, { name: 'createUser' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRCREALL)
   @Response(userResponses.create)

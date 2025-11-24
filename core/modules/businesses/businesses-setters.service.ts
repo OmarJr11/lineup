@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
@@ -8,6 +8,7 @@ import { Business } from '../../entities';
 import { businessesResponses } from '../../common/responses';
 import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 
 @Injectable()
@@ -28,9 +29,28 @@ export class BusinessesSettersService extends BasicService<Business> {
      * @param {CreateBusinessInput} data - The data to create a new business
      * @returns {Promise<Business>}
      */
+    @Transactional()
     async create(data: CreateBusinessInput): Promise<Business> {
+        // Check duplicate email before attempting to save to provide a clearer error
+        const exists = await this.businessRepository.findOne({ where: { email: data.email } });
+        if (exists) {
+            throw new BadRequestException(this._uCreate.mailExists);
+        }
+
         return await this.save(data).catch((error) => {
             LogError(this.logger, error, this.create.name);
+            // Handle DB unique constraint violation gracefully
+            // Postgres uses error.code === '23505' for unique violations
+            const pgCode = (error && error.code) ? error.code : null;
+            const constraint = (error && error.constraint) ? error.constraint : null;
+            if (pgCode === '23505') {
+                if (constraint && constraint.includes('email')) {
+                    throw new BadRequestException(this._uCreate.mailExists);
+                }
+                if (constraint && constraint.includes('path')) {
+                    throw new BadRequestException(this._uCreate.pathExists);
+                }
+            }
             throw new InternalServerErrorException(this._uCreate.error);
         });
     }
