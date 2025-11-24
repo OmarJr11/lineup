@@ -2,14 +2,15 @@ import { UnauthorizedException } from '@nestjs/common';
 import { userResponses } from '../responses';
 
 export const cookieOrHeaderExtractor = (req) => {
-    let token = null;
-    if (req.headers.token) {
-        token = req.headers.token;
-    }
+    let token: string = null;
 
-    if (!req.headers.token) {
-        throw new UnauthorizedException(userResponses.token.cookieNotSent);
-    }
+    // 1) Check cookie (preferred when using HttpOnly cookies)
+    if (req.cookies && req.cookies.token) return req.cookies.token as string;
 
-    return token;
+    // 2) Check custom header `token`
+    if (
+        !token && req.headers && req.headers.token
+    ) return req.headers.token as string;
+
+    throw new UnauthorizedException(userResponses.token.cookieNotSent);
 };

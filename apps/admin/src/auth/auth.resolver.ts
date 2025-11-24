@@ -1,19 +1,25 @@
-import { Controller, Post, Body, Res, UseGuards, Req } from '@nestjs/common';
+import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { LoginDto } from '../../../../core/modules/auth/dto/login.dto';
-import { Request } from 'express';
-import { Response } from 'express';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { userResponses } from '../../../../core/common/responses';
+import { Request, Response } from 'express';
+import { LoginResponse } from '../../../../core/schemas/login-response.schema';
+import { BaseResponse } from '../../../../core/schemas/base-response.schema';
 
-@Controller('auth')
-export class AuthController {
+@Resolver()
+export class AuthResolver {
   constructor(private readonly authService: AuthService) { }
 
-  @Post('login')
-  async loginBusiness(@Body() login: LoginDto, @Res() res: Response) {
+  @Mutation(() => LoginResponse)
+  async login(
+    @Args('login') login: LoginDto,
+    @Context() ctx: any,
+  ) {
+    const res: Response = ctx.res;
     const result = await this.authService.validateUser(login);
     const token = result.token;
     const refreshToken = result.refreshToken;
@@ -23,12 +29,13 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard, TokenGuard)
-  @Post('logout')
+  @Mutation(() => BaseResponse)
   async logout(
-      @Req() req: Request,
-      @UserDec() user: IUserReq,
-      @Res() res: Response
+    @Context() ctx: any,
+    @UserDec() user: IUserReq,
   ) {
-      return await this.authService.logout(req, res, user, userResponses.logout);
+    const req: Request = ctx.req;
+    const res: Response = ctx.res;
+    return await this.authService.logout(req, res, user, userResponses.logout);
   }
 }

@@ -13,6 +13,7 @@ import { BusinessesGettersService } from '../businesses/businesses-getters.servi
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { getAcceptableDomains, getRequestAgent } from '../../common/helpers/requests.helper';
+import { LoginResponse } from '../../schemas';
 
 @Injectable()
 export class AuthService {
@@ -198,21 +199,26 @@ export class AuthService {
     token: string,
     refreshToken: string,
     result: ILoginResponse
-  ): Promise<Response> {
+  ): Promise<LoginResponse> {
     const cookies = this.configService.get<string>('COOKIES');
-    res.cookie('token', token, {
+    const isProd = process.env.NODE_ENV === 'production';
+    const sameSite = cookies === 'true' ? ('lax' as 'lax') : ('none' as 'none');
+    const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: cookies === 'true' ? 'lax' : 'none',
+      secure: isProd,
+      sameSite,
       maxAge: 24 * 3600 * 1000, // 1 day
-    });
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: cookies === 'true' ? 'lax' : 'none',
-      maxAge: 24 * 3600 * 1000, // 1 day
-    });
-    return res.send({ ...result });
+      path: '/',
+    };
+
+    // Access token cookie
+    res.cookie('token', token, cookieOptions);
+
+    // Refresh token cookie - consider limiting `path` to a refresh endpoint if desired
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+
+    // Do not call res.send here — GraphQL resolvers should return plain data.
+    return { ...result };
   }
 
   /**
@@ -228,7 +234,7 @@ export class AuthService {
       res: Response,
       userOrBusiness: IUserOrBusinessReq,
       response: IResponseWithData
-  ): Promise<Response> {
+  ): Promise<IResponse> {
       const domains = getAcceptableDomains();
       const agent = getRequestAgent(req, domains);
       const dataToken: ILogout = {
@@ -259,7 +265,8 @@ export class AuthService {
       }
       res.clearCookie('token', { path: '/', domain: dataToken.domain });
       res.clearCookie('refreshToken', { path: '/', domain: dataToken.domain });
-      return res.status(200).json(response.success);
+      // Return data; controllers or resolvers should send the HTTP response.
+      return response.success;
   }
 
   /**

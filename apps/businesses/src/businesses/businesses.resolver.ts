@@ -1,26 +1,42 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
 import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
-import { BusinessSchema, PaginatedBusinesses } from '../../../../core/schemas';
+import { BusinessSchema, LoginResponse, PaginatedBusinesses } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { IBusinessReq } from '../../../../core/common/interfaces';
-import { UserDec, Permissions, BusinessDec, Response } from '../../../../core/common/decorators';
+import { BusinessDec, Permissions, Response, UserDec} from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
 import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
 import { businessesResponses } from '../../../../core/common/responses';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
+import { TokensService } from '../../../../core/modules/token/token.service';
+import { AuthService } from '../../../../core/modules/auth/auth.service';
+import { Response as ResponseExpress } from 'express';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessSchema)
 export class BusinessesResolver {
-  constructor(private readonly businessesService: BusinessesService) {}
+  private readonly _bCreate = businessesResponses.create;
+  
+  constructor(
+    private readonly businessesService: BusinessesService,
+    private readonly tokensService: TokensService,
+    private readonly authService: AuthService,
+  ) {}
 
-  @Mutation(() => BusinessSchema, { name: 'createBusiness' })
-  async createBusiness(@Args('data') data: CreateBusinessInput) {
+  @Mutation(() => LoginResponse )
+  async createBusiness(
+    @Args('data') data: CreateBusinessInput,
+    @Context() ctx: any,
+  ): Promise<LoginResponse> {
+    const res: ResponseExpress = ctx.res;
     const business = await this.businessesService.create(data, ProvidersEnum.LineUp);
-    return toBusinessSchema(business);
+    const { token, refreshToken } =
+    await this.tokensService.generateTokens(business);
+    const result = { ...this._bCreate.success, business };
+    return await this.authService.setCookies(res, token, refreshToken, result);
   }
 
   @Query(() => BusinessSchema, { name: 'findOneBusiness' })
@@ -51,7 +67,7 @@ export class BusinessesResolver {
     @Args('data') data: UpdateBusinessInput,
     @BusinessDec() businessReq: IBusinessReq
   ) {
-    const business = await this.businessesService.update(data.id, data, businessReq);
+    const business = await this.businessesService.update(data, businessReq);
     return toBusinessSchema(business);
   }
 

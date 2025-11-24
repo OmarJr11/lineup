@@ -13,7 +13,7 @@ export class Business extends BaseEntity {
     email: string;
 
     @Column('boolean', { name: 'email_validated' })
-    emailValidated?: boolean;
+    emailValidated: boolean;
 
     @Column({ type: 'enum', enum: ProvidersEnum })
     provider: ProvidersEnum;

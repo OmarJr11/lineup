@@ -12,3 +12,5 @@ export * from './business.schema';
 export * from './product.schema';
 export * from './catalog.schema';
 export * from './location.schema';
+export * from './base-response.schema';
+export * from './login-response.schema';

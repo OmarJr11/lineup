@@ -279,6 +279,11 @@ export const userResponses = {
             status: false,
             message: 'Expired refresh token',
         },
+        tokenNotFound: {
+            code: 101006,
+            status: false,
+            message: 'Token not found',
+        },
         error: {
             code: 101099,
             status: false,
