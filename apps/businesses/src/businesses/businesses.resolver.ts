@@ -36,7 +36,7 @@ export class BusinessesResolver {
     const { token, refreshToken } =
     await this.tokensService.generateTokens(business);
     const result = { ...this._bCreate.success, business };
-    return await this.authService.setCookies(res, token, refreshToken, result);
+    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
   }
 
   @Query(() => BusinessSchema, { name: 'findOneBusiness' })
