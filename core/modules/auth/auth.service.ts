@@ -234,10 +234,13 @@ export class AuthService {
       req: Request,
       res: Response,
       userOrBusiness: IUserOrBusinessReq,
-      response: IResponseWithData
+      response: IResponseWithData,
+      cookiePrefix: string,
   ): Promise<IResponse> {
       const domains = getAcceptableDomains();
       const agent = getRequestAgent(req, domains);
+      const tokenName = `${cookiePrefix}token`;
+      const refreshName = `${cookiePrefix}refreshToken`;
       const dataToken: ILogout = {
           token: req.cookies.token,
           refreshToken: req.cookies.refreshToken,
@@ -260,9 +263,31 @@ export class AuthService {
           dataToken.refreshToken, dataToken.token, user
         );
       }
-      res.clearCookie('token', { path: '/', domain: dataToken.domain });
-      res.clearCookie('refreshToken', { path: '/', domain: dataToken.domain });
-      // Return data; controllers or resolvers should send the HTTP response.
+
+      const domain = dataToken.domain;
+      const hasValidDomain =
+        typeof domain === 'string' && domain.length > 0 && domain !== 'localhost' && domain.includes('.');
+
+      const cookieOptions: {
+        path: string;
+        domain?: string;
+        secure?: boolean;
+        httpOnly?: boolean;
+      } = {
+        path: '/',
+        secure: dataToken.secure,
+        httpOnly: dataToken.httpOnly,
+      };
+
+      if (hasValidDomain) cookieOptions.domain = domain;
+      
+      // Clear both prefixed and default cookie names to be safe
+      res.clearCookie(tokenName, cookieOptions);
+      res.clearCookie(refreshName, cookieOptions);
+      if (tokenName !== 'token') {
+        res.clearCookie('token', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
+      }
       return response.success;
   }
 
