@@ -11,7 +11,6 @@ export const ValidatingEnv = Joi.object({
 
   JWT_SECRET: Joi.string().required(),
   REQUEST_REFERER: Joi.string().required(),
-  COOKIE_DOMAIN: Joi.string().required(),
   MAIN_DOMAIN: Joi.string().required(),
   SECRET: Joi.string().required(),
   EXPIRED_TOKEN_MIN: Joi.string().required(),
