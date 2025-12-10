@@ -18,9 +18,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     getRequest(context: ExecutionContext) {
         // Soporta HTTP y GraphQL
         const ctx = context.switchToHttp();
-        if (ctx.getRequest()) {
-            return ctx.getRequest();
-        }
+        if (ctx.getRequest()) return ctx.getRequest();
         // Para GraphQL
         const gqlCtx = context.getArgByIndex(2);
         return gqlCtx?.req;

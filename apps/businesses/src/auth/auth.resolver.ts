@@ -36,6 +36,6 @@ export class AuthResolver {
   ) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.logout(req, res, business, businessesResponses.logout);
+    return await this.authService.logout(req, res, business, businessesResponses.logout, 'lineup_');
   }
 }
