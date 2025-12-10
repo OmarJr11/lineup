@@ -55,6 +55,15 @@ export class UsersResolver {
     return toUserSchema(user);
   }
 
+  @Query(() => UserSchema, { name: 'me' })
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  async me(
+    @UserDec() user: IUserReq
+  ): Promise<UserSchema> {
+    const found = await this.usersService.findOne(user.userId);
+    return toUserSchema(found);
+  }
+
   @Mutation(() => UserSchema, { name: 'updateUser' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRUPDALL)

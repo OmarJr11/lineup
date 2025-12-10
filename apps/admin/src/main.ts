@@ -7,8 +7,8 @@ import {
 import { createConnection } from 'typeorm';
 import { join } from 'path';
 import * as dotenv from 'dotenv';
-import { EnvironmentsEnum } from '../../../core/common/enums';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
+import * as cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -29,9 +29,42 @@ async function bootstrap() {
   });
   const app = await NestFactory.create(AdminModule);
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
-  app.enableCors();
+  const cors = {
+    origin: getCors(),
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+    allowedHeaders: [
+      'Accept',
+      'Content-Type',
+      'Authorization',
+      'language',
+      'token',
+      'refreshToken',
+    ],
+    exposedHeaders: ['token_expired'],
+  };
+  app.enableCors(cors);
+  app.use(cookieParser());
+
   await app.listen(process.env.PORT_ADMIN ?? 3003);
 }
+
+const getCors = (): string[] => {
+  const corsArray: string[] = [];
+  const corsEnv = process.env.CORS.split(',');
+  corsEnv.forEach((e) => {
+    const url = e.trim();
+    if (url !== '') {
+      corsArray.push(`http://${url}`);
+      corsArray.push(`https://${url}`);
+    }
+  });
+
+  return corsArray;
+};
+
 bootstrap();
 
 

@@ -42,7 +42,9 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       sortSchema: true,
       introspection: true,
-      context: ({ req }) => ({ req }),
+      // Include both `req` and `res` in the GraphQL context so resolvers
+      // can set cookies on the response (used by AuthService.setCookies).
+      context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: true,
     }),
     UsersModule,

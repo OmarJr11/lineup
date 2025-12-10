@@ -59,6 +59,14 @@ export class BusinessesResolver {
     };
   }
 
+  @Query(() => BusinessSchema, { name: 'myBusiness' })
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  async myBusiness(
+    @BusinessDec() businessReq: IBusinessReq
+  ) {
+    return toBusinessSchema(await this.businessesService.findOne(businessReq.businessId));
+  }
+
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
