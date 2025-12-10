@@ -25,7 +25,7 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result);
+    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
   }
 
   @UseGuards(JwtAuthGuard, TokenGuard)

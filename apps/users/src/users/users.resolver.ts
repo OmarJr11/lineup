@@ -37,7 +37,7 @@ export class UsersResolver {
     const { token, refreshToken } =
     await this.tokensService.generateTokens(user);
     const result = { ...this._uCreate.success, user };
-    return await this.authService.setCookies(res, token, refreshToken, result);
+    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
   }
 
   @Query(() => UserSchema, { name: 'userById' })

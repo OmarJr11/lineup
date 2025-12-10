@@ -192,17 +192,21 @@ export class AuthService {
    * @param {string} token - Access token
    * @param {string} refreshToken - Refresh token
    * @param {ILoginResponse} result - Login response
+   * @param {string} cookiePrefix - Prefix for cookie names
    * @returns {Promise<Response>}
    */
   async setCookies(
     res: Response,
     token: string,
     refreshToken: string,
-    result: ILoginResponse
+    result: ILoginResponse,
+    cookiePrefix: string,
   ): Promise<LoginResponse> {
     const cookies = this.configService.get<string>('COOKIES');
     const isProd = process.env.NODE_ENV === 'production';
     const sameSite = cookies === 'true' ? ('lax' as 'lax') : ('none' as 'none');
+    const tokenName = `${cookiePrefix}token`;
+    const refreshTokenName = `${cookiePrefix}refreshToken`;
     const cookieOptions = {
       httpOnly: true,
       secure: isProd,
@@ -210,22 +214,19 @@ export class AuthService {
       maxAge: 24 * 3600 * 1000, // 1 day
       path: '/',
     };
-
     // Access token cookie
-    res.cookie('token', token, cookieOptions);
-
+    res.cookie(tokenName, token, cookieOptions);
     // Refresh token cookie - consider limiting `path` to a refresh endpoint if desired
-    res.cookie('refreshToken', refreshToken, cookieOptions);
-
+    res.cookie(refreshTokenName, refreshToken, cookieOptions);
     // Do not call res.send here — GraphQL resolvers should return plain data.
     return { ...result };
   }
 
   /**
    * Logout and erase the cookies
-   * @param {ILogout} dataTokens - Data with token and refreshToken
+   * @param {Request} req - request Object
    * @param {Response} res - response Object
-   * @param {IUserReq} user - Logged User
+   * @param {IUserOrBusinessReq} userOrBusiness - User or Business making the logout
    * @param {IResponseWithData} response - response with the structure to return
    * @returns {Promise<IResponse>}
    */
@@ -241,12 +242,8 @@ export class AuthService {
           token: req.cookies.token,
           refreshToken: req.cookies.refreshToken,
           domain: agent,
-          secure: agent.includes(
-            this.configService.get<string>('MAIN_DOMAIN')
-          ),
-          httpOnly: agent.includes(
-            this.configService.get<string>('MAIN_DOMAIN')
-          ),
+          secure: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
+          httpOnly: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
       };
 
       LogWarn(this.logger, 'Logout', this.logout.name, userOrBusiness);
