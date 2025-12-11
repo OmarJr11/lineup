@@ -203,7 +203,7 @@ export class AuthService {
     cookiePrefix: string,
   ): Promise<LoginResponse> {
     const cookies = this.configService.get<string>('COOKIES');
-    const sameSite = cookies ? ('lax' as 'lax') : ('none' as 'none');
+    const sameSite = ('none' as 'none');
     const tokenName = `${cookiePrefix}token`;
     const refreshTokenName = `${cookiePrefix}refreshToken`;
     const cookieOptions = {
