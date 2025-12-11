@@ -203,13 +203,12 @@ export class AuthService {
     cookiePrefix: string,
   ): Promise<LoginResponse> {
     const cookies = this.configService.get<string>('COOKIES');
-    const isProd = process.env.NODE_ENV === 'production';
-    const sameSite = cookies === 'true' ? ('lax' as 'lax') : ('none' as 'none');
+    const sameSite = ('none' as 'none');
     const tokenName = `${cookiePrefix}token`;
     const refreshTokenName = `${cookiePrefix}refreshToken`;
     const cookieOptions = {
       httpOnly: true,
-      secure: isProd,
+      secure: true,
       sameSite,
       maxAge: 24 * 3600 * 1000, // 1 day
       path: '/',
