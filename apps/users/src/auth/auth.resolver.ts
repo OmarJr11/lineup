@@ -28,6 +28,15 @@ export class AuthResolver {
     return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
   }
 
+  @Mutation(() => LoginResponse)
+  async refreshToken(
+    @Context() ctx: any,
+  ) {
+    const req: Request = ctx.req;
+    const res: Response = ctx.res;
+    return await this.authService.refreshAndSetCookies(req, res, 'lineup_');
+  }
+
   @UseGuards(JwtAuthGuard, TokenGuard)
   @Mutation(() => BaseResponse)
   async logout(
