@@ -92,7 +92,6 @@ export class AuthService {
   async refreshToken(
     refreshToken: string,
     token: string,
-    idUser: number
   ): Promise<ILoginResponse> {
     if (!refreshToken) {
       LogWarn(this.logger, this.rToken.notCookies.message, this.refreshToken.name);
@@ -105,29 +104,42 @@ export class AuthService {
       throw new UnauthorizedException(this.rToken.tokenNotValid);
     }
 
-    if (Number(idUser) !== Number(decodedToken.sub)) {
-      LogWarn(this.logger, this.rToken.idUserDontMatch.message, this.refreshToken.name);
-      throw new UnauthorizedException(this.rToken.idUserDontMatch);
+    if(decodedToken.isBusiness) {
+      const business = await this.businessesGettersService
+        .findOneByIdBusinessAndToken(
+          decodedToken.idBusiness,
+          decodedToken.email,
+          decodedToken.status
+        ).catch((error) => {
+          LogError(this.logger, error, this.refreshToken.name);
+          throw new UnauthorizedException(this.rToken.tokenNotValid);
+        });
+      const tokenDB = await this.tokenService.updateRefreshToken(
+        refreshToken,
+        token,
+        business,
+        this.rToken
+      );
+      return { ...this.rToken.success, business, ...tokenDB };
+    } else {
+      const user = await this.usersGettersService
+        .findOneByIdUserAndToken(
+          decodedToken.idUser,
+          decodedToken.email,
+          decodedToken.status
+        ).catch((error) => {
+          LogError(this.logger, error, this.refreshToken.name);
+          throw new UnauthorizedException(this.rToken.tokenNotValid);
+        });
+        const tokenDB = await this.tokenService.updateRefreshToken(
+          refreshToken,
+          token,
+          user,
+          this.rToken
+        );
+        return { ...this.rToken.success, user, ...tokenDB };
     }
 
-    const user = await this.usersGettersService
-      .findOneByIdUserAndToken(
-        idUser,
-        decodedToken.email,
-        decodedToken.status
-      ).catch((error) => {
-        LogError(this.logger, error, this.refreshToken.name);
-        throw new UnauthorizedException(this.rToken.tokenNotValid);
-      });
-
-    const tokenDB = await this.tokenService.updateRefreshToken(
-      refreshToken,
-      token,
-      user,
-      this.rToken
-    );
-
-    return { ...this.rToken.success, user, ...tokenDB };
   }
 
   /**
@@ -219,6 +231,38 @@ export class AuthService {
     res.cookie(refreshTokenName, refreshToken, cookieOptions);
     // Do not call res.send here — GraphQL resolvers should return plain data.
     return { ...result };
+  }
+
+  /**
+   * Read tokens from request cookies, refresh them and set new cookies in response
+   */
+  async refreshAndSetCookies(
+    req: Request,
+    res: Response,
+    cookiePrefix: string,
+  ): Promise<LoginResponse> {
+    const token = req.cookies[`${cookiePrefix}token`] || req.cookies.token;
+    const refreshToken = req.cookies[`${cookiePrefix}refreshToken`] || req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      LogWarn(this.logger, this.rToken.notCookies.message, this.refreshAndSetCookies.name);
+      throw new UnauthorizedException(this.rToken.notCookies);
+    }
+
+    const decoded = this.jwtService.decode(token);
+    if (!decoded) {
+      LogWarn(this.logger, this.rToken.tokenNotValid.message, this.refreshAndSetCookies.name);
+      throw new UnauthorizedException(this.rToken.tokenNotValid);
+    }
+
+    const idUser = Number((decoded as any).sub);
+
+    const result = await this.refreshToken(refreshToken, token);
+    const newToken = result.token;
+    const newRefresh = result.refreshToken;
+    delete result.token;
+    delete result.refreshToken;
+    return await this.setCookies(res, newToken, newRefresh, result, cookiePrefix);
   }
 
   /**

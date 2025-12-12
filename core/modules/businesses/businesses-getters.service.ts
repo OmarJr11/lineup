@@ -13,6 +13,7 @@ import { InfinityScrollInput } from '../../common/dtos';
 export class BusinessesGettersService extends BasicService<Business> {
     private logger: Logger = new Logger(BusinessesGettersService.name);
     private readonly _uList = businessesResponses.list;
+    private readonly _uToken = businessesResponses.token;
 
     constructor(
         @InjectRepository(Business)
@@ -127,4 +128,25 @@ export class BusinessesGettersService extends BasicService<Business> {
         }
         return business;
     }
+
+    /**
+     * Find User by ID, email and status
+     * @param {number} id - user ID
+     * @param {string} email - user email
+     * @param {StatusEnum} status - user status
+     * @returns {Promise<Business>}
+     */
+    async findOneByIdBusinessAndToken(
+        id: number,
+        email: string,
+        status: StatusEnum
+    ): Promise<Business> {
+        return await this.findOneWithOptionsOrFail({
+            where: { id, email, status },
+        }).catch((error) => {
+            LogError(this.logger, error, this.findOneByIdBusinessAndToken.name);
+            throw new UnauthorizedException(this._uToken.tokenNotValid);
+        });
+    }
+    
 }
