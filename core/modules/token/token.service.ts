@@ -73,22 +73,27 @@ export class TokensService extends BasicService<Token> {
    * @returns {Promise<string>}
    */
   async generateToken(user: User | Business): Promise<string> {
-    if(user['username']) {
+    const isUser = Boolean(user['username']);
+    if (isUser) {
       return this.generateTokenJwt({
         username: user['username'],
         email: user.email,
         sub: user.id,
         status: user.status,
-        isBusiness: false
-      });
+        isBusiness: false,
+        idUser: Number(user.id),
+        idBusiness: null,
+      } as any);
     } else {
       return this.generateTokenJwt({
         path: user['path'],
         email: user.email,
         sub: user.id,
         status: user.status,
-        isBusiness: true
-      });
+        isBusiness: true,
+        idUser: null,
+        idBusiness: Number(user.id),
+      } as any);
     }
   }
 
@@ -131,7 +136,7 @@ export class TokensService extends BasicService<Token> {
     // Generate new Refresh token and saved it in db.
     const newRt: CreateTokenDto = {
       idUser: user['username'] ? Number(user.id) : null,
-      idBusiness: user['name'] ? Number(user.id) : null,
+      idBusiness: user['username'] ? null : Number(user.id),
       token: newToken,
       refresh: newRefreshToken,
       creationDate: new Date(),
@@ -193,17 +198,28 @@ export class TokensService extends BasicService<Token> {
   async updateRefreshToken(
     refreshToken: string,
     token: string,
-    user: User,
+    user: User | Business,
     responses: IResponseWithData
   ): Promise<IRefreshToken> {
-    const rt = await this.tokenRepository
-      .findOneOrFail({ where: { idUser: user.id, token, refresh: refreshToken } })
-      .catch((error) => {
-        LogError(this.logger, error, this.updateRefreshToken.name, user);
-        throw new UnauthorizedException(responses.refreshNotValid);
-      });
+    let rt: Token;
+    if(user['username']) {
+      rt = await this
+        .findOneWithOptionsOrFail({ where: { idUser: user.id, token, refresh: refreshToken } })
+        .catch((error) => {
+          LogError(this.logger, error, this.updateRefreshToken.name, user);
+          throw new UnauthorizedException(responses.refreshNotValid);
+        });
+      rt.idUser = user.id;
+    } else {
+      rt = await this
+        .findOneWithOptionsOrFail({ where: { idBusiness: user.id, token, refresh: refreshToken } })
+        .catch((error) => {
+          LogError(this.logger, error, this.updateRefreshToken.name, user);
+          throw new UnauthorizedException(responses.refreshNotValid);
+        });
+      rt.idBusiness = user.id;
+    }
 
-    rt.idUser = user.id;
     await this.deleteRefreshTokenEntity(rt).catch((error) => {
       LogError(this.logger, error, this.updateRefreshToken.name, user);
       if (error instanceof TokenExpiredError) {

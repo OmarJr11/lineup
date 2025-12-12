@@ -1,9 +1,9 @@
 import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
 import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
 import { BusinessSchema, LoginResponse, PaginatedBusinesses } from '../../../../core/schemas';
-import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { IBusinessReq, ICookieInterceptor } from '../../../../core/common/interfaces';
+import { IBusinessReq } from '../../../../core/common/interfaces';
 import { BusinessDec, Permissions, Response, UserDec} from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
