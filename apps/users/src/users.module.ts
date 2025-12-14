@@ -43,6 +43,30 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
       introspection: true,
       context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: true,
+      formatError: (error: any) => {
+        const message = error?.message || 'Internal server error';
+        const extCode = error?.extensions?.code;
+        const extResponse = error?.extensions?.response;
+        let code = 500;
+        if (extResponse && typeof extResponse.statusCode === 'number') {
+          code = extResponse.statusCode;
+        } else if (extCode) {
+          switch (String(extCode)) {
+            case 'BAD_REQUEST':
+              code = 400; break;
+            case 'UNAUTHORIZED':
+              code = 401; break;
+            case 'FORBIDDEN':
+              code = 403; break;
+            case 'NOT_FOUND':
+              code = 404; break;
+            default:
+              code = 500;
+          }
+        }
+        const status = code >= 200 && code < 300;
+        return { code, status, message };
+      },
     }),
     AuthModule,
     UsersModuleCore,
