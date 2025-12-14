@@ -142,6 +142,11 @@ export const userResponses = {
             status: false,
             message: 'User is not active.',
         },
+        isNotAUser: {
+            code: 100306,
+            status: false,
+            message: 'The specified ID does not correspond to a user.',
+        },
         error: {
             code: 100399,
             status: false,

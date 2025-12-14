@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotAcceptableException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -17,10 +17,13 @@ import * as argon2 from 'argon2';
 import { ProvidersEnum } from '../../common/enums';
 import { RolesService } from '../roles/roles.service';
 import { BusinessRolesService } from '../business-roles/business-roles.service';
+import { LogError } from '../../common/helpers/logger.helper';
+import { businessesResponses } from '../../common/responses';
 
 @Injectable()
 export class BusinessesService extends BasicService<Business> {
   private logger = new Logger(BusinessesService.name);
+  private readonly _uList = businessesResponses.list;
 
   constructor(
     @Inject(REQUEST)
@@ -87,6 +90,10 @@ export class BusinessesService extends BasicService<Business> {
    * @returns {Promise<Business>}
    */
   async findOne(id: number): Promise<Business> {
+    if(!id) {
+      LogError(this.logger, this._uList.isNotABusiness.message, this.findOne.name);
+      throw new NotAcceptableException(this._uList.isNotABusiness);
+    }
     return await this.businessesGettersService.findOne(id);
   }
 
