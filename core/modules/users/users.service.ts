@@ -25,6 +25,7 @@ export class UsersService extends BasicService<User> {
   private logger: Logger = new Logger(UsersSettersService.name);
   private readonly _uCreate = userResponses.create;
   private readonly _uUpdate = userResponses.update;
+  private readonly _uList = userResponses.list;
 
   constructor(
     @Inject(REQUEST)
@@ -127,6 +128,10 @@ export class UsersService extends BasicService<User> {
    * @returns {Promise<User>} 
    */
   async findOne(id: number): Promise<User> {
+    if(!id) {
+      LogError(this.logger, this._uList.isNotAUser.message, this.findOne.name);
+      throw new NotAcceptableException(this._uList.isNotAUser);
+    }
     return await this.usersGettersService.findOne(id);
   }
 
