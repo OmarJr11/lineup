@@ -90,10 +90,15 @@ export const businessesResponses = {
             status: false,
             message: 'Path not valid',
         },
-        userNotActive: {
+        businessNotActive: {
             code: 200305,
             status: false,
             message: 'Business is not active.',
+        },
+        isNotABusiness: {
+            code: 200306,
+            status: false,
+            message: 'The specified ID does not correspond to a business.',
         },
         error: {
             code: 200399,

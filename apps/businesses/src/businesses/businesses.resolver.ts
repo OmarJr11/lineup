@@ -64,7 +64,8 @@ export class BusinessesResolver {
   async myBusiness(
     @BusinessDec() businessReq: IBusinessReq
   ) {
-    return toBusinessSchema(await this.businessesService.findOne(businessReq.businessId));
+    const found = await this.businessesService.findOne(businessReq.businessId);
+    return toBusinessSchema(found);
   }
 
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
