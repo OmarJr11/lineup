@@ -69,4 +69,7 @@ export class Business extends BaseEntity {
 
     @OneToMany(() => Location, (location) => location.modificationBusiness)
     modifiedLocations?: Location[];
+
+    @OneToMany(() => File, (file) => file.creationBusiness)
+    files?: File[];
 }

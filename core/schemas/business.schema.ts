@@ -2,7 +2,12 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessRoleSchema, CatalogSchema, LocationSchema, ProductSchema } from '.';
+import {
+  BusinessRoleSchema,
+  CatalogSchema,
+  LocationSchema,
+  ProductSchema
+} from '.';
 
 @ObjectType()
 export class BusinessSchema {
@@ -53,4 +58,7 @@ export class BusinessSchema {
 
   @Field(() => [LocationSchema], { nullable: true })
   locations?: LocationSchema[];
+
+  @Field(() => [FileSchema], { nullable: true })
+  files?: FileSchema[];
 }
