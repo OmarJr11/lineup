@@ -24,6 +24,7 @@ import { businessesResponses } from '../../common/responses';
 export class BusinessesService extends BasicService<Business> {
   private logger = new Logger(BusinessesService.name);
   private readonly _uList = businessesResponses.list;
+  private readonly _uUp = businessesResponses.update;
 
   constructor(
     @Inject(REQUEST)
@@ -50,7 +51,7 @@ export class BusinessesService extends BasicService<Business> {
     provider: ProvidersEnum,
   ): Promise<Business> {
     data.path = await this.checkBusinessPathExists(
-      data.name.toLocaleLowerCase().replace(/\s+/g, '-')
+      this.generatePathFromName(data.name)
     );
     data.email = data.email.toLowerCase();
 
@@ -118,10 +119,12 @@ export class BusinessesService extends BasicService<Business> {
     businessReq: IBusinessReq
   ): Promise<Business> {
     const business = await this.businessesGettersService.findOne(data.id);
-    if(data.path) {
-      data.path = await this.checkBusinessPathExists(
-        data.path.toLocaleLowerCase().replace(/\s+/g, '-')
-      );
+    if(data.path && data.path !== business.path) {
+      const exist = await this.businessesGettersService.getOneByPath(data.path);
+      if(exist) {
+        LogError(this.logger, this._uUp.pathExists.message, this.update.name);
+        throw new NotAcceptableException(this._uUp.pathExists);
+      }
     }
     await this.businessSettersService.update(data, business, businessReq);
     return await this.businessesGettersService.findOne(data.id);
@@ -155,5 +158,24 @@ export class BusinessesService extends BasicService<Business> {
       }
     }
     return path;
+  }
+  
+  /**
+   * Generate a URL-friendly path from a business name.
+   * - lowercases
+   * - removes diacritics (accents)
+   * - replaces any non-alphanumeric sequence with a single hyphen
+   * - trims leading/trailing hyphens
+   * @param {string} name - The business name
+   * @returns {string} - The generated path
+   */
+  private generatePathFromName(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-');
   }
 }
