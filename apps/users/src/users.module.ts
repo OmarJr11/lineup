@@ -9,6 +9,7 @@ import { UsersModule as UsersModuleCore } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
     }),
     AuthModule,
     UsersModuleCore,
+    FilesModule,
   ],
 })
 export class UsersModule implements NestModule {

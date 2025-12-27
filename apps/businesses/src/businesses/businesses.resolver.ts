@@ -44,6 +44,11 @@ export class BusinessesResolver {
     return toBusinessSchema(await this.businessesService.findOne(id));
   }
 
+  @Query(() => BusinessSchema, { name: 'findBusinessByPath' })
+  async findByPath(@Args('path', { type: () => String }) path: string) {
+    return toBusinessSchema(await this.businessesService.findOneByPath(path));
+  }
+
   @Query(() => PaginatedBusinesses, { name: 'findAllBusinesses' })
   async findAll(
     @Args('pagination', { type: () => InfinityScrollInput })
