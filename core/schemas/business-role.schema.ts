@@ -12,10 +12,16 @@ export class BusinessRoleSchema extends BaseSchema {
   status: StatusEnum;
 
   @Field(() => Int)
+  idBusiness: number;
+
+  @Field(() => Int)
   idCreationBusiness: number;
 
   @Field(() => BusinessSchema, { nullable: true })
   business?: BusinessSchema;
+
+  @Field(() => BusinessSchema, { nullable: true })
+  creationBusiness?: BusinessSchema;
 
   @Field(() => RoleSchema, { nullable: true })
   role?: RoleSchema;

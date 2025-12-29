@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Business, Product } from '.';
+import { Business, File, Product } from '.';
 import { StatusEnum } from '../common/enums';
 import { BaseEntity } from './base.entity';
 
@@ -10,12 +10,22 @@ export class Catalog extends BaseEntity {
     
     @Column({ type: 'varchar', length: 255 })
     title: string;
+
+    @Column({ type: 'varchar', name: 'image_code', length: 255, nullable: true })
+    imageCode?: string;
+
+    @ManyToOne(() => File, (files) => files.catalogFiles)
+    @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
+    image?: File;
     
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
     @Column('int8', { name: 'id_creation_business' })
     idCreationBusiness: number;
+
+    @Column('text', { array: true, nullable: true })
+    tags?: string[];
 
     @ManyToOne(() => Business, (business) => business.catalogs)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])

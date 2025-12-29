@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, Check } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, Check } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
-import { Business } from '.';
+import { Business, Catalog } from '.';
 
 @Check(`"id_creation_business" IS NOT NULL OR "id_creation_user" IS NOT NULL`)
 @Entity({ name: 'files', schema: 'system' })
@@ -39,4 +39,7 @@ export class File extends BaseEntity {
 
     @OneToMany(() => Business, (business) => business.image)
     businessFiles?: Business[];
+
+    @OneToMany(() => Catalog, (catalog) => catalog.image)
+    catalogFiles?: Catalog[];
 }

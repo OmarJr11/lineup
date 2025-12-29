@@ -46,6 +46,9 @@ export class Business extends BaseEntity {
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
+    @OneToMany(() => BusinessRole, (role) => role.creationBusiness)
+    creationBusinessRoles?: BusinessRole[];
+
     @OneToMany(() => BusinessRole, (role) => role.business)
     businessRoles?: BusinessRole[];
     
