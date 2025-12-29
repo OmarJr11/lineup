@@ -69,6 +69,7 @@ export class BusinessesGettersService extends BasicService<Business> {
                 path: path.toLocaleLowerCase(),
                 status: Not(StatusEnum.DELETED)
             },
+            relations: ['image'],
         }).catch((error) => {
             LogError(this.logger, error, this.findOneByPath.name);
             throw new NotAcceptableException(this._uList.businessNotFound);

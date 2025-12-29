@@ -9,6 +9,9 @@ export class BusinessRole {
     @Column('int8', { name: 'id_role', primary: true })
     idRole: number;
 
+    @Column('int8', { name: 'id_business', primary: true })
+    idBusiness: number;
+
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
@@ -17,10 +20,14 @@ export class BusinessRole {
 
     @ManyToOne(() => Business, (business) => business.businessRoles)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
-    business: Business;
+    creationBusiness: Business;
 
     @ManyToOne(() => Role, (role) => role.businessRoles)
     @JoinColumn([{ name: 'id_role', referencedColumnName: 'id' }])
     role: Role;
+
+    @ManyToOne(() => Business, (business) => business.businessRoles)
+    @JoinColumn([{ name: 'id_business', referencedColumnName: 'id' }])
+    business: Business;
 }
 

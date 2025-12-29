@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
 import { businessRolesResponses } from '../../common/responses';
 import { IBusinessReq } from '../../common/interfaces';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BusinessRolesService extends BasicService<BusinessRole> {
@@ -35,10 +36,12 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
    * @param {number} idRole - The ID of the role
    * @param {IBusinessReq} business - The business data to save
    */
+  @Transactional()
   async create(idBusiness: number, idRole: number, business: IBusinessReq) {
-    await this.save({ idBusiness, idRole }, business).catch((error) => {
-      LogError(this.logger, error, this.rCreate.error.message, business);
-      throw new InternalServerErrorException(this.rCreate.error);
-    });
+    await this.save({ idBusiness, idRole }, business)
+      .catch((error) => {
+        LogError(this.logger, error, this.rCreate.error.message, business);
+        throw new InternalServerErrorException(this.rCreate.error);
+      });
   }
 }
