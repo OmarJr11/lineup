@@ -45,6 +45,23 @@ export class CatalogsResolver {
     };
   }
 
+  @Query(() => PaginatedCatalogs, { name: 'findAllMyCatalogs' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  async findAllMyCatalogs(
+    @Args('pagination', { type: () => InfinityScrollInput })
+    pagination: InfinityScrollInput,
+    @BusinessDec() businessReq: IBusinessReq
+  ) {
+    const items = (await this.catalogsService.findAllMyCatalogs(pagination, businessReq))
+      .map(catalog => toCatalogSchema(catalog));
+    return {
+      items,
+      total: items.length,
+      page: pagination.page,
+      limit: pagination.limit
+    };
+  }
+
   @Query(() => CatalogSchema, { name: 'findOneCatalog' })
   async findOne(@Args('id', { type: () => Int }) id: number) {
     return toCatalogSchema(await this.catalogsService.findOne(id));
@@ -66,6 +83,6 @@ export class CatalogsResolver {
   @Permissions(CatalogsPermissionsEnum.CATDELETE)
   @Response(catalogsResponses.delete)
   async remove(@Args('id') id: number, @BusinessDec() businessReq: IBusinessReq) {
-    return await this.catalogsService.remove(id, businessReq);
+    return toCatalogSchema(await this.catalogsService.remove(id, businessReq));
   }
 }

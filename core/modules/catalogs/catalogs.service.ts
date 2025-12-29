@@ -53,6 +53,18 @@ export class CatalogsService extends BasicService<Catalog> {
     }
 
     /**
+     * Get all Catalogs with pagination
+     * @param {InfinityScrollInput} query - query parameters for pagination
+     * @returns {Promise<Catalog[]>}
+     */
+    async findAllMyCatalogs(
+      query: InfinityScrollInput,
+      businessReq: IBusinessReq
+    ): Promise<Catalog[]> {
+      return await this.catalogsGettersService.findAllMyCatalogs(query, businessReq);
+    }
+
+    /**
      * Find a catalog by its ID.
      * @param {number} id - The ID of the catalog to find.
      * @returns {Promise<Catalog>} The found catalog.
@@ -81,12 +93,11 @@ export class CatalogsService extends BasicService<Catalog> {
      * Remove a catalog.
      * @param {number} id - The ID of the catalog to remove.
      * @param {IBusinessReq} businessReq - The business request object.
-     * @return {Promise<boolean>} True if the catalog was removed successfully.
+     * @returns {Promise<Catalog>} The removed catalog.
      */
     @Transactional()
-    async remove(id: number, businessReq: IBusinessReq): Promise<boolean> {
+    async remove(id: number, businessReq: IBusinessReq): Promise<Catalog> {
       const catalog = await this.catalogsGettersService.findOne(id);
-      await this.catalogsSettersService.remove(catalog, businessReq);
-      return true;
+      return await this.catalogsSettersService.remove(catalog, businessReq);
     }
 }
