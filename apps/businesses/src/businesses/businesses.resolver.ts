@@ -4,7 +4,7 @@ import { BusinessSchema, LoginResponse, PaginatedBusinesses } from '../../../../
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { IBusinessReq } from '../../../../core/common/interfaces';
-import { BusinessDec, Permissions, Response, UserDec} from '../../../../core/common/decorators';
+import { BusinessDec, Permissions, Response} from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
@@ -91,7 +91,7 @@ export class BusinessesResolver {
   @Response(businessesResponses.delete)
   async removeBusiness(
     @Args('id', { type: () => Int }) id: number,
-    @UserDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq
   ) {
     return await this.businessesService.remove(id, businessReq);
   }

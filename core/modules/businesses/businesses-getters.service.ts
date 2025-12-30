@@ -14,6 +14,7 @@ export class BusinessesGettersService extends BasicService<Business> {
     private logger: Logger = new Logger(BusinessesGettersService.name);
     private readonly _uList = businessesResponses.list;
     private readonly _uToken = businessesResponses.token;
+    private readonly _relations = ['image', 'locations'];
 
     constructor(
         @InjectRepository(Business)
@@ -33,13 +34,18 @@ export class BusinessesGettersService extends BasicService<Business> {
         const skip = (page - 1) * limit;
         const order = query.order || 'DESC';
         const orderBy = query.orderBy || 'creation_date';
-        return await this.createQueryBuilder('b')
+        const businesses = await this.createQueryBuilder('b')
             .leftJoinAndSelect('b.image', 'image')
+            .leftJoinAndSelect(
+                'b.locations', 'locations', 'locations.status <> :locationStatus',
+                { locationStatus: StatusEnum.DELETED }
+            )
             .where('b.status <> :status', { status: StatusEnum.DELETED })
             .limit(limit)
             .offset(skip)
             .orderBy(`b.${orderBy}`, order)
             .getMany();
+        return this.formatBusinesses(businesses);
     }
 
     /**
@@ -50,12 +56,12 @@ export class BusinessesGettersService extends BasicService<Business> {
     async findOne(id: number): Promise<Business> {
         const business = await this.findOneWithOptionsOrFail({
             where: { id, status: Not(StatusEnum.DELETED) },
-            relations: ['image'],
+            relations: this._relations,
         }).catch((error) => {
             LogError(this.logger, error, this.findOne.name);
             throw new NotAcceptableException(this._uList.businessNotFound);
         });
-        return business;
+        return this.formatBusiness(business);
     }
 
     /**
@@ -64,16 +70,17 @@ export class BusinessesGettersService extends BasicService<Business> {
      * @returns {Promise<Business>}
      */
     async findOneByPath(path: string): Promise<Business> {
-        return await this.findOneWithOptionsOrFail({
+        const business = await this.findOneWithOptionsOrFail({
             where: { 
                 path: path.toLocaleLowerCase(),
                 status: Not(StatusEnum.DELETED)
             },
-            relations: ['image'],
+            relations: this._relations,
         }).catch((error) => {
             LogError(this.logger, error, this.findOneByPath.name);
             throw new NotAcceptableException(this._uList.businessNotFound);
         });
+        return this.formatBusiness(business);
     }
 
     /**
@@ -150,4 +157,26 @@ export class BusinessesGettersService extends BasicService<Business> {
         });
     }
     
+    /**
+     * Format Business data
+     * @param {Business} business - Business entity
+     * @returns {Business} - Formatted Business entity
+     */
+    private formatBusiness(business: Business): Business {
+        if(business.locations && business.locations.length > 0) {
+            business.locations = business.locations
+                .filter(location => location.status !== StatusEnum.DELETED);
+        }
+        if(business.password) delete business?.password;
+        return business;
+    }
+
+    /**
+     * Format Businesses data
+     * @param {Business[]} businesses - Array of Business entities
+     * @returns {Business[]} - Array of Formatted Business entities
+     */
+    private formatBusinesses(businesses: Business[]): Business[] {
+        return businesses.map(business => this.formatBusiness(business));
+    }
 }

@@ -4,6 +4,7 @@ import { UserSchema } from './user.schema';
 import { BusinessSchema } from './business.schema';
 import { CatalogSchema } from './catalog.schema';
 import { ProductSchema } from './product.schema';
+import { LocationSchema } from '.';
 
 export function PaginatedResponse<TItem>(TClass: Type<TItem>) {
   @ObjectType({ isAbstract: true })
@@ -34,3 +35,6 @@ export class PaginatedCatalogs extends PaginatedResponse(CatalogSchema) {}
 
 @ObjectType()
 export class PaginatedProducts extends PaginatedResponse(ProductSchema) {}
+
+@ObjectType()
+export class PaginatedLocations extends PaginatedResponse(LocationSchema) {}
