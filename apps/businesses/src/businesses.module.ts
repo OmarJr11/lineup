@@ -7,6 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { FilesModule } from './files/files.module';
 import { BusinessesModule as BusinessesModuleCore } from './businesses/businesses.module';
+import { LocationsModule } from './locations/locations.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
@@ -75,6 +76,7 @@ import { CatalogsModule } from './catalogs/catalogs.module';
     AuthModule,
     FilesModule,
     BusinessesModuleCore,
+    LocationsModule,
     ProductsModule,
     CatalogsModule,
   ]
