@@ -10,8 +10,11 @@ export class LocationSchema {
     @Field()
     address: string;
 
+    @Field(() => String, { nullable: true })
+    addressComponents?: string;
+
     @Field(() => String)
-    addressComponents: string;
+    googleMapsUrl?: string;
 
     @Field(() => StatusEnum)
     status: StatusEnum;

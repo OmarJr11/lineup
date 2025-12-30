@@ -45,11 +45,11 @@ export class LocationsService extends BasicService<Location> {
 
   /**
    * Get all Locations with pagination
-   * @param {InfinityScrollInput} query - query parameters for pagination
+   * @param {IBusinessReq} businessReq - The business request object.
    * @returns {Promise<Location[]>}
    */
-  async findAll(query: InfinityScrollInput): Promise<Location[]> {
-    return await this.locationsGettersService.findAll(query);
+  async findAllMyLocations(businessReq: IBusinessReq): Promise<Location[]> {
+    return await this.locationsGettersService.findAllMyLocations(businessReq);
   }
 
   /**

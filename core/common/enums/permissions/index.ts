@@ -4,3 +4,4 @@ export * from './blogs-permissions.enum';
 export * from './businesses-permissions.enum';
 export * from './catalogs-permissions.enum';
 export * from './products-permissions.enum';
+export * from './locations-permissions.enum';

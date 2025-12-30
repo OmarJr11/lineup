@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Location } from '../../entities';
 import { BasicService } from '../../common/services';
 import { Not, Repository } from 'typeorm';
-import { InfinityScrollInput } from '../../common/dtos';
 import { locationsResponses } from '../../common/responses';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
+import { IBusinessReq } from '../../common/interfaces';
 
 @Injectable()
 export class LocationsGettersService extends BasicService<Location> {
@@ -22,20 +22,16 @@ export class LocationsGettersService extends BasicService<Location> {
 
     /**
      * Get all Locations with pagination
-     * @param {InfinityScrollInput} query - query parameters for pagination
+     * @param {IBusinessReq} businessReq - The business request object.
      * @returns {Promise<Location[]>}
      */
-    async findAll(query: InfinityScrollInput): Promise<Location[]> {
-        const page = query.page || 1;
-        const limit = query.limit || 10;
-        const skip = (page - 1) * limit;
-        const order = query.order || 'DESC';
-        const orderBy = query.orderBy || 'creation_date';
+    async findAllMyLocations(businessReq: IBusinessReq): Promise<Location[]> {
         return await this.createQueryBuilder('l')
             .where('l.status <> :status', { status: StatusEnum.DELETED })
-            .limit(limit)
-            .offset(skip)
-            .orderBy(`l.${orderBy}`, order)
+            .andWhere(
+                'l.idCreationBusiness = :idCreationBusiness',
+                { idCreationBusiness: businessReq.businessId }
+            )
             .getMany();
     }
 

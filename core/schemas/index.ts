@@ -15,3 +15,4 @@ export * from './location.schema';
 export * from './base-response.schema';
 export * from './login-response.schema';
 export * from './base.schema';
+export * from './paginated.schema';

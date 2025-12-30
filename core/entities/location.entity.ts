@@ -11,8 +11,11 @@ export class Location extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   address: string;
 
-  @Column({ name: 'address_components', type: 'text' })
+  @Column({ name: 'address_components', type: 'text', nullable: true })
   addressComponents: string;
+
+  @Column({ name: 'google_maps_url', type: 'text' })
+  googleMapsUrl: string;
   
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
