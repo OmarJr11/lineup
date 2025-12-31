@@ -5,3 +5,4 @@ export * from './businesses-permissions.enum';
 export * from './catalogs-permissions.enum';
 export * from './products-permissions.enum';
 export * from './locations-permissions.enum';
+export * from './social-networks-permissions.enum';
