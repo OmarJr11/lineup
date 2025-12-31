@@ -16,3 +16,4 @@ export * from './base-response.schema';
 export * from './login-response.schema';
 export * from './base.schema';
 export * from './paginated.schema';
+export * from './social-network.schema';

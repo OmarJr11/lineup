@@ -10,3 +10,4 @@ export * from './business-roles.response'; //9
 export * from './catalogs.response'; //10
 export * from './products.response'; //11
 export * from './locations.response'; //12
+export * from './social-networks.response'; //13

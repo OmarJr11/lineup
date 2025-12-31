@@ -10,6 +10,7 @@ import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { SocialNetworksModule } from '../../../core/modules/social-networks/social-networks.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
     UsersModule,
     AuthModule,
     FilesModule,
+    SocialNetworksModule,
   ],
 })
 export class AdminModule implements NestModule {

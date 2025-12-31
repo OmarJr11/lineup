@@ -10,7 +10,8 @@ import {
     Token,
     User,
     UserRole,
-    Location
+    Location,
+    SocialNetwork
 } from '.';
 
 export const entities = [
@@ -25,5 +26,6 @@ export const entities = [
     BusinessRole,
     Product,
     Catalog,
-    Location
+    Location,
+    SocialNetwork,
 ]
