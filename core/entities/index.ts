@@ -10,3 +10,5 @@ export * from './business-role.entity';
 export * from './product.entity';
 export * from './catalog.entity';
 export * from './location.entity';
+export * from './social-network.entity';
+export * from './social-network-business.entity';

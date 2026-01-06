@@ -1,3 +1,5 @@
+import { registerEnumType } from "@nestjs/graphql";
+
 export enum SocialMediasEnum {
     FACEBOOK = 'facebook',
     TWITTER = 'twitter',
@@ -16,3 +18,5 @@ export enum SocialMediasEnum {
     EMAIL = 'email',
     OTHER = 'other'
 }
+
+registerEnumType(SocialMediasEnum, { name: 'SocialMediasEnum' });
