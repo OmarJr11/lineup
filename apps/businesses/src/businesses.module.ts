@@ -14,6 +14,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
 import { ProductsModule } from './products/products.module';
 import { CatalogsModule } from './catalogs/catalogs.module';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
+import { SocialNetworkBusinessesModule } from './social-network-businesses/social-network-businesses.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
     ProductsModule,
     CatalogsModule,
     SocialNetworksModule,
+    SocialNetworkBusinessesModule,
   ]
 })
 export class BusinessesModule implements NestModule {
