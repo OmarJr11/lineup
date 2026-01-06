@@ -13,6 +13,8 @@ import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
 import { ProductsModule } from './products/products.module';
 import { CatalogsModule } from './catalogs/catalogs.module';
+import { SocialNetworksModule } from './social-networks/social-networks.module';
+import { SocialNetworkBusinessesModule } from './social-network-businesses/social-network-businesses.module';
 
 @Module({
   imports: [
@@ -79,6 +81,8 @@ import { CatalogsModule } from './catalogs/catalogs.module';
     LocationsModule,
     ProductsModule,
     CatalogsModule,
+    SocialNetworksModule,
+    SocialNetworkBusinessesModule,
   ]
 })
 export class BusinessesModule implements NestModule {

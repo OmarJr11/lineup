@@ -43,6 +43,12 @@ export class SocialNetworksResolver {
         return toSocialNetworkSchema(socialNetwork);
     }
 
+    @Query(() => [SocialNetworkSchema], { name: 'findAllSocialNetworks' })
+    async findAll() {
+        const items = await this.socialNetworksService.findAll();
+        return items.map(socialNetwork => toSocialNetworkSchema(socialNetwork));
+    }
+
     @Mutation(() => SocialNetworkSchema, { name: 'updateSocialNetwork' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(SocialNetworkPermissionsEnum.SNWUPD)

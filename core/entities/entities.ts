@@ -11,7 +11,8 @@ import {
     User,
     UserRole,
     Location,
-    SocialNetwork
+    SocialNetwork,
+    SocialNetworkBusiness
 } from '.';
 
 export const entities = [
@@ -28,4 +29,5 @@ export const entities = [
     Catalog,
     Location,
     SocialNetwork,
+    SocialNetworkBusiness,
 ]

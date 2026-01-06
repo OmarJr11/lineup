@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { SocialMediasEnum, StatusEnum } from '../common/enums';
-import { File, User } from '.';
+import { File, SocialNetworkBusiness, User } from '.';
 
 @Entity({ schema: 'system', name: 'social_networks' })
 export class SocialNetwork extends BaseEntity {
@@ -34,4 +34,7 @@ export class SocialNetwork extends BaseEntity {
     @ManyToOne(() => User, (users) => users.modifiedRoles)
     @JoinColumn([{ name: 'id_modification_user', referencedColumnName: 'id' }])
     modificationUser: User;
+
+    @OneToMany(() => SocialNetworkBusiness, (socialNetworkBusiness) => socialNetworkBusiness.socialNetwork)
+    socialNetworkBusinesses?: SocialNetworkBusiness[];
 }

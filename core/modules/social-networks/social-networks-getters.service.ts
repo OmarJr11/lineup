@@ -57,7 +57,8 @@ export class SocialNetworksGettersService extends BasicService<SocialNetwork> {
   async findAll(): Promise<SocialNetwork[]> {
     try {
       return await this.find({ 
-        where: { status: Not(StatusEnum.DELETED) }
+        where: { status: Not(StatusEnum.DELETED) },
+        relations: ['image']
       });
     } catch (error) {
       LogError(this.logger, error, this.findAll.name);
