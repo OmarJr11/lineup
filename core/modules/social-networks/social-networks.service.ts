@@ -63,6 +63,14 @@ export class SocialNetworksService extends BasicService<SocialNetwork> {
     }
 
     /**
+     * Find all Social Networks
+     * @returns {Promise<SocialNetwork[]>} - Array of Social Network entities
+     */
+    async findAll(): Promise<SocialNetwork[]> {
+        return await this.socialNetworksGettersService.findAll();
+    }
+
+    /**
      * Update Social Network
      * @param {UpdateSocialNetworkInput} data - Data to update the social network
      * @param {IUserReq} user - User or business making the request
