@@ -6,7 +6,9 @@ import {
   BusinessRoleSchema,
   CatalogSchema,
   LocationSchema,
-  ProductSchema
+  ProductFileSchema,
+  ProductSchema,
+  ProductVariationSchema
 } from '.';
 
 @ObjectType()
@@ -61,4 +63,16 @@ export class BusinessSchema {
 
   @Field(() => [FileSchema], { nullable: true })
   files?: FileSchema[];
+
+  @Field(() => [ProductVariationSchema], { nullable: true })
+  productVariations?: ProductVariationSchema[];
+
+  @Field(() => [ProductVariationSchema], { nullable: true })
+  modifiedProductVariations?: ProductVariationSchema[];
+
+  @Field(() => [ProductFileSchema], { nullable: true })
+  productFiles?: ProductFileSchema[];
+
+  @Field(() => [ProductFileSchema], { nullable: true })
+  modifiedProductFiles?: ProductFileSchema[];
 }

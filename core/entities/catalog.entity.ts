@@ -8,7 +8,7 @@ export class Catalog extends BaseEntity {
     @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
     
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 150 })
     title: string;
 
     @Column({ type: 'varchar', name: 'image_code', length: 255, nullable: true })
@@ -17,6 +17,9 @@ export class Catalog extends BaseEntity {
     @ManyToOne(() => File, (files) => files.catalogFiles)
     @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
     image?: File;
+    
+    @Column({ type: 'varchar', length: 255, unique: true })
+    path: string;
     
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;

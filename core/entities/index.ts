@@ -8,6 +8,8 @@ export * from './file.entity';
 export * from './business.entity';
 export * from './business-role.entity';
 export * from './product.entity';
+export * from './product-file.entity';
+export * from './product-variation.entity';
 export * from './catalog.entity';
 export * from './location.entity';
 export * from './social-network.entity';

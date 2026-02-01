@@ -12,3 +12,5 @@ export * from './products.response'; //11
 export * from './locations.response'; //12
 export * from './social-networks.response'; //13
 export * from './social-network-businesses.response'; //14
+export * from './product-files.response'; //15
+export * from './product-variations.response'; //16

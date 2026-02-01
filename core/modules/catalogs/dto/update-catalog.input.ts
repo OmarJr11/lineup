@@ -1,6 +1,6 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, IsArray } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, IsArray, IsEmpty } from 'class-validator';
 
 @InputType()
 export class UpdateCatalogInput {
@@ -28,4 +28,7 @@ export class UpdateCatalogInput {
     @IsArray()
     @IsString({ each: true })
     tags?: string[];
+
+    @IsEmpty()
+    path?: string;
 }

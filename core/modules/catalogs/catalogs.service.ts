@@ -39,6 +39,11 @@ export class CatalogsService extends BasicService<Catalog> {
       data: CreateCatalogInput,
       businessReq: IBusinessReq
     ): Promise<Catalog> {
+      const tittleFormatted = this.catalogsSettersService
+        .generatePathFromTitle(data.title);
+      const path = await this.catalogsGettersService
+        .checkCatalogPathExists(tittleFormatted);
+      data.path = path;
       const catalog = await this.catalogsSettersService.create(data, businessReq);
       return await this.catalogsGettersService.findOne(catalog.id);
     }
@@ -74,6 +79,15 @@ export class CatalogsService extends BasicService<Catalog> {
     }
 
     /**
+     * Find a catalog by its path or fail.
+     * @param {string} path - The path of the catalog to find.
+     * @returns {Promise<Catalog>} The found catalog.
+     */
+    async findOneByPath(path: string): Promise<Catalog> {
+      return await this.catalogsGettersService.getOneByPathOrFail(path);
+    }
+
+    /**
      * Update a catalog.
      * @param {UpdateCatalogInput} data - The data for updating the catalog.
      * @param {IBusinessReq} businessReq - The business request object.
@@ -85,6 +99,13 @@ export class CatalogsService extends BasicService<Catalog> {
       businessReq: IBusinessReq
     ): Promise<Catalog> {
       const catalog = await this.catalogsGettersService.findOne(data.idCatalog);
+      if(data.title && data.title !== catalog.title) {
+        const tittleFormatted = this.catalogsSettersService
+          .generatePathFromTitle(data.title);
+        const path = await this.catalogsGettersService
+          .checkCatalogPathExists(tittleFormatted, catalog.id);
+        data.path = path;
+      }
       await this.catalogsSettersService.update(catalog, data, businessReq);
       return await this.catalogsGettersService.findOne(catalog.id);
     }

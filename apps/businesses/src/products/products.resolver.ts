@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { CreateProductInput } from '../../../../core/modules/products/dto/create-product.input';
 import { ProductsService } from '../../../../core/modules/products/products.service';
 import { UpdateProductInput } from '../../../../core/modules/products/dto/update-product.input';
@@ -44,9 +44,41 @@ export class ProductsResolver {
       };
     }
 
+    @Query(() => PaginatedProducts, { name: 'getAllByCatalog' })
+    async getAllByCatalog(
+      @Args('idCatalog', { type: () => Int }) idCatalog: number,
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByCatalog(idCatalog, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
+    @Query(() => PaginatedProducts, { name: 'getAllByBusiness' })
+    async getAllByBusiness(
+      @Args('idBusiness', { type: () => Int }) idBusiness: number,
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByBusiness(idBusiness, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
     @Query(() => ProductSchema, { name: 'findOneProduct' })
-    findOne(@Args('id') id: number) {
-      return this.productsService.findOne(id);
+    async findOne(@Args('id', { type: () => Int }) id: number) {
+      return toProductSchema(await this.productsService.findOne(id));
     }
 
     @Mutation(() => ProductSchema, { name: 'updateProduct' })
@@ -60,11 +92,14 @@ export class ProductsResolver {
       return toProductSchema(await this.productsService.update(data, businessReq));
     }
 
-    @Mutation(() => ProductSchema, { name: 'removeProduct' })
+    @Mutation(() => Boolean, { name: 'removeProduct' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(ProductsPermissionsEnum.PRODDEL)
     @Response(productsResponses.delete)
-    async remove(@Args('id') id: number, @BusinessDec() businessReq: IBusinessReq) {
+    async remove(
+      @Args('id', { type: () => Int }) id: number, 
+      @BusinessDec() businessReq: IBusinessReq
+    ) {
       return await this.productsService.remove(id, businessReq);
     }
 }

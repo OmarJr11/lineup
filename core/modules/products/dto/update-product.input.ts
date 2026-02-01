@@ -1,15 +1,16 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ProductImageInput } from './product-image.input';
+import { ProductVariationInput } from './product-variation.input';
 
 @InputType()
 export class UpdateProductInput {
   @Field()
-  @IsOptional()
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
-  id?: number;
+  id: number;
 
   @Field()
   @IsOptional()
@@ -46,4 +47,25 @@ export class UpdateProductInput {
   @Type(() => Number)
   @IsNumber()
   idCatalog?: number;
+
+  @Field(() => [ProductImageInput], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductImageInput)
+  images?: ProductImageInput[];
+
+  @Field(() => [String])
+  @IsOptional()
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
+
+  @Field(() => [ProductVariationInput], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariationInput)
+  variations?: ProductVariationInput[];
 }
