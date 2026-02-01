@@ -10,6 +10,8 @@ export * from './business.schema';
 export * from './paginated.schema';
 export * from './business-role.schema';
 export * from './product.schema';
+export * from './product-file.schema';
+export * from './product-variation.schema';
 export * from './catalog.schema';
 export * from './location.schema';
 export * from './base-response.schema';

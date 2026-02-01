@@ -3,18 +3,24 @@ import { BusinessSchema, FileSchema, ProductSchema } from '.';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class CatalogSchema{
+export class ProductFileSchema {
     @Field(() => Int)
     id: number;
 
     @Field()
-    title: string;
+    imageCode: string;
 
-    @Field({ nullable: true })
-    imageCode?: string;
+    @Field(() => FileSchema, { nullable: true })
+    file?: FileSchema;
 
-    @Field()
-    path: string;
+    @Field(() => Int)
+    idProduct: number;
+
+    @Field(() => ProductSchema, { nullable: true })
+    product?: ProductSchema;
+
+    @Field(() => Int)
+    order: number;
 
     @Field(() => StatusEnum)
     status: StatusEnum;
@@ -22,18 +28,9 @@ export class CatalogSchema{
     @Field(() => Int)
     idCreationBusiness: number;
 
-    @Field(() => [String], { nullable: true })
-    tags?: string[];
-
     @Field(() => BusinessSchema, { nullable: true })
     business?: BusinessSchema;
 
     @Field(() => BusinessSchema, { nullable: true })
-    modificationBusiness?: BusinessSchema;
-
-    @Field(() => [ProductSchema], { nullable: true })
-    products?: ProductSchema[];
-
-    @Field(() => FileSchema, { nullable: true })
-    image?: FileSchema;
+    modificationBusiness?: BusinessSchema;  
 }

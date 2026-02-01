@@ -35,11 +35,12 @@ export class ProductsSettersService extends BasicService<Product> {
         data: CreateProductInput,
         businessReq: IBusinessReq
     ): Promise<Product> {
-        return await this.save(data, businessReq)
-            .catch((error) => {
-                LogError(this.logger, error, this.create.name, businessReq);
-                throw new InternalServerErrorException(this.rCreate.error);
-            });
+      try {
+        return await this.save(data, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.create.name, businessReq);
+        throw new InternalServerErrorException(this.rCreate.error);
+      }
     }
 
     /**
@@ -54,11 +55,12 @@ export class ProductsSettersService extends BasicService<Product> {
         data: UpdateProductInput,
         businessReq: IBusinessReq
     ) {
-      return await this.updateEntity(data, product, businessReq)
-        .catch((error) => {
-          LogError(this.logger, error, this.update.name, businessReq);
-          throw new InternalServerErrorException(this.rUpdate.error);
-        });
+      try {
+        return await this.updateEntity(data, product, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.update.name, businessReq);
+        throw new InternalServerErrorException(this.rUpdate.error);
+      }
     }
 
     /**
@@ -68,10 +70,11 @@ export class ProductsSettersService extends BasicService<Product> {
      */
     @Transactional()
     async remove(product: Product, businessReq: IBusinessReq) {
-        return await this.deleteEntityByStatus(product, businessReq)
-            .catch((error) => {
-                LogError(this.logger, error, this.remove.name, businessReq);
-                throw new InternalServerErrorException(this.rDelete.error);
-            });
+      try {
+        return await this.deleteEntityByStatus(product, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.remove.name, businessReq);
+        throw new InternalServerErrorException(this.rDelete.error);
+      }
     }
 }

@@ -35,11 +35,12 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       data: CreateCatalogInput,
       businessReq: IBusinessReq
     ): Promise<Catalog> {
-      return await this.save(data, businessReq)
-        .catch((error) => {
-          LogError(this.logger, error, this.create.name, businessReq);
-          throw new InternalServerErrorException(this.rCreate.error);
-        });
+      try {
+        return await this.save(data, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.create.name, businessReq);
+        throw new InternalServerErrorException(this.rCreate.error);
+      }
     }
 
     /**
@@ -54,11 +55,12 @@ export class CatalogsSettersService extends BasicService<Catalog> {
         data: UpdateCatalogInput,
         businessReq: IBusinessReq
     ) {
-      return await this.updateEntity(data, catalog, businessReq)
-        .catch((error) => {
-          LogError(this.logger, error, this.update.name, businessReq);
-          throw new InternalServerErrorException(this.rUpdate.error);
-        });
+      try {
+        return await this.updateEntity(data, catalog, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.update.name, businessReq);
+        throw new InternalServerErrorException(this.rUpdate.error);
+      }
     }
 
     /**
@@ -68,9 +70,30 @@ export class CatalogsSettersService extends BasicService<Catalog> {
      */
     @Transactional()
     async remove(catalog: Catalog, businessReq: IBusinessReq) {
-      return await this.deleteEntityByStatus(catalog, businessReq).catch((error) => {
+      try {
+        return await this.deleteEntityByStatus(catalog, businessReq);
+      } catch (error) {
         LogError(this.logger, error, this.remove.name, businessReq);
         throw new InternalServerErrorException(this.rDelete.error);
-      });
+      }
+    }
+
+    /**
+     * Generate a URL-friendly path from a catalog title.
+     * - lowercases
+     * - removes diacritics (accents)
+     * - replaces any non-alphanumeric sequence with a single hyphen
+     * - trims leading/trailing hyphens
+     * @param {string} title - The catalog title
+     * @returns {string} The generated path
+     */
+    generatePathFromTitle(title: string): string {
+      return title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-');
     }
 }

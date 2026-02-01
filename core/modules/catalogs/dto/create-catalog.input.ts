@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, MaxLength, MinLength, IsOptional, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength, IsOptional, IsArray, IsEmpty } from 'class-validator';
 
 @InputType()
 export class CreateCatalogInput {
@@ -20,4 +20,7 @@ export class CreateCatalogInput {
     @IsArray()
     @IsString({ each: true })
     tags?: string[];
+
+    @IsEmpty()
+    path?: string;
 }
