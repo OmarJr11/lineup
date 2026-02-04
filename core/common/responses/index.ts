@@ -15,3 +15,4 @@ export * from './social-network-businesses.response'; //14
 export * from './product-files.response'; //15
 export * from './product-variations.response'; //16
 export * from './product-reactions.response'; //17
+export * from './business-followers.response'; //18

@@ -9,6 +9,7 @@ export * from './permission.schema';
 export * from './business.schema';
 export * from './paginated.schema';
 export * from './business-role.schema';
+export * from './business-follower.schema';
 export * from './product.schema';
 export * from './product-file.schema';
 export * from './product-variation.schema';

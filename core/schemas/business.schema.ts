@@ -3,6 +3,7 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
 import {
+  BusinessFollowerSchema,
   BusinessRoleSchema,
   CatalogSchema,
   LocationSchema,
@@ -46,6 +47,9 @@ export class BusinessSchema {
   @Field(() => [String], { nullable: true })
   tags?: string[];
 
+  @Field(() => Int)
+  followers: number;
+
   @Field(() => StatusEnum)
   status: StatusEnum;
 
@@ -75,4 +79,7 @@ export class BusinessSchema {
 
   @Field(() => [ProductFileSchema], { nullable: true })
   modifiedProductFiles?: ProductFileSchema[];
+
+  @Field(() => [BusinessFollowerSchema], { nullable: true })
+  businessFollowers?: BusinessFollowerSchema[];
 }

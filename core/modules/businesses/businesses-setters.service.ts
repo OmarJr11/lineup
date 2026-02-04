@@ -84,4 +84,24 @@ export class BusinessesSettersService extends BasicService<Business> {
             throw new InternalServerErrorException(this._ucDelete.error);
         });
     }
+
+    /**
+     * Increment the followers count on a business.
+     * @param {Business} business - The business.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async incrementFollowers(business: Business, userReq: IUserReq) {
+        const followers = business.followers + 1;
+        await this.updateEntity({ followers }, business, userReq);
+    }
+
+    /**
+     * Decrement the followers count on a business.
+     * @param {Business} business - The business.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async decrementFollowers(business: Business, userReq: IUserReq) {
+        const followers = business.followers - 1;
+        await this.updateEntity({ followers }, business, userReq);
+    }
 }

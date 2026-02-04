@@ -11,6 +11,7 @@ import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
 import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
+import { BusinessesModule } from './businesses/businesses.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { ProductsModule } from './products/products.module';
     UsersModuleCore,
     FilesModule,
     ProductsModule,
+    BusinessesModule,
   ],
 })
 export class UsersModule implements NestModule {
