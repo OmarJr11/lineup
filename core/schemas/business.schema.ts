@@ -3,10 +3,13 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
 import {
+  BusinessFollowerSchema,
   BusinessRoleSchema,
   CatalogSchema,
   LocationSchema,
-  ProductSchema
+  ProductFileSchema,
+  ProductSchema,
+  ProductVariationSchema
 } from '.';
 
 @ObjectType()
@@ -44,6 +47,9 @@ export class BusinessSchema {
   @Field(() => [String], { nullable: true })
   tags?: string[];
 
+  @Field(() => Int)
+  followers: number;
+
   @Field(() => StatusEnum)
   status: StatusEnum;
 
@@ -61,4 +67,19 @@ export class BusinessSchema {
 
   @Field(() => [FileSchema], { nullable: true })
   files?: FileSchema[];
+
+  @Field(() => [ProductVariationSchema], { nullable: true })
+  productVariations?: ProductVariationSchema[];
+
+  @Field(() => [ProductVariationSchema], { nullable: true })
+  modifiedProductVariations?: ProductVariationSchema[];
+
+  @Field(() => [ProductFileSchema], { nullable: true })
+  productFiles?: ProductFileSchema[];
+
+  @Field(() => [ProductFileSchema], { nullable: true })
+  modifiedProductFiles?: ProductFileSchema[];
+
+  @Field(() => [BusinessFollowerSchema], { nullable: true })
+  businessFollowers?: BusinessFollowerSchema[];
 }

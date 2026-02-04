@@ -5,12 +5,18 @@ import {
     File,
     Permission,
     Product,
+    ProductFile,
+    ProductVariation,
     Role,
     RolePermission,
     Token,
     User,
     UserRole,
-    Location
+    Location,
+    SocialNetwork,
+    SocialNetworkBusiness,
+    ProductReaction,
+    BusinessFollower
 } from '.';
 
 export const entities = [
@@ -24,6 +30,12 @@ export const entities = [
     Business,
     BusinessRole,
     Product,
+    ProductFile,
+    ProductReaction,
+    ProductVariation,
     Catalog,
-    Location
+    Location,
+    SocialNetwork,
+    SocialNetworkBusiness,
+    BusinessFollower
 ]

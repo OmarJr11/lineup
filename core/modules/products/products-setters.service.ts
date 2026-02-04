@@ -5,7 +5,7 @@ import { Product } from '../../entities';
 import { BasicService } from '../../common/services';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IBusinessReq } from '../../common/interfaces';
+import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
@@ -35,11 +35,12 @@ export class ProductsSettersService extends BasicService<Product> {
         data: CreateProductInput,
         businessReq: IBusinessReq
     ): Promise<Product> {
-        return await this.save(data, businessReq)
-            .catch((error) => {
-                LogError(this.logger, error, this.create.name, businessReq);
-                throw new InternalServerErrorException(this.rCreate.error);
-            });
+      try {
+        return await this.save(data, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.create.name, businessReq);
+        throw new InternalServerErrorException(this.rCreate.error);
+      }
     }
 
     /**
@@ -54,11 +55,12 @@ export class ProductsSettersService extends BasicService<Product> {
         data: UpdateProductInput,
         businessReq: IBusinessReq
     ) {
-      return await this.updateEntity(data, product, businessReq)
-        .catch((error) => {
-          LogError(this.logger, error, this.update.name, businessReq);
-          throw new InternalServerErrorException(this.rUpdate.error);
-        });
+      try {
+        return await this.updateEntity(data, product, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.update.name, businessReq);
+        throw new InternalServerErrorException(this.rUpdate.error);
+      }
     }
 
     /**
@@ -68,10 +70,31 @@ export class ProductsSettersService extends BasicService<Product> {
      */
     @Transactional()
     async remove(product: Product, businessReq: IBusinessReq) {
-        return await this.deleteEntityByStatus(product, businessReq)
-            .catch((error) => {
-                LogError(this.logger, error, this.remove.name, businessReq);
-                throw new InternalServerErrorException(this.rDelete.error);
-            });
+      try {
+        return await this.deleteEntityByStatus(product, businessReq);
+      } catch (error) {
+        LogError(this.logger, error, this.remove.name, businessReq);
+        throw new InternalServerErrorException(this.rDelete.error);
+      }
+    }
+
+    /**
+     * Increment the likes count on a product.
+     * @param {Product} product - The product.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async incrementLikes(product: Product, userReq: IUserReq) {
+        const likes = product.likes + 1;
+        await this.updateEntity({ likes }, product, userReq);
+    }
+
+    /**
+     * Decrement the likes count on a product.
+     * @param {Product} product - The product.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async decrementLikes(product: Product, userReq: IUserReq) {
+        const likes = product.likes - 1;
+        await this.updateEntity({ likes }, product, userReq);
     }
 }

@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog } from '.';
+import { Business, Catalog, ProductFile, ProductReaction, ProductVariation } from '.';
 
 @Entity({ name: 'products' })
 export class Product extends BaseEntity {
@@ -46,4 +46,13 @@ export class Product extends BaseEntity {
     @ManyToOne(() => Business, (business) => business.modifiedProducts)
     @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
     modificationBusiness?: Business;
+
+    @OneToMany(() => ProductFile, (productFile) => productFile.product)
+    productFiles?: ProductFile[];
+
+    @OneToMany(() => ProductVariation, (variation) => variation.product)
+    variations?: ProductVariation[];
+
+    @OneToMany(() => ProductReaction, (reaction) => reaction.product)
+    reactions?: ProductReaction[];
 }

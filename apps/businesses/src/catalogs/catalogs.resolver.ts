@@ -67,6 +67,11 @@ export class CatalogsResolver {
     return toCatalogSchema(await this.catalogsService.findOne(id));
   }
 
+  @Query(() => CatalogSchema, { name: 'findOneCatalogByPath' })
+  async findOneByPath(@Args('path', { type: () => String }) path: string) {
+    return toCatalogSchema(await this.catalogsService.findOneByPath(path));
+  }
+
   @Mutation(() => CatalogSchema, { name: 'updateCatalog' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(CatalogsPermissionsEnum.CATUPDATE)

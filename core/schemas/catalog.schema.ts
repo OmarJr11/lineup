@@ -13,6 +13,9 @@ export class CatalogSchema{
     @Field({ nullable: true })
     imageCode?: string;
 
+    @Field()
+    path: string;
+
     @Field(() => StatusEnum)
     status: StatusEnum;
 
