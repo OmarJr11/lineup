@@ -1,8 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, ProductFile } from '.';
-import { ProductVariation } from './product-variation.entity';
+import { Business, Catalog, ProductFile, ProductReaction, ProductVariation } from '.';
 
 @Entity({ name: 'products' })
 export class Product extends BaseEntity {
@@ -53,4 +52,7 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductVariation, (variation) => variation.product)
     variations?: ProductVariation[];
+
+    @OneToMany(() => ProductReaction, (reaction) => reaction.product)
+    reactions?: ProductReaction[];
 }

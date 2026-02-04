@@ -14,7 +14,7 @@ export class BusinessesGettersService extends BasicService<Business> {
     private logger: Logger = new Logger(BusinessesGettersService.name);
     private readonly _uList = businessesResponses.list;
     private readonly _uToken = businessesResponses.token;
-    private readonly _relations = ['image', 'locations'];
+    private readonly _relations = ['image', 'locations', 'businessFollowers'];
 
     constructor(
         @InjectRepository(Business)
@@ -40,6 +40,7 @@ export class BusinessesGettersService extends BasicService<Business> {
                 'b.locations', 'locations', 'locations.status <> :locationStatus',
                 { locationStatus: StatusEnum.DELETED }
             )
+            .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
             .where('b.status <> :status', { status: StatusEnum.DELETED })
             .limit(limit)
             .offset(skip)

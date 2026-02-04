@@ -13,6 +13,14 @@ import { IBusinessReq } from '../../common/interfaces';
 export class CatalogsGettersService extends BasicService<Catalog> {
     private logger = new Logger(CatalogsGettersService.name);
     private readonly rList = catalogsResponses.list;
+    private readonly _relations = [
+        'image', 
+        'business', 'business.image', 
+        'products', 
+        'products.productFiles', 'products.productFiles.file', 
+        'products.variations', 
+        'products.reactions'
+    ];
 
     constructor(
       @InjectRepository(Catalog)
@@ -34,6 +42,13 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         const orderBy = query.orderBy || 'creation_date';
         return await this.createQueryBuilder('c')
             .leftJoinAndSelect('c.image', 'image')
+            .leftJoinAndSelect('c.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage')
+            .leftJoinAndSelect('c.products', 'products')
+            .leftJoinAndSelect('products.productFiles', 'productFiles')
+            .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+            .leftJoinAndSelect('products.variations', 'variations')
+            .leftJoinAndSelect('products.reactions', 'reactions')
             .where('c.status <> :status', { status: StatusEnum.DELETED })
             .limit(limit)
             .offset(skip)
@@ -57,6 +72,13 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         const orderBy = query.orderBy || 'creation_date';
         return await this.createQueryBuilder('c')
             .leftJoinAndSelect('c.image', 'image')
+            .leftJoinAndSelect('c.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage')
+            .leftJoinAndSelect('c.products', 'products')
+            .leftJoinAndSelect('products.productFiles', 'productFiles')
+            .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+            .leftJoinAndSelect('products.variations', 'variations')
+            .leftJoinAndSelect('products.reactions', 'reactions')
             .where('c.status <> :status', { status: StatusEnum.DELETED })
             .andWhere('c.idCreationBusiness = :idCreationBusiness', { idCreationBusiness: business.businessId })
             .limit(limit)
@@ -74,7 +96,7 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         try {
             return await this.findOneWithOptionsOrFail({    
                 where: { id, status: Not(StatusEnum.DELETED) },
-                relations: ['image']
+                relations: this._relations
             });
         } catch (error) {
             LogError(this.logger, error, this.findOne.name);
@@ -100,7 +122,7 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         try {
             return await this.findOneWithOptionsOrFail({
                 where: { path, status: Not(StatusEnum.DELETED) },
-                relations: ['image']
+                relations: this._relations
             });
         } catch (error) {
             LogError(this.logger, error, this.getOneByPathOrFail.name);

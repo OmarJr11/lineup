@@ -16,7 +16,8 @@ export class ProductsGettersService extends BasicService<Product> {
         'catalog', 'catalog.image',
         'business', 'business.image',
         'productFiles', 'productFiles.file',
-        'variations'
+        'variations',
+        'reactions'
     ];
 
     constructor(
@@ -131,6 +132,7 @@ export class ProductsGettersService extends BasicService<Product> {
             .leftJoinAndSelect('catalog.image', 'imageCatalog')
             .leftJoinAndSelect('p.business', 'business')
             .leftJoinAndSelect('business.image', 'imageBusiness')
-            .leftJoinAndSelect('p.variations', 'variations');
+            .leftJoinAndSelect('p.variations', 'variations')
+            .leftJoinAndSelect('p.reactions', 'reactions');
     }
 }
