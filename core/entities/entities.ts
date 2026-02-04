@@ -14,7 +14,8 @@ import {
     UserRole,
     Location,
     SocialNetwork,
-    SocialNetworkBusiness
+    SocialNetworkBusiness,
+    ProductReaction
 } from '.';
 
 export const entities = [
@@ -29,6 +30,7 @@ export const entities = [
     BusinessRole,
     Product,
     ProductFile,
+    ProductReaction,
     ProductVariation,
     Catalog,
     Location,

@@ -5,7 +5,7 @@ import { Product } from '../../entities';
 import { BasicService } from '../../common/services';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IBusinessReq } from '../../common/interfaces';
+import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
@@ -76,5 +76,25 @@ export class ProductsSettersService extends BasicService<Product> {
         LogError(this.logger, error, this.remove.name, businessReq);
         throw new InternalServerErrorException(this.rDelete.error);
       }
+    }
+
+    /**
+     * Increment the likes count on a product.
+     * @param {Product} product - The product.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async incrementLikes(product: Product, userReq: IUserReq) {
+        const likes = product.likes + 1;
+        await this.updateEntity({ likes }, product, userReq);
+    }
+
+    /**
+     * Decrement the likes count on a product.
+     * @param {Product} product - The product.
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async decrementLikes(product: Product, userReq: IUserReq) {
+        const likes = product.likes - 1;
+        await this.updateEntity({ likes }, product, userReq);
     }
 }
