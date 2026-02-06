@@ -1,5 +1,12 @@
 import { StatusEnum } from '../common/enums';
-import { BusinessSchema, CatalogSchema, ProductFileSchema, ProductReactionSchema, ProductVariationSchema } from '.';
+import {
+    BusinessSchema,
+    CatalogSchema,
+    CurrencySchema,
+    ProductFileSchema,
+    ProductReactionSchema,
+    ProductVariationSchema
+} from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
@@ -10,14 +17,20 @@ export class ProductSchema{
     @Field()
     title: string;
 
-    @Field()
-    subtitle: string;
+    @Field({ nullable: true })
+    subtitle?: string;
 
     @Field()
     description: string;
 
     @Field(() => Float, { nullable: true })
     price?: number;
+
+    @Field(() => Int, { nullable: true })
+    idCurrency?: number;
+
+    @Field(() => CurrencySchema, { nullable: true })
+    currency?: CurrencySchema;
 
     @Field(() => Int)
     likes: number;
