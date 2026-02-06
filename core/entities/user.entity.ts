@@ -2,7 +2,7 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessFollower, File, ProductReaction, Role, Token, UserRole } from '.';
+import { BusinessFollower, Currency, File, ProductReaction, Role, Token, UserRole } from '.';
 
 @Entity({ schema: 'system', name: 'users' })
 export class User extends BaseEntity {
@@ -56,4 +56,7 @@ export class User extends BaseEntity {
 
     @OneToMany(() => BusinessFollower, (follower) => follower.creationUser)
     businessFollowers?: BusinessFollower[];
+
+    @OneToMany(() => Currency, (currency) => currency.creationUser)
+    createdCurrencies?: Currency[];
 }

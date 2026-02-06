@@ -1,8 +1,9 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
+import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
 
 @InputType()
 export class UpdateProductInput {
@@ -34,12 +35,19 @@ export class UpdateProductInput {
   @IsString()
   description?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
-  @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
   price?: number;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
+  idCurrency?: number;
 
   @Field()
   @IsOptional()
