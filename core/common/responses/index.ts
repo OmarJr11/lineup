@@ -16,3 +16,4 @@ export * from './product-files.response'; //15
 export * from './product-variations.response'; //16
 export * from './product-reactions.response'; //17
 export * from './business-followers.response'; //18
+export * from './currencies.response'; //19

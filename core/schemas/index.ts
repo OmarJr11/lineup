@@ -22,3 +22,4 @@ export * from './base.schema';
 export * from './paginated.schema';
 export * from './social-network.schema';
 export * from './social-network-business.schema';
+export * from './currency.schema';

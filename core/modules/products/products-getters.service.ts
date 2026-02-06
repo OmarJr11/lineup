@@ -15,6 +15,7 @@ export class ProductsGettersService extends BasicService<Product> {
     private readonly relations = [
         'catalog', 'catalog.image',
         'business', 'business.image',
+        'currency',
         'productFiles', 'productFiles.file',
         'variations',
         'reactions'
@@ -132,6 +133,7 @@ export class ProductsGettersService extends BasicService<Product> {
             .leftJoinAndSelect('catalog.image', 'imageCatalog')
             .leftJoinAndSelect('p.business', 'business')
             .leftJoinAndSelect('business.image', 'imageBusiness')
+            .leftJoinAndSelect('p.currency', 'currency')
             .leftJoinAndSelect('p.variations', 'variations')
             .leftJoinAndSelect('p.reactions', 'reactions');
     }

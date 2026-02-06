@@ -16,7 +16,8 @@ import {
     SocialNetwork,
     SocialNetworkBusiness,
     ProductReaction,
-    BusinessFollower
+    BusinessFollower,
+    Currency
 } from '.';
 
 export const entities = [
@@ -37,5 +38,6 @@ export const entities = [
     Location,
     SocialNetwork,
     SocialNetworkBusiness,
-    BusinessFollower
+    BusinessFollower,
+    Currency
 ]

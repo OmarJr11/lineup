@@ -1,9 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, ProductFile, ProductReaction, ProductVariation } from '.';
+import { Business, Catalog, Currency, ProductFile, ProductReaction, ProductVariation } from '.';
 
 @Entity({ name: 'products' })
+@Check(`(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`)
 export class Product extends BaseEntity {
     @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
@@ -11,7 +12,7 @@ export class Product extends BaseEntity {
     @Column({ type: 'varchar', length: 255 })
     title: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, nullable: true })
     subtitle: string;
 
     @Column({ type: 'text' })
@@ -19,6 +20,13 @@ export class Product extends BaseEntity {
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     price?: number;
+
+    @Column('int8', { name: 'id_currency', nullable: true })
+    idCurrency?: number;
+
+    @ManyToOne(() => Currency, (currency) => currency.products)
+    @JoinColumn([{ name: 'id_currency', referencedColumnName: 'id' }])
+    currency?: Currency;
 
     @Column('int8', { default: 0 })
     likes: number;
