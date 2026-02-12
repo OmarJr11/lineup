@@ -1,9 +1,20 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Check,
+    Column,
+    Entity,
+    Index,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
 import { Business, SocialNetwork } from '.';
 
-
+@Check(
+    'CHK_social_network_business_url_or_phone',
+    `("url" IS NOT NULL AND "url" <> '') OR ("phone" IS NOT NULL AND "phone" <> '')`
+)
 @Index('IDX_unique_active_social_network_business', ['idCreationBusiness', 'idSocialNetwork'], {
     unique: true,
     where: "status != 'deleted'"
@@ -16,8 +27,11 @@ export class SocialNetworkBusiness extends BaseEntity {
     @Column('int8', { name: 'id_social_network' })
     idSocialNetwork: number;
 
-    @Column({ type: 'text' })
-    url: string;
+    @Column({ type: 'text', nullable: true })
+    url?: string;
+
+    @Column({ type: 'text', nullable: true })
+    phone?: string;
 
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;

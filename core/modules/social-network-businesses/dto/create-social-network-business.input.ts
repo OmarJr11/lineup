@@ -1,6 +1,7 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, IsUrl } from 'class-validator';
+import { IsEmpty, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { SocialNetworkContactInput } from './social-network-contact.input';
 
 @InputType()
 export class CreateSocialNetworkBusinessInput {
@@ -10,9 +11,15 @@ export class CreateSocialNetworkBusinessInput {
     @IsNumber()
     idSocialNetwork: number;
 
-    @Field()
+    @Field(() => SocialNetworkContactInput)
     @IsNotEmpty()
-    @IsString()
-    @IsUrl()
-    url: string;
+    @ValidateNested()
+    @Type(() => SocialNetworkContactInput)
+    contact: SocialNetworkContactInput;
+
+    @IsEmpty()
+    url?: string;
+
+    @IsEmpty()
+    phone?: string;
 }
