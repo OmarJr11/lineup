@@ -60,6 +60,9 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
         businessReq: IBusinessReq
     ): Promise<SocialNetworkBusiness> {
         try {
+            const { url, phone } = data.contact;
+            data.url = url;
+            data.phone = phone;
             return await this.updateEntity(data, socialNetworkBusiness, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.update.name, businessReq);

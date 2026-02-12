@@ -29,7 +29,7 @@ export class UpdateSocialNetworkBusinessInput {
     contact?: SocialNetworkContactInput;
 
     @IsEmpty()
-    email?: string;
+    url?: string;
 
     @IsEmpty()
     phone?: string;
