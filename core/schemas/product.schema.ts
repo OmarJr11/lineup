@@ -36,6 +36,9 @@ export class ProductSchema{
     likes: number;
 
     @Field(() => Int)
+    visits: number;
+
+    @Field(() => Int)
     idCatalog: number;
 
     @Field(() => CatalogSchema, { nullable: true })

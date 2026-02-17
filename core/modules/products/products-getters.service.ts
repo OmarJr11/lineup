@@ -39,10 +39,15 @@ export class ProductsGettersService extends BasicService<Product> {
         const skip = (page - 1) * limit;
         const order = query.order || 'DESC';
         const orderBy = query.orderBy || 'creation_date';
-        return await this.getQueryRelations(this.createQueryBuilder('p'))
-            .where('p.status <> :status', { status: StatusEnum.DELETED })
+        const subQuery = this.createQueryBuilder('sub')
+            .select('sub.id')
+            .where('sub.status <> :status', { status: StatusEnum.DELETED })
+            .orderBy(`sub.${orderBy}`, order)
             .limit(limit)
-            .offset(skip)
+            .offset(skip);
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where(`p.id IN (${subQuery.getQuery()})`)
+            .setParameters(subQuery.getParameters())
             .orderBy(`p.${orderBy}`, order)
             .getMany();
     }
@@ -53,12 +58,14 @@ export class ProductsGettersService extends BasicService<Product> {
      * @returns {Promise<Product>} The found product.
      */
     async findOne(id: number): Promise<Product> {
-        return await this.findOneWithOptionsOrFail({ 
-            where: { id, status: Not(StatusEnum.DELETED) },
-        }).catch((error) => {
+        try {
+            return await this.findOneWithOptionsOrFail({ 
+                where: { id, status: Not(StatusEnum.DELETED) },
+            });
+        } catch (error) {
             LogError(this.logger, error, this.findOne.name);
             throw new NotFoundException(this.rList.notFound);
-        });
+        }
     }
 
     /**
@@ -90,11 +97,16 @@ export class ProductsGettersService extends BasicService<Product> {
         const skip = (page - 1) * limit;
         const order = query.order || 'DESC';
         const orderBy = query.orderBy || 'creation_date';
-        return await this.getQueryRelations(this.createQueryBuilder('p'))
-            .where('p.status <> :status', { status: StatusEnum.DELETED })
-            .andWhere('p.idCatalog = :idCatalog', { idCatalog })
+        const subQuery = this.createQueryBuilder('sub')
+            .select('sub.id')
+            .where('sub.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('sub.idCatalog = :idCatalog', { idCatalog })
+            .orderBy(`sub.${orderBy}`, order)
             .limit(limit)
-            .offset(skip)
+            .offset(skip);
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where(`p.id IN (${subQuery.getQuery()})`)
+            .setParameters(subQuery.getParameters())
             .orderBy(`p.${orderBy}`, order)
             .getMany();
     }
@@ -111,11 +123,16 @@ export class ProductsGettersService extends BasicService<Product> {
         const skip = (page - 1) * limit;
         const order = query.order || 'DESC';
         const orderBy = query.orderBy || 'creation_date';
-        return await this.getQueryRelations(this.createQueryBuilder('p'))
-            .where('p.status <> :status', { status: StatusEnum.DELETED })
-            .andWhere('p.idCreationBusiness = :idBusiness', { idBusiness })
+        const subQuery = this.createQueryBuilder('sub')
+            .select('sub.id')
+            .where('sub.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('sub.idCreationBusiness = :idBusiness', { idBusiness })
+            .orderBy(`sub.${orderBy}`, order)
             .limit(limit)
-            .offset(skip)
+            .offset(skip);
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where(`p.id IN (${subQuery.getQuery()})`)
+            .setParameters(subQuery.getParameters())
             .orderBy(`p.${orderBy}`, order)
             .getMany();
     }

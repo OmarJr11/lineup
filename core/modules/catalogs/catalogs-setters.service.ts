@@ -79,6 +79,19 @@ export class CatalogsSettersService extends BasicService<Catalog> {
     }
 
     /**
+     * Increment the visits count on a catalog.
+     * @param {Catalog} catalog - The catalog.
+     */
+    async incrementVisits(catalog: Catalog) {
+        const visits = Number(catalog.visits) + 1;
+        const businessReq: IBusinessReq = { 
+          businessId: catalog.idCreationBusiness,
+          path: catalog.business.path
+        };
+        await this.updateEntity({ visits }, catalog, businessReq);
+    }
+
+    /**
      * Generate a URL-friendly path from a catalog title.
      * - lowercases
      * - removes diacritics (accents)

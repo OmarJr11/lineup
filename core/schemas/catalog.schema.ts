@@ -22,6 +22,9 @@ export class CatalogSchema{
     @Field(() => Int)
     idCreationBusiness: number;
 
+    @Field(() => Int)
+    visits: number;
+
     @Field(() => [String], { nullable: true })
     tags?: string[];
 
