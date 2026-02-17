@@ -10,8 +10,11 @@ export class SocialNetworkBusinessSchema {
     @Field(() => Int)
     idSocialNetwork: number;
 
-    @Field()
-    url: string;
+    @Field({ nullable: true })
+    url?: string;
+
+    @Field({ nullable: true })
+    phone?: string;
 
     @Field(() => StatusEnum)
     status: StatusEnum;

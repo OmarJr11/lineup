@@ -23,3 +23,4 @@ export * from './paginated.schema';
 export * from './social-network.schema';
 export * from './social-network-business.schema';
 export * from './currency.schema';
+export * from './record-visit-response.schema';

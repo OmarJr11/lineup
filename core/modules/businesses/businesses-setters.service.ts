@@ -104,4 +104,14 @@ export class BusinessesSettersService extends BasicService<Business> {
         const followers = business.followers - 1;
         await this.updateEntity({ followers }, business, userReq);
     }
+
+    /**
+     * Increment the visits count on a business.
+     * @param {Business} business - The business.
+     */
+    async incrementVisits(business: Business) {
+        const visits = Number(business.visits) + 1;
+        const businessReq: IBusinessReq = { businessId: business.id, path: business.path };
+        await this.updateEntity({ visits }, business, businessReq);
+    }
 }

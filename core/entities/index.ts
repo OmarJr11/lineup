@@ -17,3 +17,6 @@ export * from './location.entity';
 export * from './social-network.entity';
 export * from './social-network-business.entity';
 export * from './currency.entity';
+export * from './business-visit.entity';
+export * from './product-visit.entity';
+export * from './catalog-visit.entity';

@@ -11,6 +11,11 @@ export const socialNetworkBusinessesResponses = {
             status: false,
             message: 'The Social Network Business already exists.',
         },
+        contactMismatch: {
+            code: 1400102,
+            status: false,
+            message: 'The contact type (url or phone) does not match the selected social network requirements.',
+        },
         error: {
             code: 1400199,
             status: false,

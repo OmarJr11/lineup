@@ -18,3 +18,4 @@ export * from './product-reactions.response'; //17
 export * from './business-followers.response'; //18
 export * from './currencies.response'; //19
 export * from './gemini.response'; //20
+export * from './visits.response'; //20

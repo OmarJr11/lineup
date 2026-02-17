@@ -26,15 +26,16 @@ export class SocialNetworkBusinessesResolver {
         @Args('data') data: CreateSocialNetworkBusinessInput,
         @BusinessDec() businessReq: IBusinessReq
     ) {
-        const socialNetworkBusiness = await this.socialNetworkBusinessesService.create(data, businessReq);
+        const socialNetworkBusiness = await this.socialNetworkBusinessesService
+            .create(data, businessReq);
         return toSocialNetworkBusinessSchema(socialNetworkBusiness);
     }
 
     @Query(() => [SocialNetworkBusinessSchema], { name: 'findAllMySocialNetworkBusinesses' })
     @UseGuards(JwtAuthGuard, TokenGuard)
     async findAllMySocialNetworkBusinesses(@BusinessDec() businessReq: IBusinessReq) {
-        const socialNetworkBusinesses = await this
-            .socialNetworkBusinessesService.findByBusiness(businessReq.businessId);
+        const socialNetworkBusinesses = await this.socialNetworkBusinessesService
+            .findByBusiness(businessReq.businessId);
         return socialNetworkBusinesses.map((snb) => toSocialNetworkBusinessSchema(snb));
     }
 
