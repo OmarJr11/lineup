@@ -17,3 +17,4 @@ export * from './product-variations.response'; //16
 export * from './product-reactions.response'; //17
 export * from './business-followers.response'; //18
 export * from './currencies.response'; //19
+export * from './visits.response'; //20

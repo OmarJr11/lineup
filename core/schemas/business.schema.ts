@@ -50,6 +50,9 @@ export class BusinessSchema {
   @Field(() => Int)
   followers: number;
 
+  @Field(() => Int)
+  visits: number;
+
   @Field(() => StatusEnum)
   status: StatusEnum;
 

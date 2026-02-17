@@ -97,4 +97,17 @@ export class ProductsSettersService extends BasicService<Product> {
         const likes = product.likes - 1;
         await this.updateEntity({ likes }, product, userReq);
     }
+
+    /**
+     * Increment the visits count on a product.
+     * @param {Product} product - The product.
+     */
+    async incrementVisits(product: Product) {
+        const visits = Number(product.visits) + 1;
+        const businessReq: IBusinessReq = {
+          businessId: product.idCreationBusiness,
+          path: ''
+        };
+        await this.updateEntity({ visits }, product, businessReq);
+    }
 }

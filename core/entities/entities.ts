@@ -1,12 +1,15 @@
 import {
     Business,
     BusinessRole,
+    BusinessVisit,
     Catalog,
+    CatalogVisit,
     File,
     Permission,
     Product,
     ProductFile,
     ProductVariation,
+    ProductVisit,
     Role,
     RolePermission,
     Token,
@@ -39,5 +42,8 @@ export const entities = [
     SocialNetwork,
     SocialNetworkBusiness,
     BusinessFollower,
+    BusinessVisit,
+    ProductVisit,
+    CatalogVisit,
     Currency
 ]

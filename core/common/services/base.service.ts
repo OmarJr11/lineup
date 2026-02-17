@@ -194,7 +194,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      * If entity does not exist in the database then inserts.
      *
      * @param {*} data -: Data required to create the entity
-     * @param {IUserReq} [user] - User who executed the action
+     * @param {IUserOrBusinessReq} [userOrBusiness] - User who executed the action
      * @param {IExtraDataToSave} [extraData] - Extra data to save
      */
     async save(data: any, userOrBusiness?: IUserOrBusinessReq, extraData?: IExtraDataToSave) {

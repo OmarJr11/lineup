@@ -12,6 +12,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
 import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
+import { VisitsModule } from './visits/visits.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { BusinessesModule } from './businesses/businesses.module';
     FilesModule,
     ProductsModule,
     BusinessesModule,
+    VisitsModule,
   ],
 })
 export class UsersModule implements NestModule {
