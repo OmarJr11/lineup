@@ -75,10 +75,10 @@ export class ProductsGettersService extends BasicService<Product> {
      */
     async findOneWithRelations(id: number): Promise<Product> {
         try {
-            return await this.findOneWithOptionsOrFail({ 
-                where: { id, status: Not(StatusEnum.DELETED) },
-                relations: this.relations,
-            });
+            return await this.getQueryRelations(this.createQueryBuilder('p'))
+                .where('p.id = :id', { id })
+                .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
         } catch (error) {
             LogError(this.logger, error, this.findOneWithRelations.name);
             throw new NotFoundException(this.rList.notFound);
@@ -142,16 +142,30 @@ export class ProductsGettersService extends BasicService<Product> {
      * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
      * @returns {SelectQueryBuilder<Product>} The query builder with relations applied
      */
-    private getQueryRelations(queryBuilder: SelectQueryBuilder<Product>): SelectQueryBuilder<Product> {
+    private getQueryRelations(
+        queryBuilder: SelectQueryBuilder<Product>
+    ): SelectQueryBuilder<Product> {
         return queryBuilder
-            .leftJoinAndSelect('p.productFiles', 'productFiles')
+            .leftJoinAndSelect(
+                'p.productFiles',
+                'productFiles',
+                'productFiles.status <> :statusProductFile', { statusProductFile: StatusEnum.DELETED }
+            )
             .leftJoinAndSelect('productFiles.file', 'file')
             .leftJoinAndSelect('p.catalog', 'catalog')
             .leftJoinAndSelect('catalog.image', 'imageCatalog')
             .leftJoinAndSelect('p.business', 'business')
             .leftJoinAndSelect('business.image', 'imageBusiness')
             .leftJoinAndSelect('p.currency', 'currency')
-            .leftJoinAndSelect('p.variations', 'variations')
-            .leftJoinAndSelect('p.reactions', 'reactions');
+            .leftJoinAndSelect(
+                'p.variations',
+                'variations',
+                'variations.status <> :statusVariations', { statusVariations: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'p.reactions',
+                'reactions',
+                'reactions.status <> :statusReaction', { statusReaction: StatusEnum.DELETED }
+            );
     }
 }
