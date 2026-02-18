@@ -1,7 +1,7 @@
 import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, ProductFile, ProductReaction, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, Currency, ProductFile, ProductReaction, ProductSearchIndex, ProductVariation, ProductVisit } from '.';
 
 @Entity({ name: 'products' })
 @Check(`(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`)
@@ -69,4 +69,7 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductVisit, (visit) => visit.product)
     productVisits?: ProductVisit[];
+
+    @OneToMany(() => ProductSearchIndex, (index) => index.product)
+    productSearchIndexes?: ProductSearchIndex[];
 }
