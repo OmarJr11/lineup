@@ -7,3 +7,5 @@ export * from './permissions';
 export * from './social-medias.enum';
 export * from './reaction-type.enum';
 export * from './visit-type.enum';
+export * from './search-target.enum';
+export * from './consumers';

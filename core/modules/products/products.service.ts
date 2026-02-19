@@ -19,6 +19,9 @@ import { ProductFilesGettersService } from '../product-files/product-files-gette
 import { ProductVariationsSettersService } from '../product-variations/product-variations-setters.service';
 import { ProductVariationsGettersService } from '../product-variations/product-variations-getters.service';
 import { ProductVariationInput } from './dto/product-variation.input';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
+import { QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 
 @Injectable()
 export class ProductsService extends BasicService<Product> {
@@ -34,7 +37,9 @@ export class ProductsService extends BasicService<Product> {
       private readonly productFilesSettersService: ProductFilesSettersService,
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
-      private readonly productVariationsGettersService: ProductVariationsGettersService
+      private readonly productVariationsGettersService: ProductVariationsGettersService,
+      @InjectQueue(QueueNamesEnum.searchData)
+      private readonly searchDataQueue: Queue,
     ) {
       super(productRepository, businessRequest);
     }
@@ -55,6 +60,10 @@ export class ProductsService extends BasicService<Product> {
         .createProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this
         .createProductVariations(product.id, variations, businessReq);
+      await this.searchDataQueue.add(
+        SearchDataConsumerEnum.SearchDataProduct,
+        { idProduct: product.id }
+      );
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 
@@ -113,6 +122,10 @@ export class ProductsService extends BasicService<Product> {
       await this.productsSettersService.update(product, data, businessReq);
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this.updateProductVariations(product.id, variations, businessReq);
+      await this.searchDataQueue.add(
+        SearchDataConsumerEnum.SearchDataProduct,
+        { idProduct: product.id }
+      );
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 

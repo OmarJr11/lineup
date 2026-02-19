@@ -14,11 +14,13 @@ import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import * as argon2 from 'argon2';
-import { ProvidersEnum } from '../../common/enums';
+import { ProvidersEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 import { RolesService } from '../roles/roles.service';
 import { BusinessRolesService } from '../business-roles/business-roles.service';
 import { LogError } from '../../common/helpers/logger.helper';
 import { businessesResponses } from '../../common/responses';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 @Injectable()
 export class BusinessesService extends BasicService<Business> {
@@ -35,6 +37,8 @@ export class BusinessesService extends BasicService<Business> {
     private readonly businessSettersService: BusinessesSettersService,
     private readonly rolesService: RolesService,
     private readonly businessRolesService: BusinessRolesService,
+    @InjectQueue(QueueNamesEnum.searchData)
+    private readonly searchDataQueue: Queue,
   ) {
     super(businessRepository, userRequest);
   }
@@ -73,6 +77,10 @@ export class BusinessesService extends BasicService<Business> {
     const role = await this.rolesService.findByCode(data.role);
     const userReq: IBusinessReq = { businessId: business.id, path: business.path };
     await this.businessRolesService.create(business.id, role.id, userReq);
+    await this.searchDataQueue.add(
+      SearchDataConsumerEnum.SearchDataBusiness,
+      { idBusiness: business.id }
+    );
     return business;
   }
 
@@ -127,6 +135,10 @@ export class BusinessesService extends BasicService<Business> {
       }
     }
     await this.businessSettersService.update(data, business, businessReq);
+    await this.searchDataQueue.add(
+      SearchDataConsumerEnum.SearchDataBusiness,
+      { idBusiness: business.id }
+    );
     return await this.businessesGettersService.findOne(data.id);
   }
 

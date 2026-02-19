@@ -11,6 +11,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -70,6 +71,12 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
         }
         const status = code >= 200 && code < 300;
         return { code, status, message };
+      },
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
       },
     }),
     UsersModule,

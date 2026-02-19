@@ -13,14 +13,6 @@ import { IBusinessReq } from '../../common/interfaces';
 export class CatalogsGettersService extends BasicService<Catalog> {
     private logger = new Logger(CatalogsGettersService.name);
     private readonly rList = catalogsResponses.list;
-    private readonly _relations = [
-        'image', 
-        'business', 'business.image', 
-        'products', 
-        'products.productFiles', 'products.productFiles.file', 
-        'products.variations', 
-        'products.reactions'
-    ];
 
     constructor(
       @InjectRepository(Catalog)
@@ -74,10 +66,22 @@ export class CatalogsGettersService extends BasicService<Catalog> {
             .leftJoinAndSelect('c.image', 'image')
             .leftJoinAndSelect('c.business', 'business')
             .leftJoinAndSelect('business.image', 'businessImage')
-            .leftJoinAndSelect('c.products', 'products')
-            .leftJoinAndSelect('products.productFiles', 'productFiles')
+            .leftJoinAndSelect(
+                'c.products',
+                'products',
+                'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'products.productFiles',
+                'productFiles',
+                'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
+            )
             .leftJoinAndSelect('productFiles.file', 'productFilesFile')
-            .leftJoinAndSelect('products.variations', 'variations')
+            .leftJoinAndSelect(
+                'products.variations',
+                'variations',
+                'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
+            )
             .leftJoinAndSelect('products.reactions', 'reactions')
             .where('c.status <> :status', { status: StatusEnum.DELETED })
             .andWhere('c.idCreationBusiness = :idCreationBusiness', { idCreationBusiness: business.businessId })
@@ -94,10 +98,30 @@ export class CatalogsGettersService extends BasicService<Catalog> {
      */
     async findOne(id: number): Promise<Catalog> {
         try {
-            return await this.findOneWithOptionsOrFail({    
-                where: { id, status: Not(StatusEnum.DELETED) },
-                relations: this._relations
-            });
+            return await this.createQueryBuilder('c')
+                .leftJoinAndSelect('c.image', 'image')
+                .leftJoinAndSelect('c.business', 'business')
+                .leftJoinAndSelect('business.image', 'businessImage')
+                .leftJoinAndSelect(
+                    'c.products',
+                    'products',
+                    'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect(
+                    'products.productFiles',
+                    'productFiles',
+                    'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+                .leftJoinAndSelect(
+                    'products.variations',
+                    'variations',
+                    'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('products.reactions', 'reactions')
+                .where('c.id = :id', { id })
+                .andWhere('c.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
         } catch (error) {
             LogError(this.logger, error, this.findOne.name);
             throw new NotFoundException(this.rList.notFound);
@@ -110,7 +134,30 @@ export class CatalogsGettersService extends BasicService<Catalog> {
      * @returns {Promise<Catalog | null>} The found catalog or null if not found.
      */
     async getOneByPath(path: string): Promise<Catalog | null> {
-        return await this.findOneWithOptions({ where: { path  } });
+        return await this.createQueryBuilder('c')
+            .leftJoinAndSelect('c.image', 'image')
+            .leftJoinAndSelect('c.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage')
+            .leftJoinAndSelect(
+                'c.products',
+                'products',
+                'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'products.productFiles',
+                'productFiles',
+                'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+            .leftJoinAndSelect(
+                'products.variations',
+                'variations',
+                'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('products.reactions', 'reactions')
+            .where('c.path = :path', { path })
+            .andWhere('c.status <> :status', { status: StatusEnum.DELETED })
+            .getOne();
     }
 
     /**
@@ -120,16 +167,35 @@ export class CatalogsGettersService extends BasicService<Catalog> {
      */
     async getOneByPathOrFail(path: string): Promise<Catalog> {
         try {
-            return await this.findOneWithOptionsOrFail({
-                where: { path, status: Not(StatusEnum.DELETED) },
-                relations: this._relations
-            });
+            return await this.createQueryBuilder('c')
+                .leftJoinAndSelect('c.image', 'image')
+                .leftJoinAndSelect('c.business', 'business')
+                .leftJoinAndSelect('business.image', 'businessImage')
+                .leftJoinAndSelect(
+                    'c.products',
+                    'products',
+                    'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect(
+                    'products.productFiles',
+                    'productFiles',
+                    'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+                .leftJoinAndSelect(
+                    'products.variations',
+                    'variations',
+                    'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('products.reactions', 'reactions')
+                .where('c.path = :path', { path })
+                .andWhere('c.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
         } catch (error) {
             LogError(this.logger, error, this.getOneByPathOrFail.name);
             throw new NotFoundException(this.rList.notFound);
         }
     }
-
     
     /**
      * Check if a catalog path exists and generate a unique path if it does.
