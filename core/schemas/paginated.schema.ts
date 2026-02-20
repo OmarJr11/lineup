@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { createUnionType, ObjectType, Field, Int } from '@nestjs/graphql';
 import { Type } from '@nestjs/common';
 import { UserSchema } from './user.schema';
 import { BusinessSchema } from './business.schema';
@@ -38,3 +38,30 @@ export class PaginatedProducts extends PaginatedResponse(ProductSchema) {}
 
 @ObjectType()
 export class PaginatedLocations extends PaginatedResponse(LocationSchema) {}
+
+/** Union type for search results: Business, Catalog, or Product */
+export const SearchResultItem = createUnionType({
+    name: 'SearchResultItem',
+    types: () => [BusinessSchema, CatalogSchema, ProductSchema] as const,
+    resolveType(value: { __typename?: string }) {
+        if (value.__typename === 'BusinessSchema') return BusinessSchema;
+        if (value.__typename === 'CatalogSchema') return CatalogSchema;
+        if (value.__typename === 'ProductSchema') return ProductSchema;
+        return null;
+    },
+});
+
+@ObjectType()
+export class PaginatedSearchResults {
+    @Field(() => [SearchResultItem])
+    items: object[];
+
+    @Field(() => Int)
+    total: number;
+
+    @Field(() => Int)
+    page: number;
+
+    @Field(() => Int)
+    limit: number;
+}

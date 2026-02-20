@@ -7,6 +7,8 @@ import { BusinessesSettersService } from './businesses-setters.service';
 import { BusinessRolesModule } from '../business-roles/business-roles.module';
 import { RolesModule } from '../roles/roles.module';
 import { LocationsModule } from '../locations/locations.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueNamesEnum } from '../../common/enums';
 
 @Module({
   imports: [
@@ -14,6 +16,12 @@ import { LocationsModule } from '../locations/locations.module';
     BusinessRolesModule,
     RolesModule,
     LocationsModule,
+    BullModule.registerQueue({
+      name: QueueNamesEnum.searchData,
+      defaultJobOptions: {
+        removeOnComplete: true,
+      }
+    }),
   ],
   providers: [
     BusinessesService,

@@ -13,6 +13,7 @@ import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
 import { VisitsModule } from './visits/visits.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { VisitsModule } from './visits/visits.module';
     ProductsModule,
     BusinessesModule,
     VisitsModule,
+    SearchModule,
   ],
 })
 export class UsersModule implements NestModule {

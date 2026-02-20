@@ -11,6 +11,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ConsumersModule } from '../../../core/consumers';
 
 @Module({
   imports: [
@@ -72,10 +74,17 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
         return { code, status, message };
       },
     }),
+    BullModule.forRoot({
+      connection: {
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT),
+      },
+  }),
     UsersModule,
     AuthModule,
     FilesModule,
     SocialNetworksModule,
+    ConsumersModule.register(),
   ],
 })
 export class AdminModule implements NestModule {

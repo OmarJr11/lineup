@@ -12,6 +12,9 @@ import { IBusinessReq } from '../../common/interfaces';
 import { CatalogsSettersService } from './catalogs-setters.service';
 import { CatalogsGettersService } from './catalogs-getters.service';
 import { InfinityScrollInput } from '../../common/dtos';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
+import { QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 
 @Injectable()
 export class CatalogsService extends BasicService<Catalog> {
@@ -23,7 +26,9 @@ export class CatalogsService extends BasicService<Catalog> {
       @InjectRepository(Catalog)
       private readonly catalogRepository: Repository<Catalog>,
       private readonly catalogsSettersService: CatalogsSettersService,
-      private readonly catalogsGettersService: CatalogsGettersService
+      private readonly catalogsGettersService: CatalogsGettersService,
+      @InjectQueue(QueueNamesEnum.searchData)
+      private readonly searchDataQueue: Queue,
     ) {
       super(catalogRepository, businessRequest);
     }
@@ -45,6 +50,10 @@ export class CatalogsService extends BasicService<Catalog> {
         .checkCatalogPathExists(tittleFormatted);
       data.path = path;
       const catalog = await this.catalogsSettersService.create(data, businessReq);
+      await this.searchDataQueue.add(
+        SearchDataConsumerEnum.SearchDataCatalog,
+        { idCatalog: catalog.id }
+      );
       return await this.catalogsGettersService.findOne(catalog.id);
     }
 
@@ -107,6 +116,10 @@ export class CatalogsService extends BasicService<Catalog> {
         data.path = path;
       }
       await this.catalogsSettersService.update(catalog, data, businessReq);
+      await this.searchDataQueue.add(
+        SearchDataConsumerEnum.SearchDataCatalog,
+        { idCatalog: catalog.id }
+      );
       return await this.catalogsGettersService.findOne(catalog.id);
     }
 
