@@ -181,6 +181,53 @@ export class SearchService {
     }
 
     /**
+     * Fetches featured products ordered by a calculated score.
+     * Score formula: likes × 2 + visits × 1.
+     * Results are ordered descending by score.
+     *
+     * @param pagination - InfinityScrollInput (page, limit).
+     * @returns Object with items (Product[]), total count, page, limit.
+     */
+    async getFeaturedProducts(
+        pagination: InfinityScrollInput,
+    ): Promise<IPaginatedResult<Product>> {
+        const page = Number(pagination.page) || 1;
+        const limit = Math.min(Number(pagination.limit) || 10, 50);
+        const offset = (page - 1) * limit;
+        try {
+            const rows = await this.dataSource.query<{ id: number }[]>(
+                `SELECT psi.id_product AS id
+                FROM product_search_index psi
+                INNER JOIN products p ON p.id = psi.id_product
+                INNER JOIN catalogs c ON c.id = psi.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = psi.id_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted'
+                ORDER BY (psi.likes * 2 + psi.visits * 1) DESC
+                LIMIT $1 OFFSET $2`,
+                [limit, offset],
+            );
+            const totalResult = await this.dataSource.query<{ total: number }[]>(
+                `SELECT COUNT(*)::int AS total
+                FROM product_search_index psi
+                INNER JOIN products p ON p.id = psi.id_product
+                INNER JOIN catalogs c ON c.id = psi.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = psi.id_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted'`,
+            );
+            const total = totalResult?.[0]?.total ?? 0;
+            const ids = Array.isArray(rows) ? rows.map((r) => r.id) : [];
+            const products = ids.length > 0 ? await this.fetchProductsByIds(ids) : new Map<number, Product>();
+            const items = ids.map((id) => products.get(id)).filter((p): p is Product => p != null);
+            return { items, total, page, limit };
+        } catch (error) {
+            this.logger.warn(
+                `Featured products fetch failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return { items: [], total: 0, page, limit };
+        }
+    }
+
+    /**
      * Fetches random items when search term is empty.
      *
      * @param target - Scope: ALL, BUSINESSES, CATALOGS, or PRODUCTS.
