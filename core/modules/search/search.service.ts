@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { InfinityScrollInput } from '../../common/dtos';
+import { IPaginatedResult } from '../../common/interfaces';
 import { SearchTargetEnum } from '../../common/enums';
 import { Business, Catalog, Product } from '../../entities';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
@@ -69,7 +70,7 @@ export class SearchService {
     async search(
         pagination: InfinityScrollInput,
         target: SearchTargetEnum,
-    ): Promise<{ items: SearchResultItem[]; total: number; page: number; limit: number }> {
+    ): Promise<IPaginatedResult<SearchResultItem>> {
         const searchTerm = (pagination.search || '').trim();
         const page = pagination.page || 1;
         const limit = Math.min(pagination.limit || 10, 50);
@@ -91,6 +92,50 @@ export class SearchService {
     }
 
     /**
+     * Fetches featured businesses ordered by a calculated score.
+     * Score formula: followers × 3 + visits × 1 + catalogVisitsTotal × 1 + productVisitsTotal × 1 + productLikesTotal × 2.
+     * Results are ordered descending by score.
+     *
+     * @param pagination - InfinityScrollInput (page, limit).
+     * @returns Object with items (Business[]), total count, page, limit.
+     */
+    async getFeaturedBusinesses(
+        pagination: InfinityScrollInput,
+    ): Promise<IPaginatedResult<Business>> {
+        const page = Number(pagination.page) || 1;
+        const limit = Number(pagination.limit) || 10;
+        const offset = (page - 1) * limit;
+        try {
+            const rows = await this.dataSource.query<{ id: number }[]>(
+                `SELECT bsi.id_business AS id
+                FROM business_search_index bsi
+                INNER JOIN businesses b ON b.id = bsi.id_business
+                WHERE b.status <> 'deleted'
+                ORDER BY (bsi.followers * 3 + bsi.visits + bsi.catalog_visits_total
+                    + bsi.product_visits_total + bsi.product_likes_total * 2) DESC
+                LIMIT $1 OFFSET $2`,
+                [limit, offset],
+            );
+            const totalResult = await this.dataSource.query<{ total: number }[]>(
+                `SELECT COUNT(*)::int AS total
+                FROM business_search_index bsi
+                INNER JOIN businesses b ON b.id = bsi.id_business
+                WHERE b.status <> 'deleted'`,
+            );
+            const total = totalResult?.[0]?.total ?? 0;
+            const ids = Array.isArray(rows) ? rows.map((r) => r.id) : [];
+            const businesses = ids.length > 0 ? await this.fetchBusinessesByIds(ids) : new Map<number, Business>();
+            const items = ids.map((id) => businesses.get(id)).filter((b): b is Business => b != null);
+            return { items, total, page, limit };
+        } catch (error) {
+            this.logger.warn(
+                `Featured businesses fetch failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return { items: [], total: 0, page, limit };
+        }
+    }
+
+    /**
      * Fetches random items when search term is empty.
      *
      * @param target - Scope: ALL, BUSINESSES, CATALOGS, or PRODUCTS.
@@ -104,7 +149,7 @@ export class SearchService {
         limit: number,
         offset: number,
         page: number,
-    ): Promise<{ items: SearchResultItem[]; total: number; page: number; limit: number }> {
+    ): Promise<IPaginatedResult<SearchResultItem>> {
         try {
             const rows = await this.executeRandomQuery(target, limit, offset);
             const total = await this.executeRandomCountQuery(target);
