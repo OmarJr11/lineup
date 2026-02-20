@@ -1,7 +1,9 @@
-import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
 import { Business, Catalog, Currency, ProductFile, ProductReaction, ProductSearchIndex, ProductVariation, ProductVisit } from '.';
+
+export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
 @Entity({ name: 'products' })
 @Check(`(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`)
@@ -60,6 +62,15 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductFile, (productFile) => productFile.product)
     productFiles?: ProductFile[];
+
+    /**
+     * Sorts productFiles by order field in ascending order after entity is loaded.
+     */
+    @AfterLoad()
+    sortProductFilesByOrder(): void {
+        if (!this.productFiles?.length) return;
+        else this.productFiles.sort(PRODUCT_FILE_ORDER_ASC);
+    }
 
     @OneToMany(() => ProductVariation, (variation) => variation.product)
     variations?: ProductVariation[];
