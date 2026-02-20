@@ -136,6 +136,51 @@ export class SearchService {
     }
 
     /**
+     * Fetches featured catalogs ordered by a calculated score.
+     * Score formula: visits × 3 + productLikesTotal × 2 + productVisitsTotal × 1.
+     * Results are ordered descending by score.
+     *
+     * @param pagination - InfinityScrollInput (page, limit).
+     * @returns Object with items (Catalog[]), total count, page, limit.
+     */
+    async getFeaturedCatalogs(
+        pagination: InfinityScrollInput,
+    ): Promise<IPaginatedResult<Catalog>> {
+        const page = Number(pagination.page) || 1;
+        const limit = Math.min(Number(pagination.limit) || 10, 50);
+        const offset = (page - 1) * limit;
+        try {
+            const rows = await this.dataSource.query<{ id: number }[]>(
+                `SELECT csi.id_catalog AS id
+                FROM catalog_search_index csi
+                INNER JOIN catalogs c ON c.id = csi.id_catalog
+                INNER JOIN businesses b ON b.id = csi.id_business AND b.status <> 'deleted'
+                WHERE c.status <> 'deleted'
+                ORDER BY (csi.visits * 3 + csi.product_likes_total * 2 + csi.product_visits_total * 1) DESC
+                LIMIT $1 OFFSET $2`,
+                [limit, offset],
+            );
+            const totalResult = await this.dataSource.query<{ total: number }[]>(
+                `SELECT COUNT(*)::int AS total
+                FROM catalog_search_index csi
+                INNER JOIN catalogs c ON c.id = csi.id_catalog
+                INNER JOIN businesses b ON b.id = csi.id_business AND b.status <> 'deleted'
+                WHERE c.status <> 'deleted'`,
+            );
+            const total = totalResult?.[0]?.total ?? 0;
+            const ids = Array.isArray(rows) ? rows.map((r) => r.id) : [];
+            const catalogs = ids.length > 0 ? await this.fetchCatalogsByIds(ids) : new Map<number, Catalog>();
+            const items = ids.map((id) => catalogs.get(id)).filter((c): c is Catalog => c != null);
+            return { items, total, page, limit };
+        } catch (error) {
+            this.logger.warn(
+                `Featured catalogs fetch failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return { items: [], total: 0, page, limit };
+        }
+    }
+
+    /**
      * Fetches random items when search term is empty.
      *
      * @param target - Scope: ALL, BUSINESSES, CATALOGS, or PRODUCTS.

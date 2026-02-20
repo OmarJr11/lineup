@@ -4,7 +4,7 @@ import { SearchService } from '../../../../core/modules/search/search.service';
 import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 import { SearchTargetEnum } from '../../../../core/common/enums';
-import { PaginatedSearchResults, PaginatedBusinesses } from '../../../../core/schemas';
+import { PaginatedSearchResults, PaginatedBusinesses, PaginatedCatalogs } from '../../../../core/schemas';
 import { toBusinessSchema, toCatalogSchema, toProductSchema } from '../../../../core/common/functions';
 import type { SearchResultItem } from '../../../../core/modules/search/search.service';
 import type { Business } from '../../../../core/entities';
@@ -61,6 +61,26 @@ export class SearchResolver {
     ): Promise<PaginatedBusinesses> {
         const result = await this.searchService.getFeaturedBusinesses(pagination);
         const items = result.items.map((b) => toBusinessSchema(b));
+        return {
+            items,
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+        };
+    }
+
+    /**
+     * Returns featured catalogs ordered by score (visits×3 + productLikesTotal×2 + productVisitsTotal×1).
+     * @param pagination - InfinityScrollInput (page, limit)
+     * @returns Paginated catalogs sorted by score descending
+     */
+    @UseGuards(OptionalJwtAuthGuard)
+    @Query(() => PaginatedCatalogs, { name: 'featuredCatalogs' })
+    async featuredCatalogs(
+        @Args('pagination', { type: () => InfinityScrollInput }) pagination: InfinityScrollInput,
+    ): Promise<PaginatedCatalogs> {
+        const result = await this.searchService.getFeaturedCatalogs(pagination);
+        const items = result.items.map((c) => toCatalogSchema(c));
         return {
             items,
             total: result.total,
