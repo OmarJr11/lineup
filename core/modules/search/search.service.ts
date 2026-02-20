@@ -76,7 +76,7 @@ export class SearchService {
         const offset = (page - 1) * limit;
 
         if (!searchTerm) {
-            return { items: [], total: 0, page, limit };
+            return this.fetchRandomItems(target, limit, offset, page);
         }
 
         try {
@@ -88,6 +88,105 @@ export class SearchService {
             this.logger.warn(`Search failed: ${error instanceof Error ? error.message : String(error)}`);
             return { items: [], total: 0, page, limit };
         }
+    }
+
+    /**
+     * Fetches random items when search term is empty.
+     *
+     * @param target - Scope: ALL, BUSINESSES, CATALOGS, or PRODUCTS.
+     * @param limit - Page size.
+     * @param offset - Number of records to skip.
+     * @param page - Current page number.
+     * @returns Object with items (random entities + __typename), total count, page, limit.
+     */
+    private async fetchRandomItems(
+        target: SearchTargetEnum,
+        limit: number,
+        offset: number,
+        page: number,
+    ): Promise<{ items: SearchResultItem[]; total: number; page: number; limit: number }> {
+        try {
+            const rows = await this.executeRandomQuery(target, limit, offset);
+            const total = await this.executeRandomCountQuery(target);
+            const items = await this.fetchEntitiesFromRows(rows);
+            return { items, total, page, limit };
+        } catch (error) {
+            this.logger.warn(`Random fetch failed: ${error instanceof Error ? error.message : String(error)}`);
+            return { items: [], total: 0, page, limit };
+        }
+    }
+
+    /**
+     * Executes random query against businesses, catalogs, and/or products.
+     *
+     * @param target - Which entities to query.
+     * @param limit - Page size.
+     * @param offset - Number of records to skip.
+     * @returns Ordered array of SearchResultRow (id, type) in random order.
+     */
+    private async executeRandomQuery(
+        target: SearchTargetEnum,
+        limit: number,
+        offset: number,
+    ): Promise<SearchResultRow[]> {
+        const parts: string[] = [];
+        const params: unknown[] = [];
+
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.BUSINESSES) {
+            parts.push(`(SELECT id, 'business' AS type, 0::float AS rank FROM businesses WHERE status <> 'deleted')`);
+        }
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.CATALOGS) {
+            parts.push(`(SELECT c.id, 'catalog' AS type, 0::float AS rank FROM catalogs c
+                INNER JOIN businesses b ON b.id = c.id_creation_business AND b.status <> 'deleted'
+                WHERE c.status <> 'deleted')`);
+        }
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
+            parts.push(`(SELECT p.id, 'product' AS type, 0::float AS rank FROM products p
+                INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted')`);
+        }
+
+        if (parts.length === 0) {
+            return [];
+        }
+
+        const sql = `SELECT * FROM (${parts.join(' UNION ALL ')}) AS combined ORDER BY RANDOM() LIMIT $1 OFFSET $2`;
+        const rows = await this.dataSource.query<SearchResultRow[]>(sql, [limit, offset]);
+        return Array.isArray(rows) ? rows : [];
+    }
+
+    /**
+     * Counts total records for random fetch (businesses + catalogs + products).
+     *
+     * @param target - Which entities to count.
+     * @returns Total number of records across the selected scope.
+     */
+    private async executeRandomCountQuery(target: SearchTargetEnum): Promise<number> {
+        const parts: string[] = [];
+
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.BUSINESSES) {
+            parts.push(`(SELECT COUNT(*)::int FROM businesses WHERE status <> 'deleted')`);
+        }
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.CATALOGS) {
+            parts.push(`(SELECT COUNT(*)::int FROM catalogs c
+                INNER JOIN businesses b ON b.id = c.id_creation_business AND b.status <> 'deleted'
+                WHERE c.status <> 'deleted')`);
+        }
+        if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
+            parts.push(`(SELECT COUNT(*)::int FROM products p
+                INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted')`);
+        }
+
+        if (parts.length === 0) {
+            return 0;
+        }
+
+        const sql = `SELECT (${parts.join(' + ')}) AS total`;
+        const result = await this.dataSource.query<{ total: number }[]>(sql);
+        return result?.[0]?.total ?? 0;
     }
 
     /**
@@ -267,16 +366,8 @@ export class SearchService {
      * @returns {Promise<Map<number, Business>>} Map of id -> Business.
      */
     private async fetchBusinessesByIds(ids: number[]): Promise<Map<number, Business>> {
-        const map = new Map<number, Business>();
-        for (const id of ids) {
-            try {
-                const b = await this.businessesGettersService.findOne(id);
-                map.set(id, b);
-            } catch {
-                // skip not found
-            }
-        }
-        return map;
+        const businesses = await this.businessesGettersService.findByIds(ids);
+        return new Map(businesses.map((b) => [b.id, b]));
     }
 
     /**
@@ -287,16 +378,8 @@ export class SearchService {
      * @returns {Promise<Map<number, Catalog>>} Map of id -> Catalog.
      */
     private async fetchCatalogsByIds(ids: number[]): Promise<Map<number, Catalog>> {
-        const map = new Map<number, Catalog>();
-        for (const id of ids) {
-            try {
-                const c = await this.catalogsGettersService.findOne(id);
-                map.set(id, c);
-            } catch {
-                // skip not found
-            }
-        }
-        return map;
+        const catalogs = await this.catalogsGettersService.findByIds(ids);
+        return new Map(catalogs.map((c) => [c.id, c]));
     }
 
     /**
@@ -307,15 +390,7 @@ export class SearchService {
      * @returns {Promise<Map<number, Product>>} Map of id -> Product.
      */
     private async fetchProductsByIds(ids: number[]): Promise<Map<number, Product>> {
-        const map = new Map<number, Product>();
-        for (const id of ids) {
-            try {
-                const p = await this.productsGettersService.findOneWithRelations(id);
-                map.set(id, p);
-            } catch {
-                // skip not found
-            }
-        }
-        return map;
+        const products = await this.productsGettersService.findManyWithRelations(ids);
+        return new Map(products.map((p) => [p.id, p]));
     }
 }

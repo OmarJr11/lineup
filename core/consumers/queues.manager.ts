@@ -10,15 +10,7 @@ export class QueuesManager {
   static get queueNames(): Record<string, string> {
     return {
       cache: QueueNamesEnum.cache,
-      emailSender: QueueNamesEnum.emailSender,
-      blogs: QueueNamesEnum.blogs,
-      files: QueueNamesEnum.files,
-      services: QueueNamesEnum.services,
       searchData: QueueNamesEnum.searchData,
-      wellnessSession: QueueNamesEnum.wellnessSession,
-      users: QueueNamesEnum.users,
-      profileViews: QueueNamesEnum.profileViews,
-      notifications: QueueNamesEnum.notifications,
     };
   }
 
@@ -28,26 +20,10 @@ export class QueuesManager {
 
   constructor(
     @InjectQueue(QueuesManager.queueNames.cache) cacheQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.emailSender) emailSenderQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.blogs) blogsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.files) filesQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.services) servicesQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.searchData) searchDataQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.wellnessSession) wellnessSessionQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.users) usersQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.profileViews) profileViewsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.notifications) notificationsQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
-    this.queues[QueuesManager.queueNames.emailSender] = emailSenderQueue;
-    this.queues[QueuesManager.queueNames.blogs] = blogsQueue;
-    this.queues[QueuesManager.queueNames.files] = filesQueue;
-    this.queues[QueuesManager.queueNames.services] = servicesQueue;
     this.queues[QueuesManager.queueNames.searchData] = searchDataQueue;
-    this.queues[QueuesManager.queueNames.wellnessSession] = wellnessSessionQueue;
-    this.queues[QueuesManager.queueNames.users] = usersQueue;
-    this.queues[QueuesManager.queueNames.profileViews] = profileViewsQueue;
-    this.queues[QueuesManager.queueNames.notifications] = notificationsQueue;
 
     if (
       Object.keys(this.queues).length !=

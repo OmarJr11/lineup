@@ -2,7 +2,6 @@ import { BullModule } from '@nestjs/bullmq';
 import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
-  FilesConsumer,
   QueuesManager,
   SearchDataConsumer,
 } from '.';
@@ -36,7 +35,6 @@ export class ConsumersModule {
       ],
       providers: [
         QueueLogsConsumer,
-        FilesConsumer,
         SearchDataConsumer,
       ],
     };

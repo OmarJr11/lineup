@@ -8,6 +8,7 @@ import { ProductFilesModule } from '../product-files/product-files.module';
 import { ProductVariationsModule } from '../product-variations/product-variations.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { QueueNamesEnum } from '../../common/enums';
         removeOnComplete: true,
       }
     }),
+    CatalogsModule,
   ],
   providers: [
     ProductsService,

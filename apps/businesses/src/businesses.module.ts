@@ -16,6 +16,7 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { SocialNetworkBusinessesModule } from './social-network-businesses/social-network-businesses.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [

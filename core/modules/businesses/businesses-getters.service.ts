@@ -75,6 +75,30 @@ export class BusinessesGettersService extends BasicService<Business> {
     }
 
     /**
+     * Get Businesses by IDs. Returns only found ones; ignores missing/deleted.
+     * @param {number[]} ids - Business IDs to fetch.
+     * @returns {Promise<Business[]>} Array of found businesses.
+     */
+    async findByIds(ids: number[]): Promise<Business[]> {
+        if (!ids?.length) {
+            return [];
+        }
+        const uniqueIds = [...new Set(ids)];
+        const businesses = await this.createQueryBuilder('b')
+            .leftJoinAndSelect('b.image', 'image')
+            .leftJoinAndSelect(
+                'b.locations',
+                'locations',
+                'locations.status <> :locationStatus', { locationStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+            .where('b.id IN (:...ids)', { ids: uniqueIds })
+            .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+        return this.formatBusinesses(businesses);
+    }
+
+    /**
      * Find Business by path
      * @param {string} path - Business path
      * @returns {Promise<Business>}

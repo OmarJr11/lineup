@@ -22,6 +22,7 @@ import { ProductVariationInput } from './dto/product-variation.input';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
+import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 
 @Injectable()
 export class ProductsService extends BasicService<Product> {
@@ -38,6 +39,7 @@ export class ProductsService extends BasicService<Product> {
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
       private readonly productVariationsGettersService: ProductVariationsGettersService,
+      private readonly catalogsGettersService: CatalogsGettersService,
       @InjectQueue(QueueNamesEnum.searchData)
       private readonly searchDataQueue: Queue,
     ) {
@@ -54,6 +56,9 @@ export class ProductsService extends BasicService<Product> {
       data: CreateProductInput,
       businessReq: IBusinessReq
     ): Promise<Product> {
+      const idCatalog = data.idCatalog;
+      const idBusiness = businessReq.businessId;
+      await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations } = this.extractProductRelations(data);
       const product = await this.productsSettersService.create(data, businessReq);
       if (images && images.length > 0) await this
@@ -117,7 +122,10 @@ export class ProductsService extends BasicService<Product> {
       data: UpdateProductInput,
       businessReq: IBusinessReq
     ): Promise<Product> {
-      const product = await this.productsGettersService.findOne(data.id);
+      const idBusiness = businessReq.businessId;
+      const product = await this.productsGettersService.findOneByBusinessId(data.id, idBusiness);
+      const idCatalog = data.idCatalog || product.idCatalog;
+      await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations } = this.extractProductRelations(data);
       await this.productsSettersService.update(product, data, businessReq);
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);

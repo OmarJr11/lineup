@@ -69,6 +69,43 @@ export class ProductsGettersService extends BasicService<Product> {
     }
 
     /**
+     * Find a product by its ID and business ID.
+     * @param {number} id - The ID of the product to find.
+     * @param {number} businessId - The ID of the business to find.
+     * @returns {Promise<Product>} The found product.
+     */
+    async findOneByBusinessId(id: number, businessId: number): Promise<Product> {
+        try {
+            return await this.findOneWithOptionsOrFail({ 
+                where: { 
+                    id,
+                    idCreationBusiness: businessId,
+                    status: Not(StatusEnum.DELETED)
+                },
+            });
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByBusinessId.name);
+            throw new NotFoundException(this.rList.notFound);
+        }
+    }
+
+    /**
+     * Find products by IDs with relations. Returns only found ones; ignores missing/deleted.
+     * @param {number[]} ids - Product IDs to fetch.
+     * @returns {Promise<Product[]>} Array of found products.
+     */
+    async findManyWithRelations(ids: number[]): Promise<Product[]> {
+        if (!ids?.length) {
+            return [];
+        }
+        const uniqueIds = [...new Set(ids)];
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where('p.id IN (:...ids)', { ids: uniqueIds })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+    }
+
+    /**
      * Find a product by its ID with relations.
      * @param {number} id - The ID of the product to find.
      * @returns {Promise<Product>} The found product.
