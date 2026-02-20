@@ -4,7 +4,7 @@ import { SearchService } from '../../../../core/modules/search/search.service';
 import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 import { SearchTargetEnum } from '../../../../core/common/enums';
-import { PaginatedSearchResults, PaginatedBusinesses, PaginatedCatalogs } from '../../../../core/schemas';
+import { PaginatedSearchResults, PaginatedBusinesses, PaginatedCatalogs, PaginatedProducts } from '../../../../core/schemas';
 import { toBusinessSchema, toCatalogSchema, toProductSchema } from '../../../../core/common/functions';
 import type { SearchResultItem } from '../../../../core/modules/search/search.service';
 import type { Business } from '../../../../core/entities';
@@ -81,6 +81,26 @@ export class SearchResolver {
     ): Promise<PaginatedCatalogs> {
         const result = await this.searchService.getFeaturedCatalogs(pagination);
         const items = result.items.map((c) => toCatalogSchema(c));
+        return {
+            items,
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+        };
+    }
+
+    /**
+     * Returns featured products ordered by score (likes×2 + visits×1).
+     * @param pagination - InfinityScrollInput (page, limit)
+     * @returns Paginated products sorted by score descending
+     */
+    @UseGuards(OptionalJwtAuthGuard)
+    @Query(() => PaginatedProducts, { name: 'featuredProducts' })
+    async featuredProducts(
+        @Args('pagination', { type: () => InfinityScrollInput }) pagination: InfinityScrollInput,
+    ): Promise<PaginatedProducts> {
+        const result = await this.searchService.getFeaturedProducts(pagination);
+        const items = result.items.map((p) => toProductSchema(p));
         return {
             items,
             total: result.total,
