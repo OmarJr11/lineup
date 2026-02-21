@@ -27,6 +27,10 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - db
       - redis
@@ -40,6 +44,10 @@ services:
       - "3001:3001"
     env_file:
       - .env
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - db
       - redis
@@ -53,6 +61,10 @@ services:
       - "3002:3002"
     env_file:
       - .env
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - db
       - redis
