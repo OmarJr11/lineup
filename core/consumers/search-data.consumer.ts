@@ -2,7 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { QueueNamesEnum } from '../common/enums/consumers';
-import { SearchDataConsumerEnum } from '../common/enums';
+import { SearchDataConsumerEnum, VisitTypeEnum } from '../common/enums';
 import { BusinessesGettersService } from '../modules/businesses/businesses-getters.service';
 import { CatalogsGettersService } from '../modules/catalogs/catalogs-getters.service';
 import { ProductsGettersService } from '../modules/products/products-getters.service';
@@ -17,6 +17,15 @@ interface SearchDataBusinessJobData { idBusiness: number; }
 
 /** Payload for catalog search index job. */
 interface SearchDataCatalogJobData { idCatalog: number; }
+
+/** Payload for visit record job. Updates search index counters when a visit is recorded. */
+interface SearchDataVisitRecordJobData { type: VisitTypeEnum; id: number; }
+
+/** Payload for business follow record job. Updates business_search_index.followers on follow/unfollow. */
+interface SearchDataBusinessFollowRecordJobData { idBusiness: number; action: 'follow' | 'unfollow'; }
+
+/** Payload for product like record job. Updates product, catalog and business search index likes on like/unlike. */
+interface SearchDataProductLikeRecordJobData { idProduct: number; action: 'like' | 'unlike'; }
 
 @Processor(QueueNamesEnum.searchData)
 export class SearchDataConsumer extends WorkerHost {
@@ -45,6 +54,15 @@ export class SearchDataConsumer extends WorkerHost {
         break;
       case SearchDataConsumerEnum.SearchDataCatalog:
         await this.setDataInSearchIndexCatalog(job);
+        break;
+      case SearchDataConsumerEnum.SearchDataVisitRecord:
+        await this.processVisitRecord(job);
+        break;
+      case SearchDataConsumerEnum.SearchDataBusinessFollowRecord:
+        await this.processBusinessFollowRecord(job);
+        break;
+      case SearchDataConsumerEnum.SearchDataProductLikeRecord:
+        await this.processProductLikeRecord(job);
         break;
       default:
         LogWarn(this.log, `Unhandled job: ${job.name}`, this.process.name);
@@ -91,5 +109,86 @@ export class SearchDataConsumer extends WorkerHost {
     }
     const catalog = await this.catalogsGettersService.findOne(idCatalog);
     await this.searchIndexService.upsertCatalogSearchIndex(catalog);
+  }
+
+  /**
+   * Processes a visit record job. Increments the appropriate search index counters.
+   * - BUSINESS: business_search_index.visits
+   * - CATALOG: catalog_search_index.visits, business_search_index.catalog_visits_total
+   * - PRODUCT: product_search_index.visits, catalog_search_index.product_visits_total, business_search_index.product_visits_total
+   * @param {Job<SearchDataVisitRecordJobData>} job - BullMQ job with { type, id }.
+   */
+  private async processVisitRecord(job: Job<SearchDataVisitRecordJobData>): Promise<void> {
+    const { type, id } = job.data;
+    if (!type || !id) {
+      LogWarn(this.log, `Missing type or id in visit record job ${job.id}`, this.processVisitRecord.name);
+      return;
+    }
+    switch (type) {
+      case VisitTypeEnum.BUSINESS:
+        await this.searchIndexService.incrementBusinessVisits(id);
+        break;
+      case VisitTypeEnum.CATALOG: {
+        const catalog = await this.catalogsGettersService.findOne(id);
+        await this.searchIndexService.incrementCatalogVisits(id);
+        await this.searchIndexService.incrementBusinessCatalogVisitsTotal(catalog.idCreationBusiness);
+        break;
+      }
+      case VisitTypeEnum.PRODUCT: {
+        const product = await this.productsGettersService.findOne(id);
+        await this.searchIndexService.incrementProductVisits(id);
+        await this.searchIndexService.incrementCatalogProductVisitsTotal(product.idCatalog);
+        await this.searchIndexService.incrementBusinessProductVisitsTotal(product.idCreationBusiness);
+        break;
+      }
+      default:
+        LogWarn(this.log, `Unknown visit type: ${type}`, this.processVisitRecord.name);
+    }
+  }
+
+  /**
+   * Processes a business follow record job. Increments or decrements business_search_index.followers.
+   * @param {Job<SearchDataBusinessFollowRecordJobData>} job - BullMQ job with { idBusiness, action }.
+   */
+  private async processBusinessFollowRecord(job: Job<SearchDataBusinessFollowRecordJobData>): Promise<void> {
+    const { idBusiness, action } = job.data;
+    if (!idBusiness || !action) {
+      LogWarn(this.log, `Missing idBusiness or action in follow record job ${job.id}`, this.processBusinessFollowRecord.name);
+      return;
+    }
+    if (action === 'follow') {
+      await this.searchIndexService.incrementBusinessFollowers(idBusiness);
+    } else if (action === 'unfollow') {
+      await this.searchIndexService.decrementBusinessFollowers(idBusiness);
+    } else {
+      LogWarn(this.log, `Unknown follow action: ${action}`, this.processBusinessFollowRecord.name);
+    }
+  }
+
+  /**
+   * Processes a product like record job. Increments or decrements likes in product, catalog and business search indexes.
+   * - product_search_index.likes
+   * - catalog_search_index.product_likes_total
+   * - business_search_index.product_likes_total
+   * @param {Job<SearchDataProductLikeRecordJobData>} job - BullMQ job with { idProduct, action }.
+   */
+  private async processProductLikeRecord(job: Job<SearchDataProductLikeRecordJobData>): Promise<void> {
+    const { idProduct, action } = job.data;
+    if (!idProduct || !action) {
+      LogWarn(this.log, `Missing idProduct or action in product like record job ${job.id}`, this.processProductLikeRecord.name);
+      return;
+    }
+    const product = await this.productsGettersService.findOne(idProduct);
+    if (action === 'like') {
+      await this.searchIndexService.incrementProductLikes(idProduct);
+      await this.searchIndexService.incrementCatalogProductLikesTotal(product.idCatalog);
+      await this.searchIndexService.incrementBusinessProductLikesTotal(product.idCreationBusiness);
+    } else if (action === 'unlike') {
+      await this.searchIndexService.decrementProductLikes(idProduct);
+      await this.searchIndexService.decrementCatalogProductLikesTotal(product.idCatalog);
+      await this.searchIndexService.decrementBusinessProductLikesTotal(product.idCreationBusiness);
+    } else {
+      LogWarn(this.log, `Unknown like action: ${action}`, this.processProductLikeRecord.name);
+    }
   }
 }

@@ -29,9 +29,9 @@ export class SearchIndexService {
     /**
      * Enhances raw entity data into search-optimized text using Gemini.
      * Falls back to raw text if the API fails.
-     * @param rawText - Plain text from entity.
-     * @param promptBuilder - Function that builds the user prompt.
-     * @returns Enhanced text for tsvector.
+     * @param {string} rawText - Plain text from entity.
+     * @param {Function} promptBuilder - Function that builds the user prompt.
+     * @returns {string} Enhanced text for tsvector.
      */
     async enhanceSearchText(
         rawText: string,
@@ -52,6 +52,8 @@ export class SearchIndexService {
 
     /**
      * Builds plain text from a Product for search enhancement.
+     * @param {Product} product - Product entity with relations.
+     * @returns {string} Plain text from the product.
      */
     buildProductRawText(product: Product): string {
         const parts: string[] = [
@@ -73,6 +75,8 @@ export class SearchIndexService {
 
     /**
      * Builds plain text from a Business for search enhancement.
+     * @param {Business} business - Business entity with relations.
+     * @returns {string} Plain text from the business.
      */
     buildBusinessRawText(business: Business): string {
         const parts: string[] = [
@@ -86,6 +90,8 @@ export class SearchIndexService {
 
     /**
      * Builds plain text from a Catalog for search enhancement.
+     * @param {Catalog} catalog - Catalog entity with relations.
+     * @returns {string} Plain text from the catalog.
      */
     buildCatalogRawText(catalog: Catalog): string {
         const parts: string[] = [
@@ -103,7 +109,8 @@ export class SearchIndexService {
 
     /**
      * Creates or updates the product search index for a given product.
-     * @param product - Product entity with relations.
+     * @param {Product} product - Product entity with relations.
+     * @returns {Promise<void>} Promise that resolves when the product search index is created or updated.
      */
     async upsertProductSearchIndex(product: Product): Promise<void> {
         const rawText = this.buildProductRawText(product);
@@ -129,7 +136,8 @@ export class SearchIndexService {
 
     /**
      * Creates or updates the business search index for a given business.
-     * @param business - Business entity.
+     * @param {Business} business - Business entity.
+     * @returns {Promise<void>} Promise that resolves when the business search index is created or updated.
      */
     async upsertBusinessSearchIndex(business: Business): Promise<void> {
         const rawText = this.buildBusinessRawText(business);
@@ -153,7 +161,8 @@ export class SearchIndexService {
 
     /**
      * Creates or updates the catalog search index for a given catalog.
-     * @param catalog - Catalog entity with relations.
+     * @param {Catalog} catalog - Catalog entity with relations.
+     * @returns {Promise<void>} Promise that resolves when the catalog search index is created or updated.
      */
     async upsertCatalogSearchIndex(catalog: Catalog): Promise<void> {
         const rawText = this.buildCatalogRawText(catalog);
@@ -171,6 +180,164 @@ export class SearchIndexService {
                visits = $5,
                modification_date = NOW()`,
             [idCatalog, idBusiness, TEXT_SEARCH_CONFIG, enhancedText, visits],
+        );
+    }
+
+    /**
+     * Increments the visits count in business_search_index.
+     * @param {number} idBusiness - Business ID.
+     */
+    async incrementBusinessVisits(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET visits = visits + 1, modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Increments the catalog_visits_total count in business_search_index.
+     * @param {number} idBusiness - Business ID.
+     */
+    async incrementBusinessCatalogVisitsTotal(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET catalog_visits_total = catalog_visits_total + 1, modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Increments the product_visits_total count in business_search_index.
+     * @param {number} idBusiness - Business ID.
+     */
+    async incrementBusinessProductVisitsTotal(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET product_visits_total = product_visits_total + 1, modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Increments the visits count in catalog_search_index.
+     * @param {number} idCatalog - Catalog ID.
+     */
+    async incrementCatalogVisits(idCatalog: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE catalog_search_index SET visits = visits + 1, modification_date = NOW() WHERE id_catalog = $1`,
+            [idCatalog],
+        );
+    }
+
+    /**
+     * Increments the product_visits_total count in catalog_search_index.
+     * @param {number} idCatalog - Catalog ID.
+     */
+    async incrementCatalogProductVisitsTotal(idCatalog: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE catalog_search_index SET product_visits_total = product_visits_total + 1, modification_date = NOW() WHERE id_catalog = $1`,
+            [idCatalog],
+        );
+    }
+
+    /**
+     * Increments the visits count in product_search_index.
+     * @param idProduct - Product ID.
+     */
+    async incrementProductVisits(idProduct: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE product_search_index SET visits = visits + 1, modification_date = NOW() WHERE id_product = $1`,
+            [idProduct],
+        );
+    }
+
+    /**
+     * Increments the followers count in business_search_index.
+     * @param idBusiness - Business ID.
+     */
+    async incrementBusinessFollowers(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET followers = followers + 1, modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Decrements the followers count in business_search_index by one.
+     * Uses GREATEST to avoid negative values.
+     * @param idBusiness - Business ID.
+     */
+    async decrementBusinessFollowers(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET followers = GREATEST(0, followers - 1), modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Increments the likes count in product_search_index.
+     * @param idProduct - Product ID.
+     */
+    async incrementProductLikes(idProduct: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE product_search_index SET likes = likes + 1, modification_date = NOW() WHERE id_product = $1`,
+            [idProduct],
+        );
+    }
+
+    /**
+     * Decrements the likes count in product_search_index by one.
+     * Uses GREATEST to avoid negative values.
+     * @param idProduct - Product ID.
+     */
+    async decrementProductLikes(idProduct: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE product_search_index SET likes = GREATEST(0, likes - 1), modification_date = NOW() WHERE id_product = $1`,
+            [idProduct],
+        );
+    }
+
+    /**
+     * Increments the product_likes_total count in catalog_search_index.
+     * @param idCatalog - Catalog ID.
+     */
+    async incrementCatalogProductLikesTotal(idCatalog: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE catalog_search_index SET product_likes_total = product_likes_total + 1, modification_date = NOW() WHERE id_catalog = $1`,
+            [idCatalog],
+        );
+    }
+
+    /**
+     * Decrements the product_likes_total count in catalog_search_index by one.
+     * Uses GREATEST to avoid negative values.
+     * @param idCatalog - Catalog ID.
+     */
+    async decrementCatalogProductLikesTotal(idCatalog: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE catalog_search_index SET product_likes_total = GREATEST(0, product_likes_total - 1), modification_date = NOW() WHERE id_catalog = $1`,
+            [idCatalog],
+        );
+    }
+
+    /**
+     * Increments the product_likes_total count in business_search_index.
+     * @param idBusiness - Business ID.
+     */
+    async incrementBusinessProductLikesTotal(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET product_likes_total = product_likes_total + 1, modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
+        );
+    }
+
+    /**
+     * Decrements the product_likes_total count in business_search_index by one.
+     * Uses GREATEST to avoid negative values.
+     * @param idBusiness - Business ID.
+     */
+    async decrementBusinessProductLikesTotal(idBusiness: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE business_search_index SET product_likes_total = GREATEST(0, product_likes_total - 1), modification_date = NOW() WHERE id_business = $1`,
+            [idBusiness],
         );
     }
 }
