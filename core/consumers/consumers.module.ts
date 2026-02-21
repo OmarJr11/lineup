@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
+  CatalogsConsumer,
   QueuesManager,
   SearchDataConsumer,
 } from '.';
@@ -34,6 +35,7 @@ export class ConsumersModule {
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
+        CatalogsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,
       ],

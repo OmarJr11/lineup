@@ -30,6 +30,9 @@ export class Catalog extends BaseEntity {
     @Column('int8', { default: 0 })
     visits: number;
 
+    @Column('int8', { name: 'products_count', default: 0 })
+    productsCount: number;
+
     @Column('text', { array: true, nullable: true })
     tags?: string[];
 

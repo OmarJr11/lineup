@@ -10,6 +10,7 @@ export class QueuesManager {
   static get queueNames(): Record<string, string> {
     return {
       cache: QueueNamesEnum.cache,
+      catalogs: QueueNamesEnum.catalogs,
       searchData: QueueNamesEnum.searchData,
     };
   }
@@ -20,9 +21,11 @@ export class QueuesManager {
 
   constructor(
     @InjectQueue(QueuesManager.queueNames.cache) cacheQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.catalogs) catalogsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.searchData) searchDataQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
+    this.queues[QueuesManager.queueNames.catalogs] = catalogsQueue;
     this.queues[QueuesManager.queueNames.searchData] = searchDataQueue;
 
     if (

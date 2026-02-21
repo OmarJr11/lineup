@@ -15,12 +15,16 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
     TypeOrmModule.forFeature([Product]),
     ProductFilesModule,
     ProductVariationsModule,
-    BullModule.registerQueue({
-      name: QueueNamesEnum.searchData,
-      defaultJobOptions: {
-        removeOnComplete: true,
+    BullModule.registerQueue(
+      {
+        name: QueueNamesEnum.catalogs,
+        defaultJobOptions: { removeOnComplete: true },
+      },
+      {
+        name: QueueNamesEnum.searchData,
+        defaultJobOptions: { removeOnComplete: true },
       }
-    }),
+    ),
     CatalogsModule,
   ],
   providers: [
