@@ -46,7 +46,7 @@ export class CatalogsService extends BasicService<Catalog> {
     ): Promise<Catalog> {
       const tittleFormatted = this.catalogsSettersService
         .generatePathFromTitle(data.title);
-      const path = await this.catalogsGettersService
+      const path = data.path ?? await this.catalogsGettersService
         .checkCatalogPathExists(tittleFormatted);
       data.path = path;
       const catalog = await this.catalogsSettersService.create(data, businessReq);

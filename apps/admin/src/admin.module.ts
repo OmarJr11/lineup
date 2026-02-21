@@ -13,6 +13,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConsumersModule } from '../../../core/consumers';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { ConsumersModule } from '../../../core/consumers';
     FilesModule,
     SocialNetworksModule,
     ConsumersModule.register(),
+    SeedModule,
   ],
 })
 export class AdminModule implements NestModule {

@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BullModule } from '@nestjs/bullmq';
 import { entities } from '../../../core/entities/entities';
 import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middleware.middleware';
 import { AuthModule } from './auth/auth.module';
@@ -72,12 +71,6 @@ import { SearchModule } from './search/search.module';
         }
         const status = code >= 200 && code < 300;
         return { code, status, message };
-      },
-    }),
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
       },
     }),
     AuthModule,

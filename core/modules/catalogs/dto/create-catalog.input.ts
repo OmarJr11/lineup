@@ -21,6 +21,6 @@ export class CreateCatalogInput {
     @IsString({ each: true })
     tags?: string[];
 
-    @IsEmpty()
+    @IsOptional()
     path?: string;
 }

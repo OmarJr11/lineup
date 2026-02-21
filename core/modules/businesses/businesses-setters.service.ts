@@ -8,8 +8,14 @@ import { Business } from '../../entities';
 import { businessesResponses } from '../../common/responses';
 import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
+import { ISeedBusinessData } from '../seed/dto/seed-business.input';
+import { EnvironmentsEnum, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { BusinessRolesService } from '../business-roles/business-roles.service';
+import { RolesService } from '../roles/roles.service';
 
+const SEED_DEFAULT_PASSWORD =
+    '$argon2id$v=19$m=65536,t=5,p=1$Hdv+xUgajnLsO0ElTUiRyw$rS8kZ1eSmcUu5nlNreEmIR9UUWOKjRIxYodRCA640oo';
 
 @Injectable()
 export class BusinessesSettersService extends BasicService<Business> {
@@ -21,6 +27,8 @@ export class BusinessesSettersService extends BasicService<Business> {
     constructor(
         @InjectRepository(Business)
         private readonly businessRepository: Repository<Business>,
+        private readonly businessRolesService: BusinessRolesService,
+        private readonly rolesService: RolesService,
     ) {
         super(businessRepository);
     }
@@ -53,6 +61,46 @@ export class BusinessesSettersService extends BasicService<Business> {
             }
             throw new InternalServerErrorException(this._uCreate.error);
         });
+    }
+
+    /**
+     * Seeds a single business (development only).
+     * Skips if email already exists.
+     * @param data Seed business data
+     * @returns Created business or null if skipped
+     */
+    @Transactional()
+    async seedBusiness(data: ISeedBusinessData): Promise<Business | null> {
+        if (process.env.NODE_ENV !== EnvironmentsEnum.Development) {
+            throw new BadRequestException('Seed only allowed in development');
+        }
+        const exists = await this.businessRepository.findOne({
+            where: { email: data.email.toLowerCase() },
+        });
+        if (exists) {
+            this.logger.debug(`Skipping business ${data.email} - already exists`);
+            return null;
+        }
+        const business = this.businessRepository.create({
+            email: data.email.toLowerCase(),
+            emailValidated: data.emailValidated ?? true,
+            provider: ProvidersEnum.LineUp,
+            password: data.password || SEED_DEFAULT_PASSWORD,
+            telephone: data.telephone,
+            name: data.name,
+            description: data.description,
+            path: data.path,
+            tags: data.tags,
+            followers: data.followers ?? 0,
+            visits: data.visits ?? 0,
+            status: StatusEnum.ACTIVE,
+        });
+        const saved = await this.businessRepository.save(business);
+        const role = await this.rolesService.findByCode(RolesCodesEnum.BUSINESS);
+        const businessReq: IBusinessReq = { businessId: saved.id, path: saved.path };
+        await this.businessRolesService.create(saved.id, role.id, businessReq);
+        delete (saved as unknown as Record<string, unknown>).password;
+        return saved;
     }
 
     /**
