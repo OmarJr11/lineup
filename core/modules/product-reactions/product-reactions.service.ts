@@ -1,14 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import { Queue } from 'bullmq';
 import { BasicService } from '../../common/services';
 import { ProductReaction, Product } from '../../entities';
 import { Repository } from 'typeorm';
 import { ProductReactionsGettersService } from './product-reactions-getters.service';
 import { ProductReactionsSettersService } from './product-reactions-setters.service';
 import { IUserReq } from '../../common/interfaces';
-import { ReactionTypeEnum } from '../../common/enums';
+import { QueueNamesEnum, ReactionTypeEnum, SearchDataConsumerEnum } from '../../common/enums';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { ProductsGettersService } from '../products/products-getters.service';
 import { ProductsSettersService } from '../products/products-setters.service';
@@ -17,7 +19,7 @@ import { ICreateProductReaction } from './interfaces/create-product-reaction.int
 @Injectable()
 export class ProductReactionsService extends BasicService<ProductReaction> {
     private logger = new Logger(ProductReactionsService.name);
-    
+
     constructor(
       @Inject(REQUEST)
       private readonly userRequest: Request,
@@ -26,7 +28,9 @@ export class ProductReactionsService extends BasicService<ProductReaction> {
       private readonly productReactionsGettersService: ProductReactionsGettersService,
       private readonly productReactionsSettersService: ProductReactionsSettersService,
       private readonly productsGettersService: ProductsGettersService,
-      private readonly productsSettersService: ProductsSettersService
+      private readonly productsSettersService: ProductsSettersService,
+      @InjectQueue(QueueNamesEnum.searchData)
+      private readonly searchDataQueue: Queue,
     ) {
       super(productReactionRepository, userRequest);
     }
@@ -50,6 +54,10 @@ export class ProductReactionsService extends BasicService<ProductReaction> {
         };
         const reaction = await this.productReactionsSettersService.create(data, userReq);
         this.incrementProductLikes(product, userReq);
+        await this.searchDataQueue.add(
+            SearchDataConsumerEnum.SearchDataProductLikeRecord,
+            { idProduct, action: 'like' }
+        );
         return await this.productReactionsGettersService.findOne(reaction.id);
     }
 
@@ -89,5 +97,9 @@ export class ProductReactionsService extends BasicService<ProductReaction> {
      */
     private async decrementProductLikes(product: Product, userReq: IUserReq) {
         await this.productsSettersService.decrementLikes(product, userReq);
+        await this.searchDataQueue.add(
+            SearchDataConsumerEnum.SearchDataProductLikeRecord,
+            { idProduct: product.id, action: 'unlike' }
+        );
     }
 }
