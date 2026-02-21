@@ -14,6 +14,7 @@ import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -71,6 +72,12 @@ import { SearchModule } from './search/search.module';
         }
         const status = code >= 200 && code < 300;
         return { code, status, message };
+      },
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
       },
     }),
     AuthModule,

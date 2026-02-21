@@ -77,6 +77,12 @@ import { BullModule } from '@nestjs/bullmq';
       },
       path: '/graphql',
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+    }),
     AuthModule,
     FilesModule,
     BusinessesModuleCore,
