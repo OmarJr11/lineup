@@ -105,7 +105,6 @@ export class SeedService {
      */
     async seedOneProduct(item: ISeedProductData): Promise<void> {
         this.assertDevelopment();
-        console.log(item.catalogPath);
         const catalog = await this.catalogsService.findOneByPath(item.catalogPath);
         const businessReq = {
             businessId: catalog.idCreationBusiness,
