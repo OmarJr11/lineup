@@ -8,15 +8,18 @@ export class Location extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int8' })
   id: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 7 })
+  lat: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7 })
+  lng: number;
+
   @Column({ type: 'varchar', length: 255 })
   address: string;
 
-  @Column({ name: 'address_components', type: 'text', nullable: true })
-  addressComponents: string;
+  @Column({ name: 'formatted_address', type: 'text' })
+  formattedAddress: string;
 
-  @Column({ name: 'google_maps_url', type: 'text' })
-  googleMapsUrl: string;
-  
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
 
