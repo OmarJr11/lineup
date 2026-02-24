@@ -162,6 +162,38 @@ export const businessesResponses = {
             message: 'The Business has been successfully deleted.',
         },
     },
+    changePassword: {
+        notFitStandard: {
+            code: 200700,
+            status: false,
+            message: "New password doesn't meet security standards.",
+        },
+        equalToPrevious: {
+            code: 200701,
+            status: false,
+            message: 'The new password cannot be the same as the old one.',
+        },
+        previousInvalid: {
+            code: 200702,
+            status: false,
+            message: 'Previous password invalid.',
+        },
+        notExistsBusiness: {
+            code: 200703,
+            status: false,
+            message: 'Business not exists.',
+        },
+        error: {
+            code: 200799,
+            status: false,
+            message: "An error has occurred, password couldn't be changed.",
+        },
+        success: {
+            code: 210700,
+            status: true,
+            message: 'Password has been successfully updated.',
+        },
+    },
     logout: {
         error: {
             code: 200899,

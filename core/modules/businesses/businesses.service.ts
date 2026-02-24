@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger, NotAcceptableException } from '@nestjs/comm
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
+import { ChangePasswordInput } from '../../common/dtos';
 import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
 import { Business } from '../../entities';
@@ -27,6 +28,7 @@ export class BusinessesService extends BasicService<Business> {
   private logger = new Logger(BusinessesService.name);
   private readonly _uList = businessesResponses.list;
   private readonly _uUp = businessesResponses.update;
+  private readonly _uChangePassword = businessesResponses.changePassword;
 
   constructor(
     @Inject(REQUEST)
@@ -59,15 +61,8 @@ export class BusinessesService extends BasicService<Business> {
     );
     data.email = data.email.toLowerCase();
 
-    if (!data.password) {
-      data.password = generateRandomCodeByLength(20);
-    }
-    data.password = await argon2.hash(data.password, {
-      type: argon2.argon2id, // recomendado
-      memoryCost: 2 ** 16,   // 65536 KB
-      timeCost: 5,           // 5 iteraciones
-      parallelism: 1,        // 1 hilo
-    });
+    if (!data.password) data.password = generateRandomCodeByLength(20);
+    data.password = await this.hashPassword(data.password);
     data.emailValidated = provider === ProvidersEnum.GOOGLE
       || provider === ProvidersEnum.META
       || provider === ProvidersEnum.APPLE;
@@ -143,6 +138,29 @@ export class BusinessesService extends BasicService<Business> {
   }
 
   /**
+   * Change business password
+   * @param {ChangePasswordInput} data - Current and new password
+   * @param {IBusinessReq} businessReq - The business making the request
+   * @returns {Promise<boolean>}
+   */
+  async changePassword(data: ChangePasswordInput, businessReq: IBusinessReq): Promise<boolean> {
+    const business = await this.businessesGettersService.findOneByIdWithPassword(businessReq.businessId);
+    const isCurrentValid = await argon2.verify(business.password, data.currentPassword);
+    if (!isCurrentValid) {
+      LogError(this.logger, this._uChangePassword.previousInvalid.message, this.changePassword.name);
+      throw new NotAcceptableException(this._uChangePassword.previousInvalid);
+    }
+    const isSame = await argon2.verify(business.password, data.newPassword);
+    if (isSame) {
+      LogError(this.logger, this._uChangePassword.equalToPrevious.message, this.changePassword.name);
+      throw new NotAcceptableException(this._uChangePassword.equalToPrevious);
+    }
+    const hashedPassword = await this.hashPassword(data.newPassword);
+    await this.businessSettersService.updatePassword(business, hashedPassword, businessReq);
+    return true;
+  }
+
+  /**
    * Remove a business
    * @param {number} id - The ID of the business to remove
    * @returns {Promise<boolean>}
@@ -189,5 +207,20 @@ export class BusinessesService extends BasicService<Business> {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .replace(/-+/g, '-');
+  }
+
+  /**
+   * Hash a plain text password using Argon2id.
+   * Uses recommended security parameters: 65536 KB memory, 5 iterations, single thread.
+   * @param {string} plainPassword - The plain text password to hash
+   * @returns {Promise<string>} - The hashed password
+   */
+  private async hashPassword(plainPassword: string): Promise<string> {
+    return argon2.hash(plainPassword, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16,
+      timeCost: 5,
+      parallelism: 1,
+    });
   }
 }

@@ -8,12 +8,13 @@ import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/co
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { UpdateUserInput } from '../../../../core/modules/users/dto/update-user.input';
 import { ICookieInterceptor, IUserReq } from '../../../../core/common/interfaces';
-import { UserDec, Permissions } from '../../../../core/common/decorators';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
 import { userResponses } from '../../../../core/common/responses';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
-import { Response } from 'express';
+import { ChangePasswordInput } from '../../../../core/common/dtos';
+import { Permissions, Response, UserDec } from '../../../../core/common/decorators';
+import { Response as ResponseExpress } from 'express';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => UserSchema)
@@ -32,7 +33,7 @@ export class UsersResolver {
     @Args('data') data: CreateUserInput,
     @Context() ctx: any,
   ): Promise<LoginResponse> {
-    const res: Response = ctx.res;
+    const res: ResponseExpress = ctx.res;
     const user = await this.usersService.create(data, ProvidersEnum.LineUp);
     const { token, refreshToken } =
     await this.tokensService.generateTokens(user);
@@ -66,6 +67,16 @@ export class UsersResolver {
   ): Promise<UserSchema> {
     const updatedUser = await this.usersService.update(data, user);
     return toUserSchema(updatedUser);
+  }
+
+  @Mutation(() => Boolean, { name: 'changePassword' })
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  @Response(userResponses.changePassword)
+  async changePassword(
+    @Args('data') data: ChangePasswordInput,
+    @UserDec() userReq: IUserReq
+  ): Promise<boolean> {
+    return await this.usersService.changePassword(data, userReq);
   }
 
   @Mutation(() => Boolean, { name: 'removeUser' })

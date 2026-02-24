@@ -150,12 +150,31 @@ export class BusinessesGettersService extends BasicService<Business> {
     }
 
     /**
-     * Find a user by mail
+     * Find Business by ID with password (for change password flow)
+     * @param {number} id - business ID
+     * @returns {Promise<Business>}
+     */
+    async findOneByIdWithPassword(id: number): Promise<Business> {
+        const business = await this.createQueryBuilder('business')
+            .addSelect('business.password')
+            .where('business.id = :id', { id })
+            .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
+            .getOneOrFail()
+            .catch((error) => {
+                LogError(this.logger, error, this.findOneByIdWithPassword.name);
+                throw new NotAcceptableException(this._uList.businessNotFound);
+            });
+        return business;
+    }
+
+    /**
+     * Find Business by email with password (for auth)
      * @param {string} email - email
-     * @returns {Promise<User>}
+     * @returns {Promise<Business>}
      */
     async findOneByEmailWithPassword(email: string): Promise<Business> {
-        const business = await this.createQueryBuilder('business')
+        try {
+            return await this.createQueryBuilder('business')
             .addSelect('business.password')
             .leftJoinAndSelect('business.businessRoles', 'businessRoles')
             .leftJoinAndSelect('businessRoles.role', 'role')
@@ -163,16 +182,11 @@ export class BusinessesGettersService extends BasicService<Business> {
             .leftJoinAndSelect('rolePermissions.permission', 'permission')
             .where('LOWER(business.email) = LOWER(:email)', { email })
             .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
-            .getOneOrFail()
-            .catch((error) => {
-                LogError(this.logger, error, this.findOneByEmailWithPassword.name);
-                throw new UnauthorizedException(this._uList.businessNotFound);
-            });
-        if (!business) {
-            LogError(this.logger, this._uList.businessNotFound, this.findOneByEmailWithPassword.name);
-            throw new UnauthorizedException(this._uList.businessNotFound);
+            .getOneOrFail();
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+            throw new NotAcceptableException(this._uList.businessNotFound);
         }
-        return business;
     }
 
     /**
