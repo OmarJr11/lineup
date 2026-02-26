@@ -174,6 +174,25 @@ export const businessesResponses = {
             message: 'Logout Successfully.',
         },
     },
+    verificationCode: {
+        error: {
+            code: 201100,
+            status: false,
+            message: 'The verification code could not be sent.',
+        },
+        success: {
+            code: 211100,
+            status: true,
+            message: 'Verification code sent successfully. Please check your inbox.',
+        },
+    },
+    verifyCode: {
+        success: {
+            code: 211200,
+            status: true,
+            message: 'Email verified successfully.',
+        },
+    },
     token: {
         cookieNotSent: {
             code: 201000,

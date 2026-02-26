@@ -3,6 +3,7 @@ import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
+  MailsConsumer,
   QueuesManager,
   SearchDataConsumer,
 } from '.';
@@ -13,6 +14,7 @@ import { BusinessesModule } from '../modules/businesses/businesses.module';
 import { ProductsModule } from '../modules/products/products.module';
 import { CatalogsModule } from '../modules/catalogs/catalogs.module';
 import { SearchModule } from '../modules/search/search.module';
+import { MailModule } from '../modules/mail/mail.module';
 
 @Module({})
 export class ConsumersModule {
@@ -32,10 +34,12 @@ export class ConsumersModule {
         ProductsModule,
         CatalogsModule,
         SearchModule,
+        MailModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
         CatalogsConsumer,
+        MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,
       ],
