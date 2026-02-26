@@ -19,3 +19,5 @@ export * from './business-followers.response'; //18
 export * from './currencies.response'; //19
 export * from './gemini.response'; //20
 export * from './visits.response'; //21
+export * from './mail.response'; //22
+export * from './validation-mails.response'; //23
