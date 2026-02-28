@@ -124,6 +124,24 @@ export class UsersGettersService extends BasicService<User> {
     }
 
     /**
+     * Find User by ID with password (for change password flow)
+     * @param {number} id - user ID
+     * @returns {Promise<User>}
+     */
+    async findOneByIdWithPassword(id: number): Promise<User> {
+        try {
+            return await this.createQueryBuilder('user')
+                .addSelect('user.password')
+                .where('user.id = :id', { id })
+                .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByIdWithPassword.name);
+            throw new NotAcceptableException(this._uList.userNotFound);
+        }
+    }
+
+    /**
      * Find User by ID, email and status
      * @param {number} id - user ID
      * @param {string} email - user email

@@ -10,9 +10,10 @@ import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/cre
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
 import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
 import { businessesResponses } from '../../../../core/common/responses';
-import { InfinityScrollInput } from '../../../../core/common/dtos';
+import { ChangePasswordInput, InfinityScrollInput } from '../../../../core/common/dtos';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
+import { VerificationCodesService } from '../../../../core/modules/verification-codes/verification-codes.service';
 import { Response as ResponseExpress } from 'express';
 
 @UsePipes(new ValidationPipe())
@@ -71,6 +72,25 @@ export class BusinessesResolver {
   ) {
     const found = await this.businessesService.findOne(businessReq.businessId);
     return toBusinessSchema(found);
+  }
+
+  /**
+   * Changes the password of the authenticated business.
+   * Requires a valid one-time verification code sent to the business's registered destination.
+   *
+   * @param {ChangePasswordInput} data - Current password, new password, destination and verification code
+   * @param {IBusinessReq} businessReq - Authenticated business extracted from JWT
+   * @returns {Promise<boolean>}
+   */
+  @Mutation(() => Boolean, { name: 'changeBusinessPassword' })
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
+  @Response(businessesResponses.changePassword)
+  async changePassword(
+    @Args('data') data: ChangePasswordInput,
+    @BusinessDec() businessReq: IBusinessReq,
+  ): Promise<boolean> {
+    return await this.businessesService.changePassword(data, businessReq);
   }
 
   @Mutation(() => BusinessSchema, { name: 'updateBusiness' })
