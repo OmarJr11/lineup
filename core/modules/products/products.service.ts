@@ -19,6 +19,10 @@ import { ProductFilesGettersService } from '../product-files/product-files-gette
 import { ProductVariationsSettersService } from '../product-variations/product-variations-setters.service';
 import { ProductVariationsGettersService } from '../product-variations/product-variations-getters.service';
 import { ProductVariationInput } from './dto/product-variation.input';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
+import { ActionsEnum, CatalogsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
+import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 
 @Injectable()
 export class ProductsService extends BasicService<Product> {
@@ -34,7 +38,12 @@ export class ProductsService extends BasicService<Product> {
       private readonly productFilesSettersService: ProductFilesSettersService,
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
-      private readonly productVariationsGettersService: ProductVariationsGettersService
+      private readonly productVariationsGettersService: ProductVariationsGettersService,
+      private readonly catalogsGettersService: CatalogsGettersService,
+      @InjectQueue(QueueNamesEnum.catalogs)
+      private readonly catalogsQueue: Queue,
+      @InjectQueue(QueueNamesEnum.searchData)
+      private readonly searchDataQueue: Queue,
     ) {
       super(productRepository, businessRequest);
     }
@@ -49,12 +58,21 @@ export class ProductsService extends BasicService<Product> {
       data: CreateProductInput,
       businessReq: IBusinessReq
     ): Promise<Product> {
+      const idCatalog = data.idCatalog;
+      const idBusiness = businessReq.businessId;
+      await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations } = this.extractProductRelations(data);
       const product = await this.productsSettersService.create(data, businessReq);
       if (images && images.length > 0) await this
         .createProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this
         .createProductVariations(product.id, variations, businessReq);
+      await this.enqueueProductCreationJobs(
+        product.id,
+        idCatalog,
+        ActionsEnum.Increment,
+        businessReq
+      );
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 
@@ -73,8 +91,12 @@ export class ProductsService extends BasicService<Product> {
      * @param {InfinityScrollInput} query - query parameters for pagination
      * @returns {Promise<Product[]>}
      */
-    async findAllByCatalog(idCatalog: number, query: InfinityScrollInput): Promise<Product[]> {
-      return await this.productsGettersService.findAllByCatalog(idCatalog, query);
+    async findAllByCatalog(
+      idCatalog: number,
+      query: InfinityScrollInput
+    ): Promise<Product[]> {
+      return await this.productsGettersService
+        .findAllByCatalog(idCatalog, query);
     }
 
     /**
@@ -83,8 +105,12 @@ export class ProductsService extends BasicService<Product> {
      * @param {InfinityScrollInput} query - query parameters for pagination
      * @returns {Promise<Product[]>}
      */
-    async findAllByBusiness(idBusiness: number, query: InfinityScrollInput): Promise<Product[]> {
-      return await this.productsGettersService.findAllByBusiness(idBusiness, query);
+    async findAllByBusiness(
+      idBusiness: number,
+      query: InfinityScrollInput
+    ): Promise<Product[]> {
+      return await this.productsGettersService
+        .findAllByBusiness(idBusiness, query);
     }
 
     /**
@@ -108,11 +134,15 @@ export class ProductsService extends BasicService<Product> {
       data: UpdateProductInput,
       businessReq: IBusinessReq
     ): Promise<Product> {
-      const product = await this.productsGettersService.findOne(data.id);
+      const idBusiness = businessReq.businessId;
+      const product = await this.productsGettersService.findOneByBusinessId(data.id, idBusiness);
+      const idCatalog = data.idCatalog || product.idCatalog;
+      await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations } = this.extractProductRelations(data);
       await this.productsSettersService.update(product, data, businessReq);
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this.updateProductVariations(product.id, variations, businessReq);
+      await this.queueForIdProduct(product.id);
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 
@@ -128,6 +158,7 @@ export class ProductsService extends BasicService<Product> {
       await this.removeProductFiles(product.id, businessReq);
       await this.removeProductVariations(product.id, businessReq);
       await this.productsSettersService.remove(product, businessReq);
+      await this.queueForIdCatalog(product.idCatalog, ActionsEnum.Decrement, businessReq);
       return true;
     }
 
@@ -284,5 +315,50 @@ export class ProductsService extends BasicService<Product> {
           }, businessReq);
         }
       }
+    }
+
+    /**
+     * Enqueues background jobs triggered when a product is created: updates the product search index
+     * and increments the catalog products count.
+     * @param {number} idProduct - The ID of the created product.
+     * @param {number} idCatalog - The ID of the catalog containing the product.
+     * @param {ActionsEnum} action - The action to perform.
+     */
+    private async enqueueProductCreationJobs(
+      idProduct: number,
+      idCatalog: number,
+      action: ActionsEnum,
+      businessReq: IBusinessReq
+    ) {
+      await this.queueForIdProduct(idProduct);
+      await this.queueForIdCatalog(idCatalog, action, businessReq);
+    }
+
+    /**
+     * Queues the background job for the product search index.
+     * @param {number} idProduct - The ID of the product.
+     */
+    private async queueForIdProduct(idProduct: number) {
+      await this.searchDataQueue.add(
+        SearchDataConsumerEnum.SearchDataProduct,
+        { idProduct }
+      );
+    }
+
+    /**
+     * Queues the background job for the catalog products count.
+     * @param {number} idCatalog - The ID of the catalog.
+     * @param {ActionsEnum} action - The action to perform.
+     * @param {IBusinessReq} businessReq - The business request object.
+     */
+    private async queueForIdCatalog(
+      idCatalog: number,
+      action: ActionsEnum,
+      businessReq: IBusinessReq
+    ) {
+      await this.catalogsQueue.add(
+        CatalogsConsumerEnum.UpdateProductsCount,
+        { idCatalog, action, businessReq }
+      );
     }
 }

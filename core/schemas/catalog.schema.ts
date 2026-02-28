@@ -28,6 +28,9 @@ export class CatalogSchema{
     @Field(() => [String], { nullable: true })
     tags?: string[];
 
+    @Field(() => Int)
+    productsCount: number;
+
     @Field(() => BusinessSchema, { nullable: true })
     business?: BusinessSchema;
 

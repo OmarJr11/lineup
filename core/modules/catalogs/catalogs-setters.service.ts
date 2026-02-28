@@ -9,6 +9,7 @@ import { IBusinessReq } from '../../common/interfaces';
 import { UpdateCatalogInput } from './dto/update-catalog.input';
 import { catalogsResponses } from '../../common/responses';
 import { LogError } from '../../common/helpers/logger.helper';
+import { ActionsEnum } from '../../common/enums';
 
 @Injectable()
 export class CatalogsSettersService extends BasicService<Catalog> {
@@ -76,6 +77,23 @@ export class CatalogsSettersService extends BasicService<Catalog> {
         LogError(this.logger, error, this.remove.name, businessReq);
         throw new InternalServerErrorException(this.rDelete.error);
       }
+    }
+
+    /**
+     * Increments or decrements the products count on a catalog.
+     * @param {Catalog} catalog - The catalog.
+     * @param {ActionsEnum} action - Whether to add or subtract one.
+     * @param {IBusinessReq} businessReq - The business request object.
+     */
+    async updateProductsCount(
+      catalog: Catalog,
+      action: ActionsEnum,
+      businessReq: IBusinessReq
+    ): Promise<void> {
+        let productsCount = Number(catalog.productsCount);
+        if (action === ActionsEnum.Increment) productsCount++;
+        else productsCount--;
+        await this.updateEntity({ productsCount }, catalog, businessReq);
     }
 
     /**

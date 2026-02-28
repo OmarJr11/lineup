@@ -4,6 +4,7 @@ export * from './login-return.interface';
 export * from './extra-data-to-save.interface';
 export * from './infinite-scroll.interface';
 export * from './paginate-options.interface';
+export * from './paginated-result.interface';
 export * from './req-with-cookies.interface';
 export * from './user-req.interface';
 export * from './address-component.interface';

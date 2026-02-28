@@ -7,6 +7,7 @@ import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { IUserReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { User } from '../../entities';
+import { ChangePasswordInput } from '../../common/dtos';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { UsersSettersService } from './users.setters.service';
@@ -26,6 +27,7 @@ export class UsersService extends BasicService<User> {
   private readonly _uCreate = userResponses.create;
   private readonly _uUpdate = userResponses.update;
   private readonly _uList = userResponses.list;
+  private readonly _uChangePassword = userResponses.changePassword;
 
   constructor(
     @Inject(REQUEST)
@@ -92,12 +94,7 @@ export class UsersService extends BasicService<User> {
     }
 
     //data.imgCode = await this.validateImage(data.imgCode);
-    data.password = await argon2.hash(data.password, {
-      type: argon2.argon2id, // recomendado
-      memoryCost: 2 ** 16,   // 65536 KB
-      timeCost: 5,           // 5 iteraciones
-      parallelism: 1,        // 1 hilo
-    });
+    data.password = await this.hashPassword(data.password);
     data.emailValidated = provider === ProvidersEnum.GOOGLE
       || provider === ProvidersEnum.META
       || provider === ProvidersEnum.APPLE;
@@ -155,6 +152,29 @@ export class UsersService extends BasicService<User> {
     }
     await this.usersSettersService.update(data, userToUpdate, user);
     return await this.usersGettersService.findOne(data.id);
+  }
+
+  /**
+   * Change user password
+   * @param {ChangePasswordInput} data - Current and new password
+   * @param {IUserReq} userReq - The user making the request
+   * @returns {Promise<boolean>}
+   */
+  async changePassword(data: ChangePasswordInput, userReq: IUserReq): Promise<boolean> {
+    const user = await this.usersGettersService.findOneByIdWithPassword(userReq.userId);
+    const isCurrentValid = await argon2.verify(user.password, data.currentPassword).catch(() => false);
+    if (!isCurrentValid) {
+      LogError(this.logger, this._uChangePassword.previousInvalid.message, this.changePassword.name);
+      throw new ForbiddenException(this._uChangePassword.previousInvalid);
+    }
+    const isSame = await argon2.verify(user.password, data.newPassword).catch(() => false);
+    if (isSame) {
+      LogError(this.logger, this._uChangePassword.equalToPrevious.message, this.changePassword.name);
+      throw new NotAcceptableException(this._uChangePassword.equalToPrevious);
+    }
+    const hashedPassword = await this.hashPassword(data.newPassword);
+    await this.usersSettersService.updatePassword(user, hashedPassword, userReq);
+    return true;
   }
 
   /**
@@ -256,5 +276,20 @@ export class UsersService extends BasicService<User> {
       LogError(this.logger, this._uUpdate.noPermission.message, this.remove.name, user);
       throw new ForbiddenException(this._uUpdate.noPermission);
     }
+  }
+
+  /**
+   * Hash a plain text password using Argon2id.
+   * Uses recommended security parameters: 65536 KB memory, 5 iterations, single thread.
+   * @param {string} plainPassword - The plain text password to hash
+   * @returns {Promise<string>} - The hashed password
+   */
+  private async hashPassword(plainPassword: string): Promise<string> {
+    return argon2.hash(plainPassword, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16,
+      timeCost: 5,
+      parallelism: 1,
+    });
   }
 }

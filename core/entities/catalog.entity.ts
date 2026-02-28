@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Business, CatalogVisit, File, Product } from '.';
+import { Business, CatalogSearchIndex, CatalogVisit, File, Product, ProductSearchIndex } from '.';
 import { StatusEnum } from '../common/enums';
 import { BaseEntity } from './base.entity';
 
@@ -30,6 +30,9 @@ export class Catalog extends BaseEntity {
     @Column('int8', { default: 0 })
     visits: number;
 
+    @Column('int8', { name: 'products_count', default: 0 })
+    productsCount: number;
+
     @Column('text', { array: true, nullable: true })
     tags?: string[];
 
@@ -46,4 +49,10 @@ export class Catalog extends BaseEntity {
 
     @OneToMany(() => CatalogVisit, (visit) => visit.catalog)
     catalogVisits?: CatalogVisit[];
+
+    @OneToMany(() => CatalogSearchIndex, (index) => index.catalog)
+    catalogSearchIndexes?: CatalogSearchIndex[];
+
+    @OneToMany(() => ProductSearchIndex, (index) => index.catalog)
+    productSearchIndexes?: ProductSearchIndex[];
 }

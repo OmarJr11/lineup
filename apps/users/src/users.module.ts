@@ -13,6 +13,9 @@ import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
 import { VisitsModule } from './visits/visits.module';
+import { SearchModule } from './search/search.module';
+import { VerificationCodesModule } from './verification-codes/verification-codes.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -72,12 +75,20 @@ import { VisitsModule } from './visits/visits.module';
         return { code, status, message };
       },
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+    }),
     AuthModule,
     UsersModuleCore,
     FilesModule,
     ProductsModule,
     BusinessesModule,
     VisitsModule,
+    SearchModule,
+    VerificationCodesModule,
   ],
 })
 export class UsersModule implements NestModule {

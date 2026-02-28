@@ -55,14 +55,47 @@ export class BusinessesGettersService extends BasicService<Business> {
      * @returns {Promise<Business>}
      */
     async findOne(id: number): Promise<Business> {
-        const business = await this.findOneWithOptionsOrFail({
-            where: { id, status: Not(StatusEnum.DELETED) },
-            relations: this._relations,
-        }).catch((error) => {
+        try {
+            const business = await this.createQueryBuilder('b')
+                .leftJoinAndSelect('b.image', 'image')
+                .leftJoinAndSelect(
+                    'b.locations',
+                    'locations',
+                    'locations.status <> :locationStatus', { locationStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+                .where('b.id = :id', { id })
+                .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
+            return this.formatBusiness(business);
+        } catch (error) {
             LogError(this.logger, error, this.findOne.name);
             throw new NotAcceptableException(this._uList.businessNotFound);
-        });
-        return this.formatBusiness(business);
+        }
+    }
+
+    /**
+     * Get Businesses by IDs. Returns only found ones; ignores missing/deleted.
+     * @param {number[]} ids - Business IDs to fetch.
+     * @returns {Promise<Business[]>} Array of found businesses.
+     */
+    async findByIds(ids: number[]): Promise<Business[]> {
+        if (!ids?.length) {
+            return [];
+        }
+        const uniqueIds = [...new Set(ids)];
+        const businesses = await this.createQueryBuilder('b')
+            .leftJoinAndSelect('b.image', 'image')
+            .leftJoinAndSelect(
+                'b.locations',
+                'locations',
+                'locations.status <> :locationStatus', { locationStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+            .where('b.id IN (:...ids)', { ids: uniqueIds })
+            .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+        return this.formatBusinesses(businesses);
     }
 
     /**
@@ -71,17 +104,23 @@ export class BusinessesGettersService extends BasicService<Business> {
      * @returns {Promise<Business>}
      */
     async findOneByPath(path: string): Promise<Business> {
-        const business = await this.findOneWithOptionsOrFail({
-            where: { 
-                path: path.toLocaleLowerCase(),
-                status: Not(StatusEnum.DELETED)
-            },
-            relations: this._relations,
-        }).catch((error) => {
+        try {
+            const business = await this.createQueryBuilder('b')
+                .leftJoinAndSelect('b.image', 'image')
+                .leftJoinAndSelect(
+                    'b.locations',
+                    'locations',
+                    'locations.status <> :locationStatus', { locationStatus: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+                .where('b.path = :path', { path: path.toLocaleLowerCase() })
+                .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
+            return this.formatBusiness(business);
+        } catch (error) {
             LogError(this.logger, error, this.findOneByPath.name);
             throw new NotAcceptableException(this._uList.businessNotFound);
-        });
-        return this.formatBusiness(business);
+        }
     }
 
     /**
@@ -104,21 +143,38 @@ export class BusinessesGettersService extends BasicService<Business> {
      * @returns {Promise<Business[]>}
      */
     async searchBusinessesByPath(path: string): Promise<Business[]> {
-        return await this.businessRepository
-            .createQueryBuilder('b')
+        return await this.createQueryBuilder('b')
             .where('b.status <> :status', { status: StatusEnum.DELETED })
             .andWhere('b.path iLIKE :path', { path: `%${path}%` })
             .getMany();
     }
 
     /**
-     * Find a user by mail
+     * Find Business by ID with password (for change password flow)
+     * @param {number} id - business ID
+     * @returns {Promise<Business>}
+     */
+    async findOneByIdWithPassword(id: number): Promise<Business> {
+        const business = await this.createQueryBuilder('business')
+            .addSelect('business.password')
+            .where('business.id = :id', { id })
+            .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
+            .getOneOrFail()
+            .catch((error) => {
+                LogError(this.logger, error, this.findOneByIdWithPassword.name);
+                throw new NotAcceptableException(this._uList.businessNotFound);
+            });
+        return business;
+    }
+
+    /**
+     * Find Business by email with password (for auth)
      * @param {string} email - email
-     * @returns {Promise<User>}
+     * @returns {Promise<Business>}
      */
     async findOneByEmailWithPassword(email: string): Promise<Business> {
-        const business = await this.businessRepository
-            .createQueryBuilder('business')
+        try {
+            return await this.createQueryBuilder('business')
             .addSelect('business.password')
             .leftJoinAndSelect('business.businessRoles', 'businessRoles')
             .leftJoinAndSelect('businessRoles.role', 'role')
@@ -126,16 +182,11 @@ export class BusinessesGettersService extends BasicService<Business> {
             .leftJoinAndSelect('rolePermissions.permission', 'permission')
             .where('LOWER(business.email) = LOWER(:email)', { email })
             .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
-            .getOneOrFail()
-            .catch((error) => {
-                LogError(this.logger, error, this.findOneByEmailWithPassword.name);
-                throw new UnauthorizedException(this._uList.businessNotFound);
-            });
-        if (!business) {
-            LogError(this.logger, this._uList.businessNotFound, this.findOneByEmailWithPassword.name);
-            throw new UnauthorizedException(this._uList.businessNotFound);
+            .getOneOrFail();
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+            throw new NotAcceptableException(this._uList.businessNotFound);
         }
-        return business;
     }
 
     /**

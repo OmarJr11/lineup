@@ -216,7 +216,7 @@ export const userResponses = {
             message: "New password doesn't meet security standards.",
         },
         equalToPrevious: {
-            code: 100201,
+            code: 100701,
             status: false,
             message: 'The new password cannot be the same as the old one.',
         },
@@ -298,6 +298,25 @@ export const userResponses = {
             code: 101006,
             status: true,
             message: 'Successful token refresh',
+        },
+    },
+    verificationCode: {
+        error: {
+            code: 101100,
+            status: false,
+            message: 'The verification code could not be sent.',
+        },
+        success: {
+            code: 111100,
+            status: true,
+            message: 'Verification code sent successfully. Please check your inbox.',
+        },
+    },
+    verifyCode: {
+        success: {
+            code: 111200,
+            status: true,
+            message: 'Email verified successfully.',
         },
     },
 };

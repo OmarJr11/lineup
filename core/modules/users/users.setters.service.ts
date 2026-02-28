@@ -29,10 +29,12 @@ export class UsersSettersService extends BasicService<User> {
      * @returns {Promise<User>} 
      */
     async create(data: CreateUserInput): Promise<User> {
-        return await this.save(data).catch((error) => {
+        try {
+            return await this.save(data);
+        } catch (error) {
             LogError(this.logger, error, this.create.name);
             throw new InternalServerErrorException(this._uCreate.error);
-        });
+        }
     }
 
     /**
@@ -43,10 +45,28 @@ export class UsersSettersService extends BasicService<User> {
      * @returns {Promise<User>}
      */
     async update(data: UpdateUserInput, user: User, userLogged: IUserReq): Promise<User> {
-        return await this.updateEntity(data, user, userLogged).catch((error) => {
+        try {
+            return await this.updateEntity(data, user, userLogged);
+        } catch (error) {
             LogError(this.logger, error, this.update.name);
             throw new InternalServerErrorException(this._ucUpdate.error);
-        });
+        }
+    }
+
+    /**
+     * Update user password
+     * @param {User} user - The user to update
+     * @param {string} hashedPassword - The new hashed password
+     * @param {IUserReq} userLogged - The logged user
+     * @returns {Promise<User>}
+     */
+    async updatePassword(user: User, hashedPassword: string, userLogged: IUserReq): Promise<User> {
+        try {
+            return await this.updateEntity({ password: hashedPassword }, user, userLogged);
+        } catch (error) {
+            LogError(this.logger, error, this.updatePassword.name);
+            throw new InternalServerErrorException(this._ucUpdate.error);
+        }
     }
 
     /**
@@ -55,9 +75,11 @@ export class UsersSettersService extends BasicService<User> {
      * @param {IUserReq} userLogged - The logged user
      */
     async remove(user: User, userLogged: IUserReq) {
-        await this.deleteEntityByStatus(user, userLogged).catch((error) => {
+        try {
+            return await this.deleteEntityByStatus(user, userLogged);
+        } catch (error) {
             LogError(this.logger, error, this.remove.name);
             throw new InternalServerErrorException(this._ucDelete.error);
-        });
+        }
     }
 }

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 import { CreateLocationInput } from './create-location.input';
-import { InputType, Field, Int, PartialType } from '@nestjs/graphql';
+import { InputType, Field, Int, PartialType, Float } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 
 @InputType()
@@ -11,24 +11,32 @@ export class UpdateLocationInput {
     @Type(() => Number)
     id: number;
 
+    @Field(() => Float)
+    @IsOptional()
+    @IsNotEmpty()
+    @IsNumber()
+    @Type(() => Number)
+    lat?: number;
+  
+    @Field(() => Float)
+    @IsOptional()
+    @IsNotEmpty()
+    @IsNumber()
+    @Type(() => Number)
+    lng?: number;
+  
     @Field()
     @IsOptional()
     @IsNotEmpty()
     @MinLength(3)
     @MaxLength(255)
     @IsString()
-    address: string;
+    address?: string;
   
-    @Field(() => String, { nullable: true })
+    @Field()
     @IsOptional()
     @IsNotEmpty()
+    @MinLength(3)
     @IsString()
-    addressComponents?: string;
-  
-    @Field(() => String, { nullable: true })
-    @IsOptional()
-    @IsNotEmpty()
-    @IsString()
-    @IsUrl()
-    googleMapsUrl?: string;
+    formattedAddress?: string;
 }

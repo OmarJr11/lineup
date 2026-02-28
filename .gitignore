@@ -54,3 +54,10 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Google OAuth credentials
+lo-oauth.json
+*-oauth.json
+
+# OAuth helper scripts (contain hardcoded credentials)
+scripts/get-gmail-token.mjs

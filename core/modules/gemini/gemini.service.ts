@@ -52,7 +52,6 @@ export class GeminiService {
    */
   async generateContent(input: IGenerateContentInput): Promise<IGenerateContentOutput> {
     const { contents, model = this.model, systemInstruction, config } = input;
-
     if (!contents || typeof contents !== 'string') {
       LogError(this.logger, this.rGenerateContent.invalidContent.message, this.generateContent.name);
       throw new BadRequestException(this.rGenerateContent.invalidContent);
@@ -62,9 +61,7 @@ export class GeminiService {
       const requestConfig = this.buildRequestConfig(config, systemInstruction);
       const response = await this.client.models
         .generateContent({ model, contents, config: requestConfig });
-
       const text = response.text ?? '';
-
       return { text, rawResponse: response };
     } catch (error) {
       LogError(this.logger, error, this.generateContent.name);

@@ -162,6 +162,38 @@ export const businessesResponses = {
             message: 'The Business has been successfully deleted.',
         },
     },
+    changePassword: {
+        notFitStandard: {
+            code: 200700,
+            status: false,
+            message: "New password doesn't meet security standards.",
+        },
+        equalToPrevious: {
+            code: 200701,
+            status: false,
+            message: 'The new password cannot be the same as the old one.',
+        },
+        previousInvalid: {
+            code: 200702,
+            status: false,
+            message: 'Previous password invalid.',
+        },
+        notExistsBusiness: {
+            code: 200703,
+            status: false,
+            message: 'Business not exists.',
+        },
+        error: {
+            code: 200799,
+            status: false,
+            message: "An error has occurred, password couldn't be changed.",
+        },
+        success: {
+            code: 210700,
+            status: true,
+            message: 'Password has been successfully updated.',
+        },
+    },
     logout: {
         error: {
             code: 200899,
@@ -172,6 +204,25 @@ export const businessesResponses = {
             code: 210800,
             status: true,
             message: 'Logout Successfully.',
+        },
+    },
+    verificationCode: {
+        error: {
+            code: 201100,
+            status: false,
+            message: 'The verification code could not be sent.',
+        },
+        success: {
+            code: 211100,
+            status: true,
+            message: 'Verification code sent successfully. Please check your inbox.',
+        },
+    },
+    verifyCode: {
+        success: {
+            code: 211200,
+            status: true,
+            message: 'Email verified successfully.',
         },
     },
     token: {

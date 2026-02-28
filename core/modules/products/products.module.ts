@@ -6,12 +6,26 @@ import { ProductsGettersService } from './products-getters.service';
 import { ProductsSettersService } from './products-setters.service';
 import { ProductFilesModule } from '../product-files/product-files.module';
 import { ProductVariationsModule } from '../product-variations/product-variations.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QueueNamesEnum } from '../../common/enums';
+import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Product]),
     ProductFilesModule,
-    ProductVariationsModule
+    ProductVariationsModule,
+    BullModule.registerQueue(
+      {
+        name: QueueNamesEnum.catalogs,
+        defaultJobOptions: { removeOnComplete: true },
+      },
+      {
+        name: QueueNamesEnum.searchData,
+        defaultJobOptions: { removeOnComplete: true },
+      }
+    ),
+    CatalogsModule,
   ],
   providers: [
     ProductsService,

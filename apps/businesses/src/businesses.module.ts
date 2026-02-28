@@ -16,6 +16,8 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { SocialNetworkBusinessesModule } from './social-network-businesses/social-network-businesses.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { VerificationCodesModule } from './verification-codes/verification-codes.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -76,6 +78,12 @@ import { CurrenciesModule } from './currencies/currencies.module';
       },
       path: '/graphql',
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+    }),
     AuthModule,
     FilesModule,
     BusinessesModuleCore,
@@ -85,6 +93,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
     SocialNetworksModule,
     SocialNetworkBusinessesModule,
     CurrenciesModule,
+    VerificationCodesModule,
   ]
 })
 export class BusinessesModule implements NestModule {

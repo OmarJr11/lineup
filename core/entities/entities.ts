@@ -20,7 +20,12 @@ import {
     SocialNetworkBusiness,
     ProductReaction,
     BusinessFollower,
-    Currency
+    Currency,
+    ProductSearchIndex,
+    CatalogSearchIndex,
+    BusinessSearchIndex,
+    ValidationMail,
+    VerificationCode,
 } from '.';
 
 export const entities = [
@@ -45,5 +50,10 @@ export const entities = [
     BusinessVisit,
     ProductVisit,
     CatalogVisit,
-    Currency
+    Currency,
+    BusinessSearchIndex,
+    CatalogSearchIndex,
+    ProductSearchIndex,
+    ValidationMail,
+    VerificationCode,
 ]

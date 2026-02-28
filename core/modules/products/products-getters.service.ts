@@ -69,16 +69,53 @@ export class ProductsGettersService extends BasicService<Product> {
     }
 
     /**
+     * Find a product by its ID and business ID.
+     * @param {number} id - The ID of the product to find.
+     * @param {number} businessId - The ID of the business to find.
+     * @returns {Promise<Product>} The found product.
+     */
+    async findOneByBusinessId(id: number, businessId: number): Promise<Product> {
+        try {
+            return await this.findOneWithOptionsOrFail({ 
+                where: { 
+                    id,
+                    idCreationBusiness: businessId,
+                    status: Not(StatusEnum.DELETED)
+                },
+            });
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByBusinessId.name);
+            throw new NotFoundException(this.rList.notFound);
+        }
+    }
+
+    /**
+     * Find products by IDs with relations. Returns only found ones; ignores missing/deleted.
+     * @param {number[]} ids - Product IDs to fetch.
+     * @returns {Promise<Product[]>} Array of found products.
+     */
+    async findManyWithRelations(ids: number[]): Promise<Product[]> {
+        if (!ids?.length) {
+            return [];
+        }
+        const uniqueIds = [...new Set(ids)];
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where('p.id IN (:...ids)', { ids: uniqueIds })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+    }
+
+    /**
      * Find a product by its ID with relations.
      * @param {number} id - The ID of the product to find.
      * @returns {Promise<Product>} The found product.
      */
     async findOneWithRelations(id: number): Promise<Product> {
         try {
-            return await this.findOneWithOptionsOrFail({ 
-                where: { id, status: Not(StatusEnum.DELETED) },
-                relations: this.relations,
-            });
+            return await this.getQueryRelations(this.createQueryBuilder('p'))
+                .where('p.id = :id', { id })
+                .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+                .getOneOrFail();
         } catch (error) {
             LogError(this.logger, error, this.findOneWithRelations.name);
             throw new NotFoundException(this.rList.notFound);
@@ -142,16 +179,30 @@ export class ProductsGettersService extends BasicService<Product> {
      * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
      * @returns {SelectQueryBuilder<Product>} The query builder with relations applied
      */
-    private getQueryRelations(queryBuilder: SelectQueryBuilder<Product>): SelectQueryBuilder<Product> {
+    private getQueryRelations(
+        queryBuilder: SelectQueryBuilder<Product>
+    ): SelectQueryBuilder<Product> {
         return queryBuilder
-            .leftJoinAndSelect('p.productFiles', 'productFiles')
+            .leftJoinAndSelect(
+                'p.productFiles',
+                'productFiles',
+                'productFiles.status <> :statusProductFile', { statusProductFile: StatusEnum.DELETED }
+            )
             .leftJoinAndSelect('productFiles.file', 'file')
             .leftJoinAndSelect('p.catalog', 'catalog')
             .leftJoinAndSelect('catalog.image', 'imageCatalog')
             .leftJoinAndSelect('p.business', 'business')
             .leftJoinAndSelect('business.image', 'imageBusiness')
             .leftJoinAndSelect('p.currency', 'currency')
-            .leftJoinAndSelect('p.variations', 'variations')
-            .leftJoinAndSelect('p.reactions', 'reactions');
+            .leftJoinAndSelect(
+                'p.variations',
+                'variations',
+                'variations.status <> :statusVariations', { statusVariations: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'p.reactions',
+                'reactions',
+                'reactions.status <> :statusReaction', { statusReaction: StatusEnum.DELETED }
+            );
     }
 }
