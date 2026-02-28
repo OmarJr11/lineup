@@ -10,3 +10,5 @@ export * from './visit-type.enum';
 export * from './search-target.enum';
 export * from './consumers';
 export * from './actions.enum';
+export * from './templates.enum';
+export * from './verification-code-channel.enum';

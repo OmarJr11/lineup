@@ -23,7 +23,9 @@ import {
     Currency,
     ProductSearchIndex,
     CatalogSearchIndex,
-    BusinessSearchIndex
+    BusinessSearchIndex,
+    ValidationMail,
+    VerificationCode,
 } from '.';
 
 export const entities = [
@@ -52,4 +54,6 @@ export const entities = [
     BusinessSearchIndex,
     CatalogSearchIndex,
     ProductSearchIndex,
+    ValidationMail,
+    VerificationCode,
 ]

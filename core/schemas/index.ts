@@ -27,3 +27,5 @@ export * from './record-visit-response.schema';
 export * from './business-search-index.schema';
 export * from './catalog-search-index.schema';
 export * from './product-search-index.schema';
+export * from './validation-mail.schema';
+export * from './verification-code.schema';
