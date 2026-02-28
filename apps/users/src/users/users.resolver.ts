@@ -50,7 +50,8 @@ export class UsersResolver {
   }
 
   @Query(() => UserSchema, { name: 'me' })
-  @UseGuards(JwtAuthGuard, TokenGuard)
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(UsersPermissionsEnum.USRLISOWN)
   async me(
     @UserDec() user: IUserReq
   ): Promise<UserSchema> {
@@ -60,7 +61,7 @@ export class UsersResolver {
 
   @Mutation(() => UserSchema)
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(UsersPermissionsEnum.USRLISOWN)
+  @Permissions(UsersPermissionsEnum.USRUPDOWN)
   async updateUser(
     @Args('data') data: UpdateUserInput,
     @UserDec() user: IUserReq
@@ -70,7 +71,8 @@ export class UsersResolver {
   }
 
   @Mutation(() => Boolean, { name: 'changePassword' })
-  @UseGuards(JwtAuthGuard, TokenGuard)
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(UsersPermissionsEnum.USRUPDOWN)
   @Response(userResponses.changePassword)
   async changePassword(
     @Args('data') data: ChangePasswordInput,

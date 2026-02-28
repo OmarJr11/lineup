@@ -1,9 +1,10 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, Length, MinLength } from 'class-validator';
 
 /**
  * Input DTO for changing password.
- * Requires current password verification and new password.
+ * Requires current password, new password, and a one-time verification code
+ * previously sent to the owner's registered destination.
  */
 @InputType()
 export class ChangePasswordInput {
