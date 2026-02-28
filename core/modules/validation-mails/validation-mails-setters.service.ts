@@ -10,8 +10,8 @@ import { BasicService } from '../../common/services/base.service';
 import { LogError } from '../../common/helpers/logger.helper';
 import { validationMailsResponses } from '../../common/responses';
 import { ValidationMail } from '../../entities/validation-mail.entity';
-import { ValidationMailsGettersService } from './validation-mails-getters.service';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { StatusEnum } from '../../common/enums';
 
 /** Length of the numeric verification code */
 const VERIFICATION_CODE_LENGTH = 6 as const;
@@ -92,7 +92,7 @@ export class ValidationMailsSettersService extends BasicService<ValidationMail> 
    */
   @Transactional()
   private async markAsUsed(record: ValidationMail): Promise<ValidationMail> {
-    record.isUsed = true;
+    const data = { isUsed: true, status: StatusEnum.COMPLETED };
     try {
       return await this.save(record);
     } catch (error) {

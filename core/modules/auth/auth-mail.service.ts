@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { QueueNamesEnum } from '../../common/enums/consumers';
 import { MailsConsumerEnum } from '../../common/enums/consumers';
 import { ISendTemplateMailInput } from '../mail/interfaces';
-import { ValidationMailsService } from '../validation-mails/validation-mails.service';
 import { TemplatesEnum } from '../../common/enums';
 import { businessesResponses } from '../../common/responses';
 import { BaseResponse } from '../../schemas';
+import { ValidationMailsSettersService } from '../validation-mails/validation-mails-setters.service';
+import { ValidationMailsGettersService } from '../validation-mails/validation-mails-getters.service';
+import { ValidationMail, VerificationCode } from '../../entities';
 
 /** Expiry label shown in the email template */
 const CODE_EXPIRES_IN = '10 minutes' as const;
@@ -18,10 +20,13 @@ const CODE_EXPIRES_IN = '10 minutes' as const;
  */
 @Injectable()
 export class AuthMailService {
+  private readonly logger = new Logger(AuthMailService.name);
+  
   constructor(
     @InjectQueue(QueueNamesEnum.mails)
     private readonly mailsQueue: Queue,
-    private readonly validationMailsService: ValidationMailsService,
+    private readonly validationMailsSettersService: ValidationMailsSettersService,
+    private readonly validationMailsGettersService: ValidationMailsGettersService,
   ) {}
 
   /**
@@ -29,10 +34,11 @@ export class AuthMailService {
    * The code is hardcoded to `000000` until a code-generation service is available.
    *
    * @param {string} email - Recipient email address
-   * @returns {Promise<void>}
    */
-  async sendVerificationCodeEmail(email: string): Promise<void> {
-    const record = await this.validationMailsService.createValidationCode(email);
+  async sendVerificationCodeEmail(email: string) {
+    const activeRecord = await this.validationMailsGettersService.findLatestByEmail(email);
+    if (activeRecord && !this.isExpired(activeRecord)) return;
+    const record = await this.validationMailsSettersService.createValidationCode(email);
     const payload: ISendTemplateMailInput = {
       to: { email },
       subject: 'Verify your email address – Lineup',
@@ -51,10 +57,21 @@ export class AuthMailService {
    * Verify a code
    * @param {string} email - The email to verify
    * @param {string} code - The code to verify
-   * @returns {Promise<void>}
+   * @returns {Promise<BaseResponse>}
    */
   async verifyCode(email: string, code: string): Promise<BaseResponse> {
-    await this.validationMailsService.verifyCode(email, code);
+    const record = await this.validationMailsGettersService.findActiveByEmailAndCode(email, code);
+    await this.validationMailsSettersService.verifyCode(record);
     return businessesResponses.verifyCode.success;
+  }
+
+  /**
+   * Checks whether a verification code record has passed its expiry date.
+   *
+   * @param {VerificationCode | ValidationMail} record - The record to evaluate
+   * @returns {boolean} True if the code is expired
+   */
+  private isExpired(record: ValidationMail | VerificationCode): boolean {
+    return new Date() > record.expiresAt;
   }
 }
