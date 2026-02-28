@@ -52,7 +52,7 @@ export class ValidationMailsGettersService extends BasicService<ValidationMail> 
    */
   async findLatestByEmail(email: string): Promise<ValidationMail | undefined> {
     return await  this.findOneWithOptions({
-      where: { email },
+      where: { email, isUsed: false },
       order: { creationDate: 'DESC' },
     });
   }

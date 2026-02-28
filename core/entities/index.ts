@@ -24,3 +24,4 @@ export * from './business-search-index.entity';
 export * from './catalog-search-index.entity';
 export * from './product-search-index.entity';
 export * from './validation-mail.entity';
+export * from './verification-code.entity';

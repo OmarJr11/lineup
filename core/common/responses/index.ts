@@ -21,3 +21,4 @@ export * from './gemini.response'; //20
 export * from './visits.response'; //21
 export * from './mail.response'; //22
 export * from './validation-mails.response'; //23
+export * from './verification-codes.response'; //24
