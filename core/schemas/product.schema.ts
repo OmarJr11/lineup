@@ -4,6 +4,7 @@ import {
     CatalogSchema,
     CurrencySchema,
     ProductFileSchema,
+    ProductRatingSchema,
     ProductReactionSchema,
     ProductVariationSchema
 } from '.';
@@ -38,6 +39,10 @@ export class ProductSchema{
     @Field(() => Int)
     visits: number;
 
+    /** Average star rating computed from all active ratings. */
+    @Field(() => Float)
+    ratingAverage: number;
+
     @Field(() => Int)
     idCatalog: number;
 
@@ -67,4 +72,7 @@ export class ProductSchema{
 
     @Field(() => [ProductReactionSchema], { nullable: true })
     reactions?: ProductReactionSchema[];
+
+    @Field(() => [ProductRatingSchema], { nullable: true })
+    ratings?: ProductRatingSchema[];
 }

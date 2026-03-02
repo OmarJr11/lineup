@@ -27,6 +27,9 @@ interface SearchDataBusinessFollowRecordJobData { idBusiness: number; action: 'f
 /** Payload for product like record job. Updates product, catalog and business search index likes on like/unlike. */
 interface SearchDataProductLikeRecordJobData { idProduct: number; action: 'like' | 'unlike'; }
 
+/** Payload for product rating record job. Updates product_search_index.rating_average. */
+interface SearchDataProductRatingRecordJobData { idProduct: number; ratingAverage: number; }
+
 @Processor(QueueNamesEnum.searchData)
 export class SearchDataConsumer extends WorkerHost {
   private readonly log = new Logger(SearchDataConsumer.name);
@@ -63,6 +66,9 @@ export class SearchDataConsumer extends WorkerHost {
         break;
       case SearchDataConsumerEnum.SearchDataProductLikeRecord:
         await this.processProductLikeRecord(job);
+        break;
+      case SearchDataConsumerEnum.SearchDataProductRatingRecord:
+        await this.processProductRatingRecord(job);
         break;
       default:
         LogWarn(this.log, `Unhandled job: ${job.name}`, this.process.name);
@@ -190,5 +196,19 @@ export class SearchDataConsumer extends WorkerHost {
     } else {
       LogWarn(this.log, `Unknown like action: ${action}`, this.processProductLikeRecord.name);
     }
+  }
+
+  /**
+   * Processes a product rating record job.
+   * Updates product_search_index.rating_average with the newly computed value.
+   * @param {Job<SearchDataProductRatingRecordJobData>} job - BullMQ job with { idProduct, ratingAverage }.
+   */
+  private async processProductRatingRecord(job: Job<SearchDataProductRatingRecordJobData>): Promise<void> {
+    const { idProduct, ratingAverage } = job.data;
+    if (!idProduct || ratingAverage === undefined) {
+      LogWarn(this.log, `Missing idProduct or ratingAverage in product rating record job ${job.id}`, this.processProductRatingRecord.name);
+      return;
+    }
+    await this.searchIndexService.updateProductRatingAverage(idProduct, ratingAverage);
   }
 }

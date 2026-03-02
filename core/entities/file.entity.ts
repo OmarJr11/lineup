@@ -39,6 +39,9 @@ export class File extends BaseEntity {
 
     @OneToMany(() => Business, (business) => business.image)
     businessFiles?: Business[];
+    
+    @OneToMany(() => User, (user) => user.profileImage)
+    userProfileImages?: User[];
 
     @OneToMany(() => Catalog, (catalog) => catalog.image)
     catalogFiles?: Catalog[];

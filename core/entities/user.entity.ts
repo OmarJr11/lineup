@@ -1,8 +1,8 @@
 import { StatusEnum } from '../common/enums/status.enum';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessFollower, BusinessVisit, CatalogVisit, Currency, File, ProductReaction, ProductVisit, Role, Token, UserRole } from '.';
+import { BusinessFollower, BusinessVisit, CatalogVisit, Currency, File, ProductRating, ProductReaction, ProductVisit, Role, Token, UserRole } from '.';
 
 @Entity({ schema: 'system', name: 'users' })
 export class User extends BaseEntity {
@@ -33,6 +33,9 @@ export class User extends BaseEntity {
     @Column('character varying', { length: 200, select: false })
     password: string;
 
+    @Column({ type: 'varchar', name: 'image_code', length: 50, nullable: true })
+    imageCode?: string;
+
     @OneToMany(() => Role, (role) => role.creationUser)
     createdRoles?: Role[];
 
@@ -54,6 +57,9 @@ export class User extends BaseEntity {
     @OneToMany(() => ProductReaction, (reaction) => reaction.creationUser)
     productReactions?: ProductReaction[];
 
+    @OneToMany(() => ProductRating, (rating) => rating.creationUser)
+    productRatings?: ProductRating[];
+
     @OneToMany(() => BusinessFollower, (follower) => follower.creationUser)
     businessFollowers?: BusinessFollower[];
 
@@ -68,4 +74,8 @@ export class User extends BaseEntity {
 
     @OneToMany(() => CatalogVisit, (visit) => visit.creationUser)
     catalogVisits?: CatalogVisit[];
+
+    @ManyToOne(() => File, (files) => files.userProfileImages)
+    @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
+    profileImage?: File;
 }

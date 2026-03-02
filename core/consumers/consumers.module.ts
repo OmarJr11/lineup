@@ -5,6 +5,7 @@ import {
   CatalogsConsumer,
   MailsConsumer,
   QueuesManager,
+  ReviewsConsumer,
   SearchDataConsumer,
 } from '.';
 import { QueueLogsConsumer } from './queue-logs.consumer';
@@ -15,6 +16,7 @@ import { ProductsModule } from '../modules/products/products.module';
 import { CatalogsModule } from '../modules/catalogs/catalogs.module';
 import { SearchModule } from '../modules/search/search.module';
 import { MailModule } from '../modules/mail/mail.module';
+import { ProductRatingsModule } from '../modules/product-ratings/product-ratings.module';
 
 @Module({})
 export class ConsumersModule {
@@ -35,6 +37,7 @@ export class ConsumersModule {
         CatalogsModule,
         SearchModule,
         MailModule,
+        ProductRatingsModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
@@ -42,6 +45,7 @@ export class ConsumersModule {
         MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,
+        ReviewsConsumer
       ],
     };
   }

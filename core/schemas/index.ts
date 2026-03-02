@@ -14,6 +14,7 @@ export * from './product.schema';
 export * from './product-file.schema';
 export * from './product-variation.schema';
 export * from './product-reaction.schema';
+export * from './product-rating.schema';
 export * from './catalog.schema';
 export * from './location.schema';
 export * from './base-response.schema';
