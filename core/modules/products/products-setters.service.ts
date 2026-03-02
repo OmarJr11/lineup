@@ -99,6 +99,16 @@ export class ProductsSettersService extends BasicService<Product> {
     }
 
     /**
+     * Update the ratingAverage field on a product.
+     * @param {Product} product - The product.
+     * @param {number} ratingAverage - The new computed average (0.00–5.00).
+     * @param {IUserReq} userReq - The user request object.
+     */
+    async updateRatingAverage(product: Product, ratingAverage: number, userReq: IUserReq): Promise<void> {
+        await this.updateEntity({ ratingAverage }, product, userReq);
+    }
+
+    /**
      * Increment the visits count on a product.
      * @param {Product} product - The product.
      */

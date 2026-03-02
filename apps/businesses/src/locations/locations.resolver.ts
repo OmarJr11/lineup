@@ -4,7 +4,7 @@ import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/com
 import { LocationsService } from '../../../../core/modules/locations/locations.service';
 import { CreateLocationInput } from '../../../../core/modules/locations/dto/create-location.input';
 import { UpdateLocationInput } from '../../../../core/modules/locations/dto/update-location.input';
-import { LocationSchema, PaginatedLocations } from '../../../../core/schemas';
+import { LocationSchema } from '../../../../core/schemas';
 import { IBusinessReq } from '../../../../core/common/interfaces';
 import { BusinessDec, Permissions, Response } from '../../../../core/common/decorators';
 import { toLocationSchema } from '../../../../core/common/functions/locations.function';

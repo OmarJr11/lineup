@@ -5,4 +5,5 @@ export enum SearchDataConsumerEnum {
     SearchDataVisitRecord = 'search-data-visit-record',
     SearchDataBusinessFollowRecord = 'search-data-business-follow-record',
     SearchDataProductLikeRecord = 'search-data-product-like-record',
+    SearchDataProductRatingRecord = 'search-data-product-rating-record',
 }

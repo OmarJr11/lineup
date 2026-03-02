@@ -13,6 +13,7 @@ export class QueuesManager {
       catalogs: QueueNamesEnum.catalogs,
       searchData: QueueNamesEnum.searchData,
       mails: QueueNamesEnum.mails,
+      reviews: QueueNamesEnum.reviews,
     };
   }
 
@@ -25,11 +26,13 @@ export class QueuesManager {
     @InjectQueue(QueuesManager.queueNames.catalogs) catalogsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.searchData) searchDataQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.mails) mailsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.reviews) reviewsQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
     this.queues[QueuesManager.queueNames.catalogs] = catalogsQueue;
     this.queues[QueuesManager.queueNames.searchData] = searchDataQueue;
     this.queues[QueuesManager.queueNames.mails] = mailsQueue;
+    this.queues[QueuesManager.queueNames.reviews] = reviewsQueue;
 
     if (
       Object.keys(this.queues).length !=

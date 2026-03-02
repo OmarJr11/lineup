@@ -12,6 +12,7 @@ export * from './product.entity';
 export * from './product-file.entity';
 export * from './product-variation.entity';
 export * from './product-reaction.entity';
+export * from './product-rating.entity';
 export * from './catalog.entity';
 export * from './location.entity';
 export * from './social-network.entity';

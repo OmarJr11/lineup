@@ -7,6 +7,10 @@ export class LocationSchema {
     @Field(() => Int)
     id: number;
 
+    /** User-defined label for this location. */
+    @Field()
+    name: string;
+
     @Field(() => Float)
     lat: number;
 
