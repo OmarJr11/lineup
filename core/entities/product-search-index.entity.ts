@@ -42,4 +42,11 @@ export class ProductSearchIndex extends BaseEntity {
 
     @Column('int8', { default: 0 })
     visits: number;
+
+    /**
+     * Denormalized average star rating (0.00–5.00).
+     * Carries the highest weight when ranking search results by relevance.
+     */
+    @Column({ type: 'decimal', precision: 3, scale: 2, name: 'rating_average', default: 0 })
+    ratingAverage: number;
 }

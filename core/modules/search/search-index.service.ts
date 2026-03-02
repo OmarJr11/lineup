@@ -121,16 +121,19 @@ export class SearchIndexService {
         const likes = product.likes ?? 0;
         const visits = product.visits ?? 0;
 
+        const ratingAverage = product.ratingAverage ?? 0;
+
         await this.dataSource.query(
-            `INSERT INTO product_search_index (id_product, id_business, id_catalog, search_vector, likes, visits, creation_date, modification_date)
-             VALUES ($1, $2, $3, to_tsvector($4, $5), $6, $7, NOW(), NOW())
+            `INSERT INTO product_search_index (id_product, id_business, id_catalog, search_vector, likes, visits, rating_average, creation_date, modification_date)
+             VALUES ($1, $2, $3, to_tsvector($4, $5), $6, $7, $8, NOW(), NOW())
              ON CONFLICT (id_product)
              DO UPDATE SET
                search_vector = to_tsvector($4, $5),
                likes = $6,
                visits = $7,
+               rating_average = $8,
                modification_date = NOW()`,
-            [idProduct, idBusiness, idCatalog, TEXT_SEARCH_CONFIG, enhancedText, likes, visits],
+            [idProduct, idBusiness, idCatalog, TEXT_SEARCH_CONFIG, enhancedText, likes, visits, ratingAverage],
         );
     }
 
@@ -338,6 +341,19 @@ export class SearchIndexService {
         await this.dataSource.query(
             `UPDATE business_search_index SET product_likes_total = GREATEST(0, product_likes_total - 1), modification_date = NOW() WHERE id_business = $1`,
             [idBusiness],
+        );
+    }
+
+    /**
+     * Updates the rating_average in product_search_index with the given value.
+     * This column carries the highest weight when ranking search results.
+     * @param {number} idProduct - Product ID.
+     * @param {number} ratingAverage - The newly computed average (0.00–5.00).
+     */
+    async updateProductRatingAverage(idProduct: number, ratingAverage: number): Promise<void> {
+        await this.dataSource.query(
+            `UPDATE product_search_index SET rating_average = $1, modification_date = NOW() WHERE id_product = $2`,
+            [ratingAverage, idProduct],
         );
     }
 }

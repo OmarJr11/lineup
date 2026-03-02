@@ -4,6 +4,14 @@ import { IsNotEmpty, IsNumber, IsString, MaxLength, MinLength } from 'class-vali
 
 @InputType()
 export class CreateLocationInput {
+  /** User-defined label for this location (e.g. "Main store", "Warehouse"). */
+  @Field()
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  name: string;
+
   @Field(() => Float)
   @IsNotEmpty()
   @IsNumber()

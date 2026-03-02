@@ -1,7 +1,7 @@
 import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, ProductFile, ProductReaction, ProductSearchIndex, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, Currency, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductVariation, ProductVisit } from '.';
 
 export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
@@ -35,6 +35,10 @@ export class Product extends BaseEntity {
 
     @Column('int8', { default: 0 })
     visits: number;
+
+    /** Average star rating computed from all active ProductRating records. */
+    @Column({ type: 'decimal', precision: 3, scale: 2, name: 'rating_average', default: 0 })
+    ratingAverage: number;
 
     @Column('int8', { name: 'id_catalog' })
     idCatalog: number;
@@ -83,4 +87,7 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductSearchIndex, (index) => index.product)
     productSearchIndexes?: ProductSearchIndex[];
+
+    @OneToMany(() => ProductRating, (rating) => rating.product)
+    ratings?: ProductRating[];
 }

@@ -3,3 +3,4 @@ export * from './files.consumer.enum';
 export * from './mails.consumer.enum';
 export * from './queue-names.enum';
 export * from './search-data.consumer.enum';
+export * from './reviews.consumer.enum';

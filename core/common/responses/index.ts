@@ -22,3 +22,4 @@ export * from './visits.response'; //21
 export * from './mail.response'; //22
 export * from './validation-mails.response'; //23
 export * from './verification-codes.response'; //24
+export * from './product-ratings.response'; //25

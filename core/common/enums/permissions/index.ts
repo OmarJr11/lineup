@@ -4,6 +4,7 @@ export * from './blogs-permissions.enum';
 export * from './businesses-permissions.enum';
 export * from './catalogs-permissions.enum';
 export * from './products-permissions.enum';
+export * from './product-ratings-permissions.enum';
 export * from './locations-permissions.enum';
 export * from './social-networks-permissions.enum';
 export * from './social-network-businesses-permissions.enum';
