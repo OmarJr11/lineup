@@ -8,6 +8,10 @@ export class Location extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int8' })
   id: number;
 
+  /** User-defined label for this location (e.g. "Main store", "Warehouse"). */
+  @Column({ type: 'varchar', length: 100 })
+  name: string;
+
   @Column({ type: 'decimal', precision: 10, scale: 7 })
   lat: number;
 
