@@ -1,6 +1,5 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { CreateLocationInput } from './create-location.input';
-import { InputType, Field, Int, PartialType, Float } from '@nestjs/graphql';
+import { InputType, Field, Int, Float } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 
 @InputType()

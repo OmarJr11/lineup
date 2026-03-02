@@ -4,7 +4,8 @@ import { UserSchema } from './user.schema';
 import { BusinessSchema } from './business.schema';
 import { CatalogSchema } from './catalog.schema';
 import { ProductSchema } from './product.schema';
-import { LocationSchema } from '.';
+import { LocationSchema } from './location.schema';
+import { ProductRatingSchema } from './product-rating.schema';
 
 export function PaginatedResponse<TItem>(TClass: Type<TItem>) {
   @ObjectType({ isAbstract: true })
@@ -38,6 +39,9 @@ export class PaginatedProducts extends PaginatedResponse(ProductSchema) {}
 
 @ObjectType()
 export class PaginatedLocations extends PaginatedResponse(LocationSchema) {}
+
+@ObjectType()
+export class PaginatedProductRatings extends PaginatedResponse(ProductRatingSchema) {}
 
 /** Union type for search results: Business, Catalog, or Product */
 export const SearchResultItem = createUnionType({

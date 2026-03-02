@@ -10,10 +10,9 @@ import { ProductRating } from '../../entities';
 import { ProductRatingsGettersService } from './product-ratings-getters.service';
 import { ProductRatingsSettersService } from './product-ratings-setters.service';
 import { ProductsGettersService } from '../products/products-getters.service';
-import { ProductsSettersService } from '../products/products-setters.service';
 import { RateProductInput } from './dto/rate-product.input';
 import { ICreateProductRating } from '../../common/interfaces';
-import { QueueNamesEnum, ReviewsConsumerEnum } from 'core/common/enums';
+import { QueueNamesEnum, ReviewsConsumerEnum } from '../../common/enums';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 

@@ -6,9 +6,10 @@ import { IUserReq } from '../../../../core/common/interfaces';
 import { ProductRatingsPermissionsEnum } from '../../../../core/common/enums';
 import { ProductRatingsService } from '../../../../core/modules/product-ratings/product-ratings.service';
 import { ProductRatingsGettersService } from '../../../../core/modules/product-ratings/product-ratings-getters.service';
-import { ProductRatingSchema } from '../../../../core/schemas';
+import { PaginatedProductRatings, ProductRatingSchema } from '../../../../core/schemas';
 import { RateProductInput } from '../../../../core/modules/product-ratings/dto/rate-product.input';
 import { toProductRatingSchema } from '../../../../core/common/functions';
+import { InfinityScrollInput } from '../../../../core/common/dtos';
 
 /**
  * Resolver that exposes product rating operations to authenticated users.
@@ -34,24 +35,28 @@ export class ProductRatingsResolver {
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(ProductRatingsPermissionsEnum.PRODRATCRE)
     async rateProduct(
-        @Args('input') input: RateProductInput,
+        @Args('data') data: RateProductInput,
         @UserDec() user: IUserReq,
     ): Promise<ProductRatingSchema> {
-        const rating = await this.productRatingsService.rateProduct(input, user);
+        const rating = await this.productRatingsService.rateProduct(data, user);
         return toProductRatingSchema(rating);
     }
 
     /**
-     * Get all ratings for a specific product.
+     * Get paginated ratings for a specific product.
      * @param {number} idProduct - The product ID.
-     * @returns {Promise<ProductRatingSchema[]>} List of ratings for the product.
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     * @returns {Promise<PaginatedProductRatings>} Paginated list of ratings.
      */
-    @Query(() => [ProductRatingSchema], { name: 'productRatings' })
+    @Query(() => PaginatedProductRatings, { name: 'productRatings' })
     async productRatings(
         @Args('idProduct', { type: () => Int }) idProduct: number,
-    ): Promise<ProductRatingSchema[]> {
-        const ratings = await this.productRatingsGettersService.findAllByProduct(idProduct);
-        return ratings.map(toProductRatingSchema);
+        @Args('pagination', { type: () => InfinityScrollInput }) pagination: InfinityScrollInput,
+    ): Promise<PaginatedProductRatings> {
+        const items = (await this.productRatingsGettersService
+            .findAllByProductPaginated(idProduct, pagination))
+            .map(toProductRatingSchema);
+        return { items, total: items.length, page: pagination.page, limit: pagination.limit };
     }
 
     /**
@@ -71,5 +76,24 @@ export class ProductRatingsResolver {
             .findOneByProductAndUser(idProduct, user.userId);
         if (!rating) return null;
         return toProductRatingSchema(rating);
+    }
+
+    /**
+     * Get all ratings submitted by the authenticated user, paginated.
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     * @param {IUserReq} user - The authenticated user.
+     * @returns {Promise<PaginatedProductRatings>} Paginated list of the user's ratings.
+     */
+    @Query(() => PaginatedProductRatings, { name: 'myProductRatings' })
+    @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+    @Permissions(ProductRatingsPermissionsEnum.PRODRATLIS)
+    async myProductRatings(
+        @Args('pagination', { type: () => InfinityScrollInput }) pagination: InfinityScrollInput,
+        @UserDec() user: IUserReq,
+    ): Promise<PaginatedProductRatings> {
+        const items = (await this.productRatingsGettersService
+            .findAllByUserPaginated(user.userId, pagination))
+            .map(toProductRatingSchema);
+        return { items, total: items.length, page: pagination.page, limit: pagination.limit };
     }
 }
