@@ -1,6 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { RolesCodesEnum, StatusEnum } from '../common/enums';
-import { RolePermissionSchema, UserRoleSchema, UserSchema } from '.';
+import { BusinessRoleSchema, RolePermissionSchema, UserRoleSchema, UserSchema } from '.';
 import { BaseSchema } from './base.schema';
 
 @ObjectType()
@@ -31,4 +31,7 @@ export class RoleSchema extends BaseSchema {
 
   @Field(() => [RolePermissionSchema], { nullable: true })
   rolePermissions?: RolePermissionSchema[];
+
+  @Field(() => [BusinessRoleSchema], { nullable: true })
+  businessRoles?: BusinessRoleSchema[];
 }

@@ -5,9 +5,11 @@ import { ProvidersEnum } from '../common/enums';
 import {
   BusinessFollowerSchema,
   BusinessRoleSchema,
+  BusinessVisitSchema,
   CatalogSchema,
   LocationSchema,
   ProductFileSchema,
+  ProductSkuSchema,
   ProductSchema,
   ProductVariationSchema
 } from '.';
@@ -85,4 +87,10 @@ export class BusinessSchema {
 
   @Field(() => [BusinessFollowerSchema], { nullable: true })
   businessFollowers?: BusinessFollowerSchema[];
+
+  @Field(() => [BusinessVisitSchema], { nullable: true })
+  businessVisits?: BusinessVisitSchema[];
+
+  @Field(() => [ProductSkuSchema], { nullable: true })
+  productSkus?: ProductSkuSchema[];
 }

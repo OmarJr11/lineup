@@ -30,11 +30,11 @@ export class Catalog extends BaseEntity {
     @Column('int8', { default: 0 })
     visits: number;
 
-    @Column('int8', { name: 'products_count', default: 0 })
-    productsCount: number;
-
     @Column('text', { array: true, nullable: true })
     tags?: string[];
+
+    @Column('int8', { name: 'products_count', default: 0 })
+    productsCount: number;
 
     @ManyToOne(() => Business, (business) => business.catalogs)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])

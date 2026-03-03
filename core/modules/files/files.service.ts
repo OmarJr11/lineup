@@ -65,7 +65,7 @@ export class FilesService extends BasicService<File> {
       Key: directory,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: 'public-read',
+      //ACL: 'public-read',
       Metadata: {
         originalName: file.originalname,
       },

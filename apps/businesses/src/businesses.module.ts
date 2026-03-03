@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
 import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middleware.middleware';
 import { AuthModule } from './auth/auth.module';
+import GraphQLJSON from 'graphql-type-json';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { FilesModule } from './files/files.module';
@@ -45,6 +46,7 @@ import { BullModule } from '@nestjs/bullmq';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      resolvers: { JSON: GraphQLJSON },
       autoSchemaFile: true,
       playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,

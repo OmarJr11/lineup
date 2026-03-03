@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './files/files.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
+import GraphQLJSON from 'graphql-type-json';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
@@ -41,6 +42,7 @@ import { SeedModule } from './seed/seed.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      resolvers: { JSON: GraphQLJSON },
       autoSchemaFile: true,
       playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,

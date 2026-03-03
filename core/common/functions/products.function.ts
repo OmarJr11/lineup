@@ -2,15 +2,13 @@ import { Product, ProductRating, ProductReaction, ProductSku } from '../../entit
 import { ProductRatingSchema, ProductSchema, ProductReactionSchema, ProductSkuSchema } from '../../schemas';
 
 /**
- * Maps ProductSku entity to ProductSkuSchema (serializes variationOptions to JSON string).
+ * Maps ProductSku entity to ProductSkuSchema.
+ * variationOptions (Record<string, string>) is compatible with the JSON scalar in the schema.
  */
 function toProductSkuSchema(sku: ProductSku): ProductSkuSchema {
     return {
         ...sku,
-        variationOptions:
-            typeof sku.variationOptions === 'string'
-                ? sku.variationOptions
-                : JSON.stringify(sku.variationOptions ?? {}),
+        variationOptions: sku.variationOptions ?? {},
     } as ProductSkuSchema;
 }
 

@@ -1,5 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { StatusEnum } from '../common/enums';
+import { SocialMediasEnum, StatusEnum } from '../common/enums';
 import { FileSchema, UserSchema } from '.';
 
 @ObjectType()
@@ -10,8 +10,8 @@ export class SocialNetworkSchema {
     @Field()
     name: string;
 
-    @Field()
-    code: string;
+    @Field(() => SocialMediasEnum)
+    code: SocialMediasEnum;
 
     @Field()
     imageCode: string;
