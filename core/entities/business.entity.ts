@@ -1,7 +1,7 @@
 import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, File, Location, Product, ProductFile, ProductSearchIndex, ProductVariation, SocialNetworkBusiness, Token } from '.';
+import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, File, Location, Product, ProductFile, ProductSearchIndex, ProductSku, ProductVariation, SocialNetworkBusiness, Token } from '.';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
@@ -99,6 +99,12 @@ export class Business extends BaseEntity {
 
     @OneToMany(() => ProductVariation, (productVariation) => productVariation.modificationBusiness)
     modifiedProductVariations?: ProductVariation[];
+
+    @OneToMany(() => ProductSku, (productSku) => productSku.business)
+    productSkus?: ProductSku[];
+
+    @OneToMany(() => ProductSku, (productSku) => productSku.modificationBusiness)
+    modifiedProductSkus?: ProductSku[];
 
     @OneToMany(() => BusinessFollower, (follower) => follower.business)
     businessFollowers?: BusinessFollower[];

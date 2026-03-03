@@ -1,7 +1,7 @@
 import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, Currency, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductVariation, ProductVisit } from '.';
 
 export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
@@ -78,6 +78,9 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductVariation, (variation) => variation.product)
     variations?: ProductVariation[];
+
+    @OneToMany(() => ProductSku, (sku) => sku.product)
+    skus?: ProductSku[];
 
     @OneToMany(() => ProductReaction, (reaction) => reaction.product)
     reactions?: ProductReaction[];

@@ -13,6 +13,7 @@ export * from './business-follower.schema';
 export * from './product.schema';
 export * from './product-file.schema';
 export * from './product-variation.schema';
+export * from './product-sku.schema';
 export * from './product-reaction.schema';
 export * from './product-rating.schema';
 export * from './catalog.schema';

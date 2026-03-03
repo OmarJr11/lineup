@@ -6,6 +6,7 @@ import {
     ProductFileSchema,
     ProductRatingSchema,
     ProductReactionSchema,
+    ProductSkuSchema,
     ProductVariationSchema
 } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
@@ -69,6 +70,9 @@ export class ProductSchema{
 
     @Field(() => [ProductVariationSchema], { nullable: true })
     variations?: ProductVariationSchema[];
+
+    @Field(() => [ProductSkuSchema], { nullable: true })
+    skus?: ProductSkuSchema[];
 
     @Field(() => [ProductReactionSchema], { nullable: true })
     reactions?: ProductReactionSchema[];
