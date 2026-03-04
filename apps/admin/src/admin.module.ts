@@ -15,6 +15,7 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConsumersModule } from '../../../core/consumers';
 import { SeedModule } from './seed/seed.module';
+import { RolesAdminModule } from './roles-admin/roles-admin.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { SeedModule } from './seed/seed.module';
     SocialNetworksModule,
     ConsumersModule.register(),
     SeedModule,
+    RolesAdminModule,
   ],
 })
 export class AdminModule implements NestModule {
