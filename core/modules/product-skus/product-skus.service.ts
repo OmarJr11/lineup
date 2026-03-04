@@ -1,14 +1,26 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+    BadRequestException,
+    Inject,
+    Injectable,
+    Logger,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
 import { BasicService } from '../../common/services';
 import { ProductSku } from '../../entities';
 import { Repository } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { ProductSkusGettersService } from './product-skus-getters.service';
 import { ProductSkusSettersService } from './product-skus-setters.service';
+import { StockMovementsSettersService } from '../stock-movements/stock-movements-setters.service';
 import { UpdateProductSkuInput } from './dto/update-product-sku.input';
+import { AdjustStockInput } from './dto/adjust-stock.input';
+import { RegisterPurchaseInput } from './dto/register-purchase.input';
 import { IBusinessReq } from '../../common/interfaces';
+import { StockMovementTypeEnum } from '../../common/enums';
+import { LogWarn } from '../../common/helpers';
+import { productSkusResponses } from '../../common/responses';
 
 /**
  * Orchestrating service for product SKU operations.
@@ -17,6 +29,7 @@ import { IBusinessReq } from '../../common/interfaces';
 @Injectable()
 export class ProductSkusService extends BasicService<ProductSku> {
     private readonly logger = new Logger(ProductSkusService.name);
+    private readonly rRegisterPurchase = productSkusResponses.registerPurchase;
 
     constructor(
         @Inject(REQUEST)
@@ -25,6 +38,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
         private readonly productSkuRepository: Repository<ProductSku>,
         private readonly productSkusGettersService: ProductSkusGettersService,
         private readonly productSkusSettersService: ProductSkusSettersService,
+        private readonly stockMovementsSettersService: StockMovementsSettersService,
     ) {
         super(productSkuRepository, businessRequest);
     }
@@ -39,6 +53,17 @@ export class ProductSkusService extends BasicService<ProductSku> {
     }
 
     /**
+     * Find a product SKU by ID and business ID (validates ownership).
+     * @param {number} id - The SKU ID.
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<ProductSku>} The found product SKU.
+     */
+    async findOneByBusinessId(id: number, idBusiness: number): Promise<ProductSku> {
+        return await this.productSkusGettersService
+            .findOneByBusinessId(id, idBusiness);
+    }
+
+    /**
      * Find all SKUs for a product.
      * @param {number} idProduct - The product ID.
      * @returns {Promise<ProductSku[]>} Array of product SKUs.
@@ -48,14 +73,27 @@ export class ProductSkusService extends BasicService<ProductSku> {
     }
 
     /**
+     * Find all SKUs for a product by business (validates ownership).
+     * @param {number} idProduct - The product ID.
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<ProductSku[]>} Array of product SKUs.
+     */
+    async findAllByProductAndBusiness(
+        idProduct: number,
+        idBusiness: number,
+    ): Promise<ProductSku[]> {
+        return await this.productSkusGettersService
+            .findAllByProductAndBusiness(idProduct, idBusiness);
+    }
+
+    /**
      * Get total stock for a product.
      * @param {number} idProduct - The product ID.
      * @returns {Promise<number>} Total quantity.
      */
     async getTotalStock(idProduct: number): Promise<number> {
-        return await this.productSkusGettersService.getTotalStockByProduct(
-            idProduct,
-        );
+        return await this.productSkusGettersService
+            .getTotalStockByProduct(idProduct);
     }
 
     /**
@@ -69,10 +107,102 @@ export class ProductSkusService extends BasicService<ProductSku> {
         businessReq: IBusinessReq,
     ): Promise<ProductSku> {
         const sku = await this.productSkusGettersService.findOne(input.id);
-        const updateData: Partial<ProductSku> = {};
-        if (input.quantity !== undefined) updateData.quantity = input.quantity;
-        if (input.price !== undefined) updateData.price = input.price;
-        if (input.skuCode !== undefined) updateData.skuCode = input.skuCode;
-        return await this.productSkusSettersService.update(sku, updateData, businessReq);
+        return await this.productSkusSettersService.update(sku, input, businessReq);
+    }
+
+    /**
+     * Adjust stock for a product SKU (add or subtract). Records the movement in history.
+     * @param {AdjustStockInput} input - The adjustment data.
+     * @param {IBusinessReq} businessReq - The business request object.
+     * @returns {Promise<ProductSku>} The updated product SKU.
+     */
+    @Transactional()
+    async adjustStock(
+        input: AdjustStockInput,
+        businessReq: IBusinessReq,
+    ): Promise<ProductSku> {
+        const sku = await this.productSkusGettersService
+            .findOneByBusinessId(input.idProductSku, businessReq.businessId);
+        const previousQuantity = sku.quantity;
+        const newQuantity = previousQuantity + input.quantityDelta;
+        if (newQuantity < 0) {
+            LogWarn(this.logger, this.rRegisterPurchase.insufficientStock.message, this.adjustStock.name, businessReq);
+            throw new BadRequestException(this.rRegisterPurchase.insufficientStock);
+        }
+        const movementType =
+            input.quantityDelta > 0
+                ? StockMovementTypeEnum.ADJUSTMENT_IN
+                : StockMovementTypeEnum.ADJUSTMENT_OUT;
+        await this.stockMovementsSettersService.create(
+            {
+                idProductSku: sku.id,
+                type: movementType,
+                quantityDelta: input.quantityDelta,
+                previousQuantity,
+                newQuantity,
+                notes: input.notes,
+            },
+            businessReq,
+        );
+
+        const data = { quantity: newQuantity };
+        return await this.productSkusSettersService.update(sku, data, businessReq);
+    }
+
+    /**
+     * Register a purchase made by a customer (sale). Decreases stock and records the movement in history.
+     * @param {RegisterPurchaseInput} input - The sale data (quantity sold).
+     * @param {IBusinessReq} businessReq - The business request object.
+     * @returns {Promise<ProductSku>} The updated product SKU.
+     */
+    @Transactional()
+    async registerPurchase(
+        input: RegisterPurchaseInput,
+        businessReq: IBusinessReq,
+    ): Promise<ProductSku> {
+        const sku = await this.productSkusGettersService
+            .findOneByBusinessId(input.idProductSku, businessReq.businessId);
+        const previousQuantity = sku.quantity;
+        const newQuantity = previousQuantity - input.quantity;
+        if (newQuantity < 0) {
+            LogWarn(this.logger, this.rRegisterPurchase.insufficientStock.message, this.registerPurchase.name, businessReq);
+            throw new BadRequestException(this.rRegisterPurchase.insufficientStock);
+        }
+        await this.stockMovementsSettersService.create(
+            {
+                idProductSku: sku.id,
+                type: StockMovementTypeEnum.SALE,
+                quantityDelta: -input.quantity,
+                previousQuantity,
+                newQuantity,
+                notes: input.notes,
+            },
+            businessReq,
+        );
+        const data = { quantity: newQuantity };
+        return await this.productSkusSettersService.update(sku, data, businessReq);
+    }
+
+    /**
+     * Remove a product SKU (soft delete). Records the removal in history.
+     * @param {number} idProductSku - The product SKU ID.
+     * @param {IBusinessReq} businessReq - The business request object.
+     */
+    @Transactional()
+    async removeProductSku(idProductSku: number, businessReq: IBusinessReq) {
+        const sku = await this.productSkusGettersService
+            .findOneByBusinessId(idProductSku, businessReq.businessId);
+        await this.stockMovementsSettersService.create(
+            {
+                idProductSku: sku.id,
+                type: StockMovementTypeEnum.REMOVAL,
+                quantityDelta: -sku.quantity,
+                previousQuantity: sku.quantity,
+                newQuantity: 0,
+                notes: 'SKU/variation removed',
+            },
+            businessReq,
+        );
+        await this.productSkusSettersService.remove(sku, businessReq);
     }
 }

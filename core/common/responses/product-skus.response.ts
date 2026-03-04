@@ -73,4 +73,21 @@ export const productSkusResponses = {
             message: 'The Product SKU has been successfully deleted.',
         },
     },
+    registerPurchase: {
+        insufficientStock: {
+            code: 2600500,
+            status: false,
+            message: 'Insufficient stock. Cannot sell more than available quantity.',
+        },
+        error: {
+            code: 2600599,
+            status: false,
+            message: 'The Product SKU could not be registered, an error has occurred.',
+        },
+        success: {
+            code: 2610500,
+            status: true,
+            message: 'The Product SKU has been successfully registered.',
+        },
+    },
 };

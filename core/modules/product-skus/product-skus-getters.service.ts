@@ -72,17 +72,39 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
     }
 
     /**
-     * Find a product SKU by sku code.
-     * @param {string} skuCode - The SKU code.
-     * @returns {Promise<ProductSku | null>} The found product SKU or null.
+     * Find all product SKUs by product ID and business ID (validates ownership).
+     * @param {number} idProduct - The product ID.
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<ProductSku[]>} Array of product SKUs.
      */
-    async findOneBySkuCode(skuCode: string): Promise<ProductSku | null> {
+    async findAllByProductAndBusiness(
+        idProduct: number,
+        idBusiness: number,
+    ): Promise<ProductSku[]> {
+        return await this.createQueryBuilder('ps')
+            .leftJoinAndSelect('ps.product', 'product')
+            .where('ps.idProduct = :idProduct', { idProduct })
+            .andWhere('ps.idCreationBusiness = :idBusiness', { idBusiness })
+            .andWhere('ps.status <> :status', { status: StatusEnum.DELETED })
+            .orderBy('ps.id', 'ASC')
+            .getMany();
+    }
+
+    /**
+     * Find a product SKU by ID and business ID (validates ownership).
+     * @param {number} id - The SKU ID.
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<ProductSku>} The found product SKU.
+     */
+    async findOneByBusinessId(id: number, idBusiness: number): Promise<ProductSku> {
         try {
-            return await this.findOneWithOptions({
-                where: { skuCode, status: Not(StatusEnum.DELETED) },
+            return await this.findOneWithOptionsOrFail({
+                where: { id, idCreationBusiness: idBusiness, status: Not(StatusEnum.DELETED) },
+                relations: this.relations,
             });
-        } catch {
-            return null;
+        } catch (error) {
+            LogError(this.logger, error, this.findOneByBusinessId.name);
+            throw new NotFoundException(this.rList.notFound);
         }
     }
 

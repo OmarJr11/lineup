@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Product } from './';
+import { Business, Product, StockMovement } from './';
 
 /**
  * Entity representing a Stock Keeping Unit (SKU) for a product.
@@ -53,4 +53,7 @@ export class ProductSku extends BaseEntity {
     @ManyToOne(() => Business, (business) => business.modifiedProductSkus)
     @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
     modificationBusiness?: Business;
+
+    @OneToMany(() => StockMovement, (movement) => movement.productSku)
+    stockMovements?: StockMovement[];
 }

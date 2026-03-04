@@ -24,3 +24,5 @@ export * from './validation-mails.response'; //23
 export * from './verification-codes.response'; //24
 export * from './product-ratings.response'; //25
 export * from './product-skus.response'; //26
+export * from './inventory.response'; //27
+export * from './stock-movements.response'; //28

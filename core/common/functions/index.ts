@@ -5,3 +5,4 @@ export * from './products.function';
 export * from './social-networks.function';
 export * from './social-network-businesses.function';
 export * from './currencies.function';
+export * from './inventory.function';

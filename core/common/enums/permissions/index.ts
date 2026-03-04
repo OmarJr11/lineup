@@ -9,3 +9,4 @@ export * from './locations-permissions.enum';
 export * from './social-networks-permissions.enum';
 export * from './social-network-businesses-permissions.enum';
 export * from './seed-permissions.enum';
+export * from './inventory-permissions.enum';
