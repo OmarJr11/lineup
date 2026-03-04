@@ -6,6 +6,7 @@ import { ProductsGettersService } from './products-getters.service';
 import { ProductsSettersService } from './products-setters.service';
 import { ProductFilesModule } from '../product-files/product-files.module';
 import { ProductVariationsModule } from '../product-variations/product-variations.module';
+import { ProductSkusModule } from '../product-skus/product-skus.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
 import { CatalogsModule } from '../catalogs/catalogs.module';
@@ -15,6 +16,7 @@ import { CatalogsModule } from '../catalogs/catalogs.module';
     TypeOrmModule.forFeature([Product]),
     ProductFilesModule,
     ProductVariationsModule,
+    ProductSkusModule,
     BullModule.registerQueue(
       {
         name: QueueNamesEnum.catalogs,

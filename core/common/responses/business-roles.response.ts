@@ -5,6 +5,11 @@ export const businessRolesResponses = {
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
+        alreadyExists: {
+            code: 900101,
+            status: false,
+            message: 'The Business already has this role.',
+        },
         error: {
             code: 900199,
             status: false,
@@ -38,6 +43,11 @@ export const businessRolesResponses = {
             code: 900900,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
+        },
+        notFound: {
+            code: 900301,
+            status: false,
+            message: 'The Business role could not be found.',
         },
         error: {
             code: 900399,

@@ -18,6 +18,7 @@ export class ProductsGettersService extends BasicService<Product> {
         'currency',
         'productFiles', 'productFiles.file',
         'variations',
+        'skus',
         'reactions'
     ];
 
@@ -198,6 +199,11 @@ export class ProductsGettersService extends BasicService<Product> {
                 'p.variations',
                 'variations',
                 'variations.status <> :statusVariations', { statusVariations: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'p.skus',
+                'skus',
+                'skus.status <> :statusSkus', { statusSkus: StatusEnum.DELETED }
             )
             .leftJoinAndSelect(
                 'p.reactions',

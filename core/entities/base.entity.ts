@@ -5,7 +5,6 @@ export abstract class BaseEntity {
     @Column('timestamp with time zone', {
         name: 'creation_date',
         default: () => 'CURRENT_TIMESTAMP',
-        select: false,
     })
     creationDate: Date;
 

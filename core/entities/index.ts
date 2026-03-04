@@ -11,6 +11,8 @@ export * from './business-follower.entity';
 export * from './product.entity';
 export * from './product-file.entity';
 export * from './product-variation.entity';
+export * from './product-sku.entity';
+export * from './stock-movement.entity';
 export * from './product-reaction.entity';
 export * from './product-rating.entity';
 export * from './catalog.entity';

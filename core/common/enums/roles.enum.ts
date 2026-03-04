@@ -6,6 +6,7 @@ export enum RolesEnum {
     USER = 'user',
     BUSINESS = 'business',
     BUSINESS_ADMIN = 'business_admin',
+    BUSINESS_PREMIUM = 'business_premium',
 }
 
 export enum RolesCodesEnum {
@@ -14,6 +15,7 @@ export enum RolesCodesEnum {
     MODERATOR = '03MODLUP',
     BUSINESS = '05BUSSLUP',
     BUSINESS_ADMIN = '06BUSADMLUP',
+    BUSINESS_PREMIUM = '07BUSPREMLUP',
 }
 
 registerEnumType(RolesCodesEnum, { name: 'RolesCodesEnum' });

@@ -6,7 +6,10 @@ import {
     ProductFileSchema,
     ProductRatingSchema,
     ProductReactionSchema,
-    ProductVariationSchema
+    ProductSearchIndexSchema,
+    ProductSkuSchema,
+    ProductVariationSchema,
+    ProductVisitSchema
 } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
@@ -70,8 +73,17 @@ export class ProductSchema{
     @Field(() => [ProductVariationSchema], { nullable: true })
     variations?: ProductVariationSchema[];
 
+    @Field(() => [ProductSkuSchema], { nullable: true })
+    skus?: ProductSkuSchema[];
+
     @Field(() => [ProductReactionSchema], { nullable: true })
     reactions?: ProductReactionSchema[];
+
+    @Field(() => [ProductVisitSchema], { nullable: true })
+    productVisits?: ProductVisitSchema[];
+
+    @Field(() => [ProductSearchIndexSchema], { nullable: true })
+    productSearchIndexes?: ProductSearchIndexSchema[];
 
     @Field(() => [ProductRatingSchema], { nullable: true })
     ratings?: ProductRatingSchema[];
