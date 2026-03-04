@@ -42,7 +42,8 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
     */
   @Transactional()
   async create(idBusiness: number, idRole: number, user: IUserOrBusinessReq) {
-    const existing = await this.businessRolesGettersService.findOneOrFail(idBusiness, idRole);
+    const existing = await this.businessRolesGettersService
+      .findOneOrFail(idBusiness, idRole);
     if (existing) {
       LogError(this.logger, this.rCreate.alreadyExists.message, this.create.name, user);
       throw new BadRequestException(this.rCreate.alreadyExists);
@@ -64,8 +65,14 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
    */
   @Transactional()
   async removeBusinessRole(idBusiness: number, idRole: number, user: IUserOrBusinessReq) {
-    const businessRole = await this.businessRolesGettersService.findOneOrFail(idBusiness, idRole);
-    await this.deleteEntity(businessRole, { data: user});
+    const businessRole = await this.businessRolesGettersService
+      .findOneOrFail(idBusiness, idRole);
+    try {
+      await this.deleteEntity(businessRole, { data: user});
+    } catch (error) {
+      LogError(this.logger, error, this.rDelete.error.message, user);
+      throw new InternalServerErrorException(this.rDelete.error);
+    }
   }
 
   /**

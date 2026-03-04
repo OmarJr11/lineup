@@ -17,6 +17,7 @@ import { LogError } from '../../common/helpers/logger.helper';
 import { userRolesResponses } from '../../common/responses';
 import { IUserReq } from '../../common/interfaces';
 import { UserRolesGettersService } from './user-roles-getters.service';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserRolesService extends BasicService<UserRole> {
@@ -40,6 +41,7 @@ export class UserRolesService extends BasicService<UserRole> {
    * @param {number} idRole - The ID of the role
    * @param {IUserReq} user - The user data to save
    */
+  @Transactional()
   async create(idUser: number, idRole: number, user: IUserReq) {
     const existing = await this.userRolesGettersService.findOne(idUser, idRole);
     if (existing) {
@@ -60,9 +62,15 @@ export class UserRolesService extends BasicService<UserRole> {
    * @param {number} idRole - The role ID.
    * @param {IUserReq} user - The user request object.
    */
+  @Transactional()
   async removeUserRole(idUser: number, idRole: number, user: IUserReq) {
     const userRole = await this.userRolesGettersService.findOneOrFail(idUser, idRole);
-    await this.deleteEntity(userRole, { data: user});
+    try {
+      await this.deleteEntity(userRole, { data: user});
+    } catch (error) {
+      LogError(this.logger, error, this.rDelete.error.message, user);
+      throw new InternalServerErrorException(this.rDelete.error);
+    }
   }
 
   /**

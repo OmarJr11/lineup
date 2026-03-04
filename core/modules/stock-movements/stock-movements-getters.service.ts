@@ -47,14 +47,15 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
      */
     async findAllByProductSku(
         idProductSku: number,
-        limit = 50,
+        limit: number = 50,
     ): Promise<StockMovement[]> {
-        return await this.stockMovementRepository.find({
-            where: { idProductSku },
-            relations: this.relations,
-            order: { creationDate: 'DESC' },
-            take: limit,
-        });
+        return await this.createQueryBuilder('sm')
+            .leftJoinAndSelect('sm.productSku', 'productSku')
+            .leftJoinAndSelect('sm.business', 'business')
+            .where('sm.idProductSku = :idProductSku', { idProductSku })
+            .orderBy('sm.creationDate', 'DESC')
+            .limit(limit)
+            .getMany();
     }
 
     /**
@@ -66,16 +67,17 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
      */
     async findAllByBusiness(
         idBusiness: number,
-        limit = 50,
-        offset = 0,
+        limit: number = 50,
+        offset: number = 0,
     ): Promise<StockMovement[]> {
-        return await this.stockMovementRepository.find({
-            where: { idCreationBusiness: idBusiness },
-            relations: this.relations,
-            order: { creationDate: 'DESC' },
-            take: limit,
-            skip: offset,
-        });
+        return await this.createQueryBuilder('sm')
+            .leftJoinAndSelect('sm.productSku', 'productSku')
+            .leftJoinAndSelect('sm.business', 'business')
+            .where('sm.idCreationBusiness = :idBusiness', { idBusiness })
+            .orderBy('sm.creationDate', 'DESC')
+            .limit(limit)
+            .offset(offset)
+            .getMany();
     }
 
     /**
@@ -84,8 +86,8 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
      * @returns {Promise<number>} Total count.
      */
     async countByBusiness(idBusiness: number): Promise<number> {
-        return await this.stockMovementRepository.count({
-            where: { idCreationBusiness: idBusiness },
-        });
+        return await this.createQueryBuilder('sm')
+            .where('sm.idCreationBusiness = :idBusiness', { idBusiness })
+            .getCount();
     }
 }

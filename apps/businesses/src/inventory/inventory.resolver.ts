@@ -43,7 +43,8 @@ export class InventoryResolver {
         @Args('data') data: AdjustStockInput,
         @BusinessDec() businessReq: IBusinessReq,
     ) {
-        const sku = await this.productSkusService.adjustStock(data, businessReq);
+        const sku = await this.productSkusService
+            .adjustStock(data, businessReq);
         return toProductSkuSchemaFromInventory(sku);
     }
 
@@ -55,7 +56,8 @@ export class InventoryResolver {
         @Args('data') data: RegisterPurchaseInput,
         @BusinessDec() businessReq: IBusinessReq,
     ) {
-        const sku = await this.productSkusService.registerPurchase(data, businessReq);
+        const sku = await this.productSkusService
+            .registerPurchase(data, businessReq);
         return toProductSkuSchemaFromInventory(sku);
     }
 
