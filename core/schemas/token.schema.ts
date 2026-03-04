@@ -4,17 +4,17 @@ import { BaseSchema } from './base.schema';
 
 @ObjectType()
 export class TokenSchema extends BaseSchema {
-  @Field(() => Int) 
+  @Field(() => Int)
   id: number;
 
-  @Field(() => Int)
-  idUser: number;
+  @Field(() => Int, { nullable: true })
+  idUser?: number;
 
   @Field(() => UserSchema, { nullable: true })
   user?: UserSchema;
 
-  @Field(() => Int)
-  idBusiness: number;
+  @Field(() => Int, { nullable: true })
+  idBusiness?: number;
 
   @Field(() => BusinessSchema, { nullable: true })
   business?: BusinessSchema;

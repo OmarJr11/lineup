@@ -18,6 +18,9 @@ import { ProductImageInput } from './dto/product-image.input';
 import { ProductFilesGettersService } from '../product-files/product-files-getters.service';
 import { ProductVariationsSettersService } from '../product-variations/product-variations-setters.service';
 import { ProductVariationsGettersService } from '../product-variations/product-variations-getters.service';
+import { ProductSkusSettersService } from '../product-skus/product-skus-setters.service';
+import { ProductSkusGettersService } from '../product-skus/product-skus-getters.service';
+import { cartesianProduct, generateSkuCode } from '../../common/helpers/cartesian-product.helper';
 import { ProductVariationInput } from './dto/product-variation.input';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -39,6 +42,8 @@ export class ProductsService extends BasicService<Product> {
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
       private readonly productVariationsGettersService: ProductVariationsGettersService,
+      private readonly productSkusSettersService: ProductSkusSettersService,
+      private readonly productSkusGettersService: ProductSkusGettersService,
       private readonly catalogsGettersService: CatalogsGettersService,
       @InjectQueue(QueueNamesEnum.catalogs)
       private readonly catalogsQueue: Queue,
@@ -67,6 +72,7 @@ export class ProductsService extends BasicService<Product> {
         .createProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this
         .createProductVariations(product.id, variations, businessReq);
+      await this.createProductSkus(product.id, variations ?? [], businessReq);
       await this.enqueueProductCreationJobs(
         product.id,
         idCatalog,
@@ -141,7 +147,10 @@ export class ProductsService extends BasicService<Product> {
       const { images, variations } = this.extractProductRelations(data);
       await this.productsSettersService.update(product, data, businessReq);
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
-      if (variations && variations.length > 0) await this.updateProductVariations(product.id, variations, businessReq);
+      if (variations !== undefined) {
+        await this.updateProductVariations(product.id, variations, businessReq);
+        await this.syncProductSkus(product.id, businessReq);
+      }
       await this.queueForIdProduct(product.id);
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
@@ -156,6 +165,7 @@ export class ProductsService extends BasicService<Product> {
     async remove(id: number, businessReq: IBusinessReq): Promise<boolean> {
       const product = await this.productsGettersService.findOne(id);
       await this.removeProductFiles(product.id, businessReq);
+      await this.removeProductSkus(product.id, businessReq);
       await this.removeProductVariations(product.id, businessReq);
       await this.productsSettersService.remove(product, businessReq);
       await this.queueForIdCatalog(product.idCatalog, ActionsEnum.Decrement, businessReq);
@@ -164,13 +174,13 @@ export class ProductsService extends BasicService<Product> {
 
     /**
      * Extract images and variations from product input data and remove them from the data object.
-     * This prevents these fields from being saved directly to the product entity.
      * @param {CreateProductInput | UpdateProductInput} data - The product input data.
-     * @returns {{ images?: ProductImageInput[], variations?: ProductVariationInput[] }} Object containing extracted images and variations.
+     * @returns Extracted relations.
      */
-    private extractProductRelations(
-      data: CreateProductInput | UpdateProductInput
-    ): { images?: ProductImageInput[], variations?: ProductVariationInput[] } {
+    private extractProductRelations(data: CreateProductInput | UpdateProductInput): {
+      images?: ProductImageInput[];
+      variations?: ProductVariationInput[];
+    } {
       const images = data.images;
       const variations = data.variations;
       delete data.images;
@@ -296,7 +306,6 @@ export class ProductsService extends BasicService<Product> {
       // Create or update variations
       for (const variation of variations) {
         if (variation.id && existingIds.has(variation.id)) {
-          // Update existing variation
           const existing = existingVariations.find(v => v.id === variation.id);
           if (existing) {
             await this.productVariationsSettersService.update(existing, {
@@ -307,13 +316,105 @@ export class ProductsService extends BasicService<Product> {
             }, businessReq);
           }
         } else {
-          // Create new variation
           await this.productVariationsSettersService.create({
             title: variation.title,
             options: variation.options,
             idProduct: productId
           }, businessReq);
         }
+      }
+    }
+
+    /**
+     * Create product SKUs. For products without variations: one SKU with empty variationOptions.
+     * For products with variations: one SKU per combination (cartesian product).
+     * All SKUs are created with quantity 0; use the stock management feature to set quantities.
+     */
+    private async createProductSkus(
+      productId: number,
+      variations: ProductVariationInput[],
+      businessReq: IBusinessReq
+    ): Promise<void> {
+      if (variations.length === 0) {
+        const skuCode = generateSkuCode(productId, {});
+        await this.productSkusSettersService.create(
+          { idProduct: productId, skuCode, variationOptions: {}, quantity: 0 },
+          businessReq,
+        );
+        return;
+      }
+      const variationDefs = variations.map(v => ({ title: v.title, options: v.options }));
+      const titles = variationDefs.map(v => v.title);
+      const optionArrays = variationDefs.map(v => v.options);
+      const combinations = cartesianProduct(optionArrays);
+      for (const combo of combinations) {
+        const variationOptions: Record<string, string> = {};
+        titles.forEach((title, i) => { variationOptions[title] = combo[i]; });
+        const skuCode = generateSkuCode(productId, variationOptions);
+        await this.productSkusSettersService.create(
+          { idProduct: productId, skuCode, variationOptions, quantity: 0 },
+          businessReq,
+        );
+      }
+    }
+
+    /**
+     * Sync product SKUs to match current variations. Removes obsolete SKUs, creates new ones,
+     * preserves quantity for existing matching SKUs.
+     */
+    private async syncProductSkus(
+      productId: number,
+      businessReq: IBusinessReq
+    ): Promise<void> {
+      const variations = await this.productVariationsGettersService.findAllByProduct(productId);
+      const existingSkus = await this.productSkusGettersService.findAllByProduct(productId);
+      const quantityByKey = new Map<string, number>();
+      for (const sku of existingSkus) {
+        const key = JSON.stringify(Object.keys(sku.variationOptions).sort().reduce((acc, k) => {
+          acc[k] = sku.variationOptions[k]; return acc;
+        }, {} as Record<string, string>));
+        quantityByKey.set(key, sku.quantity);
+      }
+      for (const sku of existingSkus) {
+        await this.productSkusSettersService.remove(sku, businessReq);
+      }
+      if (variations.length === 0) {
+        const skuCode = generateSkuCode(productId, {});
+        const key = '{}';
+        const quantity = quantityByKey.get(key) ?? 0;
+        await this.productSkusSettersService.create(
+          { idProduct: productId, skuCode, variationOptions: {}, quantity },
+          businessReq,
+        );
+        return;
+      }
+      const variationDefs = variations.map(v => ({ title: v.title, options: v.options }));
+      const titles = variationDefs.map(v => v.title);
+      const optionArrays = variationDefs.map(v => v.options);
+      const combinations = cartesianProduct(optionArrays);
+      for (const combo of combinations) {
+        const variationOptions: Record<string, string> = {};
+        titles.forEach((title, i) => { variationOptions[title] = combo[i]; });
+        const key = JSON.stringify(variationOptions);
+        const quantity = quantityByKey.get(key) ?? 0;
+        const skuCode = generateSkuCode(productId, variationOptions);
+        await this.productSkusSettersService.create(
+          { idProduct: productId, skuCode, variationOptions, quantity },
+          businessReq,
+        );
+      }
+    }
+
+    /**
+     * Remove all product SKUs for a product.
+     */
+    private async removeProductSkus(
+      productId: number,
+      businessReq: IBusinessReq
+    ): Promise<void> {
+      const skus = await this.productSkusGettersService.findAllByProduct(productId);
+      for (const sku of skus) {
+        await this.productSkusSettersService.remove(sku, businessReq);
       }
     }
 

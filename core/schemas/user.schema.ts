@@ -30,6 +30,12 @@ export class UserSchema extends BaseSchema {
   @Field(() => ProvidersEnum)
   provider: ProvidersEnum;
 
+  @Field({ nullable: true })
+  imageCode?: string;
+
+  @Field(() => FileSchema, { nullable: true })
+  profileImage?: FileSchema;
+
   @Field(() => [RoleSchema], { nullable: true })
   createdRoles?: RoleSchema[];
 

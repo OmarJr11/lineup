@@ -5,6 +5,11 @@ export const userRolesResponses = {
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
         },
+        alreadyExists: {
+            code: 500101,
+            status: false,
+            message: 'The User already has this role.',
+        },
         error: {
             code: 500199,
             status: false,
@@ -38,6 +43,11 @@ export const userRolesResponses = {
             code: 500500,
             status: false,
             message: 'You do not have the necessary permissions to perform this action.',
+        },
+        notFound: {
+            code: 500501,
+            status: false,
+            message: 'The User rol could not be found.',
         },
         error: {
             code: 500399,

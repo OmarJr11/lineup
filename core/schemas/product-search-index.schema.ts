@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { BusinessSchema } from './business.schema';
 import { CatalogSchema } from './catalog.schema';
 import { ProductSchema } from './product.schema';
@@ -38,4 +38,7 @@ export class ProductSearchIndexSchema {
 
     @Field(() => Int)
     visits: number;
+
+    @Field(() => Float, { description: 'Average rating (0.00–5.00)' })
+    ratingAverage: number;
 }

@@ -1,8 +1,23 @@
-import { Product, ProductRating, ProductReaction } from '../../entities';
-import { ProductRatingSchema, ProductSchema, ProductReactionSchema } from '../../schemas';
+import { Product, ProductRating, ProductReaction, ProductSku } from '../../entities';
+import { ProductRatingSchema, ProductSchema, ProductReactionSchema, ProductSkuSchema } from '../../schemas';
+
+/**
+ * Maps ProductSku entity to ProductSkuSchema.
+ * variationOptions (Record<string, string>) is compatible with the JSON scalar in the schema.
+ */
+function toProductSkuSchema(sku: ProductSku): ProductSkuSchema {
+    return {
+        ...sku,
+        variationOptions: sku.variationOptions ?? {},
+    } as ProductSkuSchema;
+}
 
 export function toProductSchema(product: Product): ProductSchema {
-    return product as ProductSchema;
+    const result = { ...product } as ProductSchema;
+    if (product.skus?.length) {
+        result.skus = product.skus.map(toProductSkuSchema);
+    }
+    return result;
 }
 
 export function toProductReactionSchema(productReaction: ProductReaction): ProductReactionSchema {

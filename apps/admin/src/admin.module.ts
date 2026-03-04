@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './files/files.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { configuration, ValidatingEnv } from '../../../core/common/config';
+import GraphQLJSON from 'graphql-type-json';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
@@ -14,6 +15,7 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConsumersModule } from '../../../core/consumers';
 import { SeedModule } from './seed/seed.module';
+import { RolesAdminModule } from './roles-admin/roles-admin.module';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { SeedModule } from './seed/seed.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      resolvers: { JSON: GraphQLJSON },
       autoSchemaFile: true,
       playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
@@ -87,6 +90,7 @@ import { SeedModule } from './seed/seed.module';
     SocialNetworksModule,
     ConsumersModule.register(),
     SeedModule,
+    RolesAdminModule,
   ],
 })
 export class AdminModule implements NestModule {

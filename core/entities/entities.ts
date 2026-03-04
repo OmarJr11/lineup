@@ -8,6 +8,7 @@ import {
     Permission,
     Product,
     ProductFile,
+    ProductSku,
     ProductVariation,
     ProductVisit,
     Role,
@@ -26,7 +27,8 @@ import {
     BusinessSearchIndex,
     ValidationMail,
     VerificationCode,
-    ProductRating
+    ProductRating,
+    StockMovement
 } from '.';
 
 export const entities = [
@@ -43,6 +45,7 @@ export const entities = [
     ProductFile,
     ProductReaction,
     ProductVariation,
+    ProductSku,
     Catalog,
     Location,
     SocialNetwork,
@@ -57,5 +60,6 @@ export const entities = [
     ProductSearchIndex,
     ValidationMail,
     VerificationCode,
-    ProductRating
+    ProductRating,
+    StockMovement
 ]

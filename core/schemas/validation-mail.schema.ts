@@ -1,4 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { StatusEnum } from '../common/enums';
 import { BaseSchema } from './base.schema';
 
 /**
@@ -20,4 +21,7 @@ export class ValidationMailSchema extends BaseSchema {
 
   @Field()
   expiresAt: Date;
+
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 }

@@ -2,7 +2,10 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import {
   BaseSchema,
   BusinessSchema,
-  UserSchema
+  CatalogSchema,
+  ProductFileSchema,
+  SocialNetworkSchema,
+  UserSchema,
 } from '.';
   
 @ObjectType()
@@ -31,10 +34,21 @@ export class FileSchema extends BaseSchema {
   @Field(() => BusinessSchema, { nullable: true })
   creationBusiness?: BusinessSchema;
 
-  // Si necesitas exponer thumbnails o tags, descomenta y define los tipos correspondientes
-  // @Field(() => ThumbnailsObjectType, { nullable: true })
-  // thumbnails?: ThumbnailsObjectType;
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
 
-  // @Field(() => GraphQLJSON, { nullable: true })
-  // tags?: any;
+  @Field(() => [BusinessSchema], { nullable: true })
+  businessFiles?: BusinessSchema[];
+
+  @Field(() => [UserSchema], { nullable: true })
+  userProfileImages?: UserSchema[];
+
+  @Field(() => [CatalogSchema], { nullable: true })
+  catalogFiles?: CatalogSchema[];
+
+  @Field(() => [SocialNetworkSchema], { nullable: true })
+  socialNetworkFiles?: SocialNetworkSchema[];
+
+  @Field(() => [ProductFileSchema], { nullable: true })
+  productFiles?: ProductFileSchema[];
 }
