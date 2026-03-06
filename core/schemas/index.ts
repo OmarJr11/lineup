@@ -34,4 +34,7 @@ export * from './catalog-search-index.schema';
 export * from './product-search-index.schema';
 export * from './validation-mail.schema';
 export * from './verification-code.schema';
+export * from './discount.schema';
+export * from './discount-product.schema';
+export * from './discount-product-audit.schema';
 export * from './stock-movement.schema';
