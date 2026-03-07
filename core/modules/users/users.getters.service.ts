@@ -77,7 +77,7 @@ export class UsersGettersService extends BasicService<User> {
      * @returns {Promise<User>}
      */
     async findOneByEmailWithPassword(email: string): Promise<User> {
-        const user = await this.userRepository
+        const user = await this
             .createQueryBuilder('user')
             .addSelect('user.password')
             .leftJoinAndSelect('user.userRoles', 'userRoles')
