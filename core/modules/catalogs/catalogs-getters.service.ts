@@ -64,6 +64,30 @@ export class CatalogsGettersService extends BasicService<Catalog> {
     }
 
     /**
+     * Get all catalogs by business ID with pagination (infinite scroll).
+     * @param {number} idBusiness - The business ID.
+     * @param {InfinityScrollInput} query - Query parameters for pagination.
+     * @returns {Promise<Catalog[]>} Array of catalogs.
+     */
+    async findAllByBusinessId(
+        idBusiness: number,
+        query: InfinityScrollInput
+    ): Promise<Catalog[]> {
+        const page = query.page || 1;
+        const limit = query.limit || 10;
+        const skip = (page - 1) * limit;
+        const order = query.order || 'DESC';
+        const orderBy = query.orderBy || 'creation_date';
+        return await this.getQueryRelations(this.createQueryBuilder('c'))
+            .where('c.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('c.idCreationBusiness = :idBusiness', { idBusiness })
+            .limit(limit)
+            .offset(skip)
+            .orderBy(`c.${orderBy}`, order)
+            .getMany();
+    }
+
+    /**
      * Find catalogs by IDs. Returns only found ones; ignores missing/deleted.
      * @param {number[]} ids - Catalog IDs to fetch.
      * @returns {Promise<Catalog[]>} Array of found catalogs.

@@ -79,6 +79,19 @@ export class CatalogsService extends BasicService<Catalog> {
     }
 
     /**
+     * Get all catalogs by business ID with pagination (infinite scroll).
+     * @param {number} idBusiness - The business ID.
+     * @param {InfinityScrollInput} query - Query parameters for pagination.
+     * @returns {Promise<Catalog[]>} Array of catalogs.
+     */
+    async findAllByBusinessId(
+      idBusiness: number,
+      query: InfinityScrollInput
+    ): Promise<Catalog[]> {
+      return await this.catalogsGettersService.findAllByBusinessId(idBusiness, query);
+    }
+
+    /**
      * Find a catalog by its ID.
      * @param {number} id - The ID of the catalog to find.
      * @returns {Promise<Catalog>} The found catalog.
