@@ -15,6 +15,7 @@ import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
 import { CatalogsModule } from './catalogs/catalogs.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
@@ -90,6 +91,7 @@ import { VerificationCodesModule } from './verification-codes/verification-codes
     ProductsModule,
     BusinessesModule,
     CatalogsModule,
+    WishlistsModule,
     VisitsModule,
     SearchModule,
     VerificationCodesModule,

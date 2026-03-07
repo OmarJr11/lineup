@@ -1,5 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { TokensService } from '../../modules/token/token.service';
+import { 
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException
+} from '@nestjs/common';
+import { TokenGettersService } from '../../modules/token/token-getters.service';
 import { IResponse } from '../interfaces';
 import { userResponses } from '../responses';
 
@@ -7,7 +12,7 @@ import { userResponses } from '../responses';
 export class TokenGuard implements CanActivate {
     private readonly response: IResponse = userResponses.token.tokenNotFound;
 
-    constructor(private readonly _tokenService: TokensService) { }
+    constructor(private readonly tokenGettersService: TokenGettersService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         let request = context.switchToHttp().getRequest();
@@ -64,12 +69,10 @@ export class TokenGuard implements CanActivate {
      * Check if the token is valid
      * @param {string} token - token to check
      * @returns {Promise<boolean>}
-     **/
+     */
     async checkIfTokenIsValid(token: string): Promise<boolean> {
-        if (!token) {
-            throw new UnauthorizedException(this.response);
-        }
-        await this._tokenService.getTokenByToken(token, this.response);
+        if (!token) throw new UnauthorizedException(this.response);
+        await this.tokenGettersService.findOneByTokenOrFail(token);
         return true;
     }
 }

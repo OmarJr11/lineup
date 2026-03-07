@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum } from '../../common/enums';
+import { InfinityScrollInput } from '../../common/dtos';
 import { LogError } from '../../common/helpers/logger.helper';
 import { businessFollowersResponses } from '../../common/responses';
-import { BusinessFollower } from '../../entities';
+import { Business, BusinessFollower } from '../../entities';
 
 @Injectable()
 export class BusinessFollowersGettersService extends BasicService<BusinessFollower> {
@@ -80,6 +81,40 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
     }
 
     /**
+     * Get all businesses followed by a user with pagination (infinite scroll).
+     * @param {number} idCreationUser - The user ID.
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     * @returns {Promise<Business[]>} Array of businesses the user follows.
+     */
+    async findAllByUserPaginated(
+        idCreationUser: number,
+        pagination: InfinityScrollInput
+    ): Promise<Business[]> {
+        try {
+            const page = pagination.page || 1;
+            const limit = pagination.limit || 10;
+            const skip = (page - 1) * limit;
+            const order = pagination.order || 'DESC';
+            const orderBy = pagination.orderBy || 'creation_date';
+            const followers = await this.createQueryBuilder('bf')
+                .leftJoinAndSelect('bf.business', 'business')
+                .leftJoinAndSelect('business.image', 'image')
+                .where('bf.idCreationUser = :idCreationUser', { idCreationUser })
+                .andWhere('bf.status <> :status', { status: StatusEnum.DELETED })
+                .andWhere('business.status <> :statusBusiness', { statusBusiness: StatusEnum.DELETED })
+                .orderBy(`bf.${orderBy}`, order)
+                .limit(limit)
+                .offset(skip)
+                .getMany();
+            return followers.flatMap((f) => f.business ? [this.formatBusiness(f.business)] : []
+            );
+        } catch (error) {
+            LogError(this.logger, error, this.findAllByUserPaginated.name);
+            throw new NotFoundException(this.rList.notFound);
+        }
+    }
+
+    /**
      * Count followers by business ID.
      * @param {number} idBusiness - The business ID.
      * @returns {Promise<number>} The count of followers.
@@ -94,5 +129,15 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
             LogError(this.logger, error, this.countByBusiness.name);
             return 0;
         }
+    }
+
+    /**
+     * Format business data (filter deleted locations, remove password).
+     * @param {Business} business - Business entity.
+     * @returns {Business} Formatted business.
+     */
+    private formatBusiness(business: Business): Business {
+        if (business.password) delete business.password;
+        return business;
     }
 }
