@@ -13,6 +13,8 @@ import { SendVerificationCodeInput } from '../../../../core/modules/auth/dto/sen
 import { VerifyCodeInput } from '../../../../core/modules/auth/dto/verify-code.input';
 import { AuthMailService } from '../../../../core/modules/auth/auth-mail.service';
 
+const cookiePrefix = 'lineup_users_';
+
 @Resolver()
 export class AuthResolver {
 
@@ -32,7 +34,7 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
   @Mutation(() => LoginResponse)
@@ -41,7 +43,7 @@ export class AuthResolver {
   ) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.refreshAndSetCookies(req, res, 'lineup_');
+    return await this.authService.refreshAndSetCookies(req, res, cookiePrefix);
   }
 
   @UseGuards(JwtAuthGuard, TokenGuard)
@@ -52,7 +54,7 @@ export class AuthResolver {
   ) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.logout(req, res, user, userResponses.logout, 'lineup_');
+    return await this.authService.logout(req, res, user, userResponses.logout, cookiePrefix);
   }
 
     /**

@@ -13,6 +13,8 @@ import { Request, Response } from 'express';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { BaseResponse } from '../../../../core/schemas/base-response.schema';
 
+const cookiePrefix = 'lineup_users_';
+
 /**
  * Resolver handling authentication and email verification mutations
  * for the businesses app.
@@ -42,7 +44,8 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
+    return await this.authService
+      .setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
   /**
@@ -57,7 +60,8 @@ export class AuthResolver {
   ): Promise<LoginResponse> {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.refreshAndSetCookies(req, res, 'lineup_');
+    return await this.authService
+      .refreshAndSetCookies(req, res, cookiePrefix);
   }
 
   /**
@@ -75,7 +79,8 @@ export class AuthResolver {
   ): Promise<BaseResponse> {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.logout(req, res, business, businessesResponses.logout, 'lineup_');
+    return await this.authService
+      .logout(req, res, business, businessesResponses.logout, cookiePrefix);
   }
 
   /**
