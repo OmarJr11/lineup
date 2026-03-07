@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -27,7 +27,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { ActionsEnum, CatalogsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
     private logger = new Logger(CatalogsService.name);
     

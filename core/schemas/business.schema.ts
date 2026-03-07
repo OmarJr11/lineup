@@ -101,9 +101,6 @@ export class BusinessSchema {
   discounts?: DiscountSchema[];
 
   @Field(() => [DiscountSchema], { nullable: true })
-  creationDiscounts?: DiscountSchema[];
-
-  @Field(() => [DiscountSchema], { nullable: true })
   modifiedDiscounts?: DiscountSchema[];
 
   @Field(() => [DiscountProductSchema], { nullable: true })

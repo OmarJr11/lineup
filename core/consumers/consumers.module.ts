@@ -3,6 +3,7 @@ import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
+  DiscountsConsumer,
   MailsConsumer,
   QueuesManager,
   ReviewsConsumer,
@@ -17,6 +18,7 @@ import { CatalogsModule } from '../modules/catalogs/catalogs.module';
 import { SearchModule } from '../modules/search/search.module';
 import { MailModule } from '../modules/mail/mail.module';
 import { ProductRatingsModule } from '../modules/product-ratings/product-ratings.module';
+import { DiscountProductAuditsModule } from '../modules/discount-product-audits/discount-product-audits.module';
 
 @Module({})
 export class ConsumersModule {
@@ -26,9 +28,7 @@ export class ConsumersModule {
     return {
       module: ConsumersModule,
       imports: [
-        BullModule.registerQueue({
-          name: QueuesManager.queueNames.emailSender,
-        }),
+        BullModule.registerQueue({ name: QueuesManager.queueNames.mails }),
         TypeOrmModule.forFeature([]),
         FilesModule,
         UsersModule,
@@ -42,10 +42,11 @@ export class ConsumersModule {
       ],
       providers: [
         CatalogsConsumer,
+        DiscountsConsumer,
         MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,
-        ReviewsConsumer
+        ReviewsConsumer,
       ],
     };
   }

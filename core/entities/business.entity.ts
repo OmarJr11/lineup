@@ -124,9 +124,6 @@ export class Business extends BaseEntity {
     @OneToMany(() => Discount, (discount) => discount.business)
     discounts?: Discount[];
 
-    @OneToMany(() => Discount, (discount) => discount.creationBusiness)
-    creationDiscounts?: Discount[];
-
     @OneToMany(() => Discount, (discount) => discount.modificationBusiness)
     modifiedDiscounts?: Discount[];
 

@@ -1,4 +1,4 @@
-import { DiscountTypeEnum } from '../common/enums';
+import { DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../common/enums';
 import { BusinessSchema, CatalogSchema, CurrencySchema } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
@@ -28,11 +28,11 @@ export class DiscountSchema {
     @Field()
     endDate: Date;
 
-    @Field(() => Int, { nullable: true })
-    idBusiness?: number;
+    @Field(() => DiscountScopeEnum)
+    scope: DiscountScopeEnum;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+    @Field(() => StatusEnum)
+    status: StatusEnum;
 
     @Field(() => Int, { nullable: true })
     idCatalog?: number;
@@ -43,8 +43,9 @@ export class DiscountSchema {
     @Field(() => Int)
     idCreationBusiness: number;
 
+    /** Business that created/applies to (when scope=business, this is the business the discount applies to). */
     @Field(() => BusinessSchema, { nullable: true })
-    creationBusiness?: BusinessSchema;
+    business?: BusinessSchema;
 
     @Field(() => BusinessSchema, { nullable: true })
     modificationBusiness?: BusinessSchema;

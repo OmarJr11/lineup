@@ -1,18 +1,17 @@
 import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { DiscountTypeEnum } from '../common/enums';
+import { DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../common/enums';
 import { Business, Catalog, Currency, DiscountProduct } from './';
 
 /**
  * Entity representing a discount definition.
- * Scope is inferred: id_business = business scope, id_catalog = catalog scope, both null = product scope.
- * The actual product assignments are stored in DiscountProduct.
+ * Scope: business = idCreationBusiness is the business it applies to; catalog = id_catalog; product = single product via DiscountProduct.
  */
 @Entity({ name: 'discounts' })
 @Check(
-    `(id_business IS NOT NULL AND id_catalog IS NULL) OR ` +
-        `(id_business IS NULL AND id_catalog IS NOT NULL) OR ` +
-        `(id_business IS NULL AND id_catalog IS NULL)`,
+    `(scope = 'business' AND id_catalog IS NULL) OR ` +
+        `(scope = 'catalog' AND id_catalog IS NOT NULL) OR ` +
+        `(scope = 'product' AND id_catalog IS NULL)`,
 )
 @Check(
     `(discount_type = 'percentage' AND id_currency IS NULL) OR (discount_type = 'fixed' AND id_currency IS NOT NULL)`,
@@ -41,12 +40,8 @@ export class Discount extends BaseEntity {
     @Column({ type: 'timestamp with time zone', name: 'end_date' })
     endDate: Date;
 
-    @Column('int8', { name: 'id_business', nullable: true })
-    idBusiness?: number;
-
-    @ManyToOne(() => Business, (business) => business.discounts)
-    @JoinColumn([{ name: 'id_business', referencedColumnName: 'id' }])
-    business?: Business;
+    @Column({ type: 'enum', enum: DiscountScopeEnum })
+    scope: DiscountScopeEnum;
 
     @Column('int8', { name: 'id_catalog', nullable: true })
     idCatalog?: number;
@@ -55,12 +50,15 @@ export class Discount extends BaseEntity {
     @JoinColumn([{ name: 'id_catalog', referencedColumnName: 'id' }])
     catalog?: Catalog;
 
+    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
+    status: StatusEnum;
+
     @Column('int8', { name: 'id_creation_business' })
     idCreationBusiness: number;
 
-    @ManyToOne(() => Business, (business) => business.creationDiscounts)
+    @ManyToOne(() => Business, (business) => business.discounts)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
-    creationBusiness?: Business;
+    business?: Business;
 
     @ManyToOne(() => Business, (business) => business.modifiedDiscounts)
     @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
