@@ -11,7 +11,10 @@ import {
   ProductFileSchema,
   ProductSkuSchema,
   ProductSchema,
-  ProductVariationSchema
+  ProductVariationSchema,
+  DiscountSchema,
+  DiscountProductSchema,
+  DiscountProductAuditSchema
 } from '.';
 
 @ObjectType()
@@ -93,4 +96,16 @@ export class BusinessSchema {
 
   @Field(() => [ProductSkuSchema], { nullable: true })
   productSkus?: ProductSkuSchema[];
+
+  @Field(() => [DiscountSchema], { nullable: true })
+  discounts?: DiscountSchema[];
+
+  @Field(() => [DiscountSchema], { nullable: true })
+  modifiedDiscounts?: DiscountSchema[];
+
+  @Field(() => [DiscountProductSchema], { nullable: true })
+  creationDiscountProducts?: DiscountProductSchema[];
+
+  @Field(() => [DiscountProductAuditSchema], { nullable: true })
+  creationDiscountProductAudits?: DiscountProductAuditSchema[];
 }

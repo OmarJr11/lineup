@@ -19,6 +19,7 @@ import { SocialNetworkBusinessesModule } from './social-network-businesses/socia
 import { CurrenciesModule } from './currencies/currencies.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { DiscountsModule } from './discounts/discounts.module';
 import { BullModule } from '@nestjs/bullmq';
 
 @Module({
@@ -98,6 +99,7 @@ import { BullModule } from '@nestjs/bullmq';
     CurrenciesModule,
     VerificationCodesModule,
     InventoryModule,
+    DiscountsModule,
   ]
 })
 export class BusinessesModule implements NestModule {

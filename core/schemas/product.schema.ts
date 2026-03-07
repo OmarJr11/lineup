@@ -3,6 +3,7 @@ import {
     BusinessSchema,
     CatalogSchema,
     CurrencySchema,
+    DiscountProductSchema,
     ProductFileSchema,
     ProductRatingSchema,
     ProductReactionSchema,
@@ -87,4 +88,7 @@ export class ProductSchema{
 
     @Field(() => [ProductRatingSchema], { nullable: true })
     ratings?: ProductRatingSchema[];
+
+    @Field(() => DiscountProductSchema, { nullable: true })
+    discountProduct?: DiscountProductSchema;
 }

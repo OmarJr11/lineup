@@ -1,11 +1,12 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import { IsInt, IsOptional, IsString, Validate } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 import { OrderEnum } from '../enums';
 import { ValidateOrder } from '../decorators';
 
 @InputType()
 export class InfinityScrollInput {
   @Field(() => Int)
+  @IsNotEmpty()
   @IsInt()
   page: number = 1;
 

@@ -11,5 +11,8 @@ export * from './search-target.enum';
 export * from './consumers';
 export * from './actions.enum';
 export * from './stock-movement-type.enum';
+export * from './discount-type.enum';
+export * from './discount-scope.enum';
+export * from './audit-operation.enum';
 export * from './templates.enum';
 export * from './verification-code-channel.enum';

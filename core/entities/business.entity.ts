@@ -1,7 +1,7 @@
 import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, File, Location, Product, ProductFile, ProductSearchIndex, ProductSku, ProductVariation, SocialNetworkBusiness, Token } from '.';
+import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, Discount, File, Location, Product, ProductFile, ProductSearchIndex, ProductSku, ProductVariation, SocialNetworkBusiness, Token, DiscountProduct, DiscountProductAudit } from '.';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
@@ -120,4 +120,20 @@ export class Business extends BaseEntity {
 
     @OneToMany(() => ProductSearchIndex, (index) => index.business)
     productSearchIndexes?: ProductSearchIndex[];
+
+    @OneToMany(() => Discount, (discount) => discount.business)
+    discounts?: Discount[];
+
+    @OneToMany(() => Discount, (discount) => discount.modificationBusiness)
+    modifiedDiscounts?: Discount[];
+
+    @OneToMany(() => DiscountProduct, (discountProduct) => discountProduct.creationBusiness)
+    creationDiscountProducts?: DiscountProduct[];
+
+    @OneToMany(() => DiscountProduct, (discountProduct) => discountProduct.modificationBusiness)
+    modifiedDiscountProducts?: DiscountProduct[];
+
+    @OneToMany(() => DiscountProductAudit, (discountProductAudit) => discountProductAudit.creationBusiness)
+    creationDiscountProductAudits?: DiscountProductAudit[];
+    
 }

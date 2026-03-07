@@ -176,6 +176,34 @@ export class ProductsGettersService extends BasicService<Product> {
     }
 
     /**
+     * Get all product IDs by business (for discount assignment).
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<number[]>} Array of product IDs.
+     */
+    async findProductIdsByBusiness(idBusiness: number): Promise<number[]> {
+        const products = await this.createQueryBuilder('p')
+            .select('p.id')
+            .where('p.idCreationBusiness = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+        return products.map((p) => p.id);
+    }
+
+    /**
+     * Get all product IDs by catalog (for discount assignment).
+     * @param {number} idCatalog - The catalog ID.
+     * @returns {Promise<number[]>} Array of product IDs.
+     */
+    async findProductIdsByCatalog(idCatalog: number): Promise<number[]> {
+        const products = await this.createQueryBuilder('p')
+            .select('p.id')
+            .where('p.idCatalog = :idCatalog', { idCatalog })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .getMany();
+        return products.map((p) => p.id);
+    }
+
+    /**
      * Apply common relations to a product query builder
      * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
      * @returns {SelectQueryBuilder<Product>} The query builder with relations applied
@@ -208,7 +236,15 @@ export class ProductsGettersService extends BasicService<Product> {
             .leftJoinAndSelect(
                 'p.reactions',
                 'reactions',
-                'reactions.status <> :statusReaction', { statusReaction: StatusEnum.DELETED }
-            );
+                'reactions.status <> :statusReaction',
+                { statusReaction: StatusEnum.DELETED },
+            )
+            .leftJoinAndSelect('p.discountProduct', 'discountProduct')
+            .leftJoinAndSelect(
+                'discountProduct.discount',
+                'discount',
+                'discount.status = :statusDiscount', { statusDiscount: StatusEnum.ACTIVE },
+            )
+            .leftJoinAndSelect('discount.currency', 'discountCurrency');
     }
 }

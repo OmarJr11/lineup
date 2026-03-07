@@ -1,7 +1,7 @@
-import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, Currency, DiscountProduct, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductVariation, ProductVisit } from '.';
 
 export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
@@ -93,4 +93,7 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => ProductRating, (rating) => rating.product)
     ratings?: ProductRating[];
+
+    @OneToOne(() => DiscountProduct, (discountProduct) => discountProduct.product)
+    discountProduct?: DiscountProduct;
 }

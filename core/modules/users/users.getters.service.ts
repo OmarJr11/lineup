@@ -72,12 +72,24 @@ export class UsersGettersService extends BasicService<User> {
     }
 
     /**
+     * Check if a user exists with the given email
+     * @param {string} email - email to check
+     * @returns {Promise<boolean>}
+     */
+    async checkUserExistByEmail(email: string): Promise<boolean> {
+        const user = await this.findOneWithOptions({
+            where: { email: email.toLowerCase(), status: Not(StatusEnum.DELETED) },
+        });
+        return !!user;
+    }
+
+    /**
      * Find a user by mail
      * @param {string} email - email
      * @returns {Promise<User>}
      */
     async findOneByEmailWithPassword(email: string): Promise<User> {
-        const user = await this.userRepository
+        const user = await this
             .createQueryBuilder('user')
             .addSelect('user.password')
             .leftJoinAndSelect('user.userRoles', 'userRoles')

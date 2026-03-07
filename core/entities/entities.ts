@@ -4,6 +4,9 @@ import {
     BusinessVisit,
     Catalog,
     CatalogVisit,
+    Discount,
+    DiscountProduct,
+    DiscountProductAudit,
     File,
     Permission,
     Product,
@@ -61,5 +64,8 @@ export const entities = [
     ValidationMail,
     VerificationCode,
     ProductRating,
-    StockMovement
+    StockMovement,
+    Discount,
+    DiscountProduct,
+    DiscountProductAudit
 ]

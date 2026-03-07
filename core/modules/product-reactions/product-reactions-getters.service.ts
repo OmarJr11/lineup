@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum, ReactionTypeEnum } from '../../common/enums';
+import { InfinityScrollInput } from '../../common/dtos';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productReactionsResponses } from '../../common/responses';
-import { ProductReaction } from '../../entities';
+import { Product, ProductReaction } from '../../entities';
 
 @Injectable()
 export class ProductReactionsGettersService extends BasicService<ProductReaction> {
@@ -77,6 +78,53 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
             });
         } catch (error) {
             LogError(this.logger, error, this.findAllByProduct.name);
+            throw new NotFoundException(this.rList.notFound);
+        }
+    }
+
+    /**
+     * Get all products liked by a user with pagination (infinite scroll).
+     * @param {number} idCreationUser - The user ID.
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     * @returns {Promise<Product[]>} Array of products the user has liked.
+     */
+    async findAllLikedByUserPaginated(
+        idCreationUser: number,
+        pagination: InfinityScrollInput
+    ): Promise<Product[]> {
+        try {
+            const page = pagination.page || 1;
+            const limit = pagination.limit || 10;
+            const skip = (page - 1) * limit;
+            const order = pagination.order || 'DESC';
+            const orderBy = pagination.orderBy || 'creation_date';
+            const reactions = await this.createQueryBuilder('pr')
+                .leftJoinAndSelect('pr.product', 'product')
+                .leftJoinAndSelect(
+                    'product.productFiles',
+                    'productFiles',
+                    'productFiles.status <> :statusProductFile',
+                    { statusProductFile: StatusEnum.DELETED }
+                )
+                .leftJoinAndSelect('productFiles.file', 'file')
+                .leftJoinAndSelect('product.currency', 'currency')
+                .leftJoinAndSelect(
+                    'product.reactions',
+                    'reactions',
+                    'reactions.status <> :statusReaction',
+                    { statusReaction: StatusEnum.DELETED }
+                )
+                .where('pr.idCreationUser = :idCreationUser', { idCreationUser })
+                .andWhere('pr.type = :type', { type: ReactionTypeEnum.LIKE })
+                .andWhere('pr.status <> :status', { status: StatusEnum.DELETED })
+                .andWhere('product.status <> :statusProduct', { statusProduct: StatusEnum.DELETED })
+                .orderBy(`pr.${orderBy}`, order)
+                .limit(limit)
+                .offset(skip)
+                .getMany();
+            return reactions.flatMap((r) => (r.product ? [r.product] : []));
+        } catch (error) {
+            LogError(this.logger, error, this.findAllLikedByUserPaginated.name);
             throw new NotFoundException(this.rList.notFound);
         }
     }

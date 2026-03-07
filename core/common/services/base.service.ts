@@ -666,7 +666,7 @@ export class BasicService<Entity extends ObjectLiteral> {
      *
      * @param {*} data - Data to update the entity
      * @param {(Entity|Entity[])} entity - Entity to update
-     * @param {IUserReq} [user] - User who executed the action
+     * @param {IUserOrBusinessReq} [userOrBusiness] - User or business who executed the action
      * @returns {Promise<any>} with the updated entity
      */
     protected async updateEntity(

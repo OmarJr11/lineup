@@ -1,5 +1,5 @@
 import { StatusEnum } from '../common/enums';
-import { BusinessSchema, CatalogSearchIndexSchema, CatalogVisitSchema, FileSchema, ProductSchema, ProductSearchIndexSchema } from '.';
+import { BusinessSchema, CatalogSearchIndexSchema, CatalogVisitSchema, DiscountSchema, FileSchema, ProductSchema, ProductSearchIndexSchema } from '.';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
@@ -51,4 +51,7 @@ export class CatalogSchema{
 
     @Field(() => [ProductSearchIndexSchema], { nullable: true })
     productSearchIndexes?: ProductSearchIndexSchema[];
+
+    @Field(() => [DiscountSchema], { nullable: true })
+    discounts?: DiscountSchema[];
 }

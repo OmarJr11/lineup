@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
 import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middleware.middleware';
@@ -13,10 +14,11 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
 import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
+import { CatalogsModule } from './catalogs/catalogs.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
-import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -88,6 +90,8 @@ import { BullModule } from '@nestjs/bullmq';
     FilesModule,
     ProductsModule,
     BusinessesModule,
+    CatalogsModule,
+    WishlistsModule,
     VisitsModule,
     SearchModule,
     VerificationCodesModule,

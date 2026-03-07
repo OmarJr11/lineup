@@ -2,18 +2,27 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { TokensService } from '../token/token.service';
-import { IBusinessReq, ILoginResponse, ILogout, IResponse, IResponseWithData, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
+import { IBusinessReq, IGoogleLogin, ILoginResponse, ILogout, IResponse, IResponseWithData, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
 import { UsersGettersService } from '../users/users.getters.service';
+import { UsersService } from '../users/users.service';
 import { Business, Role, User } from '../../entities';
 import { LogError, LogWarn } from '../../common/helpers/logger.helper';
 import * as argon2 from 'argon2';
 import { userResponses } from '../../common/responses';
-import { AdminPermission, RolesCodesEnum, StatusEnum } from '../../common/enums';
+import { businessesResponses } from '../../common/responses';
+import { AdminPermission, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
+import { BusinessesService } from '../businesses/businesses.service';
+import { CreateBusinessInput } from '../businesses/dto/create-business.input';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { getAcceptableDomains, getRequestAgent } from '../../common/helpers/requests.helper';
 import { LoginResponse } from '../../schemas';
+import { OAuth2Client } from 'google-auth-library';
+import { LoginGoogleInput } from './dto/login-google.input';
+import { RegisterGoogleInput } from './dto/register-google.input';
+import { RegisterGoogleBusinessInput } from './dto/register-google-business.input';
+import { CreateUserInput } from '../users/dto/create-user.input';
 
 @Injectable()
 export class AuthService {
@@ -21,14 +30,22 @@ export class AuthService {
   private readonly rLogin = userResponses.login;
   private readonly rList = userResponses.list;
   private readonly rToken = userResponses.token;
+  private readonly rRegister = userResponses.create;
+  private readonly clientId: string;
+  private readonly googleClient: OAuth2Client;
 
   constructor(
     private readonly usersGettersService: UsersGettersService,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly tokenService: TokensService,
     private readonly configService: ConfigService,
     private readonly businessesGettersService: BusinessesGettersService,
-  ) { }
+    private readonly businessesService: BusinessesService,
+  ) {
+    this.clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') ?? '';
+    this.googleClient = new OAuth2Client(this.clientId);
+  }
 
   /**
    * Validate user
@@ -158,6 +175,145 @@ export class AuthService {
   }
 
   /**
+   * Login user with Google OAuth token.
+   * User must already exist in the database.
+   * @param {LoginGoogleInput} data - Input containing the Google ID token
+   * @returns {Promise<ILoginResponse>}
+   */
+  async loginWithGoogle(data: LoginGoogleInput): Promise<ILoginResponse> {
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const user = await this.usersGettersService.findOneByEmailWithPassword(profile.email);
+    this.checkStatus(user.status);
+    delete user?.password;
+    return await this.generateToken(user);
+  }
+
+  /**
+   * Register user with Google OAuth token.
+   * User must NOT already exist in the database.
+   * @param {RegisterGoogleInput} data - Input containing the Google ID token and role
+   * @returns {Promise<ILoginResponse>}
+   */
+  async registerWithGoogle(data: RegisterGoogleInput): Promise<ILoginResponse> {
+    if (data.role !== RolesCodesEnum.USER && data.role !== RolesCodesEnum.BUSINESS) {
+      LogWarn(this.logger, this.rRegister.noPermission.message, this.registerWithGoogle.name);
+      throw new UnauthorizedException(this.rRegister.noPermission);
+    }
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const userExists = await this.usersGettersService.checkUserExistByEmail(profile.email);
+    if (userExists) {
+      LogWarn(this.logger, this.rRegister.mailExists.message, this.registerWithGoogle.name);
+      throw new UnauthorizedException(this.rRegister.mailExists);
+    }
+    const username = profile.username ?? await this.usersService.generateUsername(profile.firstName, profile.lastName);
+    const createData: CreateUserInput = {
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      username,
+      role: data.role,
+      password: '',
+    };
+    const user = await this.usersService.create(createData, ProvidersEnum.GOOGLE);
+    this.checkStatus(user.status);
+    delete user?.password;
+    return await this.generateToken(user);
+  }
+
+  /**
+   * Login business with Google OAuth token.
+   * Business must already exist in the database.
+   * @param {LoginGoogleInput} data - Input containing the Google ID token
+   * @returns {Promise<ILoginResponse>}
+   */
+  async loginWithGoogleBusiness(data: LoginGoogleInput): Promise<ILoginResponse> {
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const business = await this.businessesGettersService.findOneByEmailWithPassword(profile.email);
+    this.checkStatus(business.status);
+    delete business?.password;
+    return await this.generateToken(business);
+  }
+
+  /**
+   * Register business with Google OAuth token.
+   * Business must NOT already exist in the database.
+   * @param {RegisterGoogleBusinessInput} data - Input containing the Google ID token
+   * @returns {Promise<ILoginResponse>}
+   */
+  async registerWithGoogleBusiness(data: RegisterGoogleBusinessInput): Promise<ILoginResponse> {
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const businessExists = await this.businessesGettersService.checkBusinessExistByEmail(profile.email);
+    if (businessExists) {
+      LogWarn(this.logger, businessesResponses.create.mailExists.message, this.registerWithGoogleBusiness.name);
+      throw new UnauthorizedException(businessesResponses.create.mailExists);
+    }
+    const businessName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
+    const createData: CreateBusinessInput = {
+      email: profile.email,
+      name: businessName,
+      role: RolesCodesEnum.BUSINESS,
+      password: '',
+    };
+    const business = await this.businessesService.create(createData, ProvidersEnum.GOOGLE);
+    this.checkStatus(business.status);
+    delete business?.password;
+    return await this.generateToken(business);
+  }
+
+  /**
+   * Verify Google ID token and extract user profile data.
+   * @param {string} token - Google ID token from the frontend
+   * @returns {Promise<{ email: string; firstName: string; lastName: string; username: string | null }>}
+   */
+  private async setDataUserFromGoogle(token: string): Promise<{
+    email: string;
+    firstName: string;
+    lastName: string;
+    username: string | null;
+  }> {
+    const googleUser = await this.googleVerify(token);
+    return {
+      email: googleUser.email,
+      firstName: googleUser.name,
+      lastName: googleUser.lastName ?? '',
+      username: null,
+    };
+  }
+
+  /**
+   * Verify Google ID token and handle verification errors.
+   * @param {string} tokenGoogle - Google ID token
+   * @returns {Promise<IGoogleLogin>}
+   */
+  private async googleVerify(tokenGoogle: string): Promise<IGoogleLogin> {
+    return await this.verifyGoogleToken(tokenGoogle).catch((err) => {
+      LogError(this.logger, err, this.googleVerify.name);
+      throw new UnauthorizedException(this.rLogin.loginTypeInvalid);
+    });
+  }
+
+  /**
+   * Verify Google ID token using Google Auth Library.
+   * @param {string} token - Google ID token from the frontend
+   * @returns {Promise<IGoogleLogin>}
+   */
+  private async verifyGoogleToken(token: string): Promise<IGoogleLogin> {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: token,
+      audience: this.clientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new UnauthorizedException(this.rLogin.loginTypeInvalid);
+    }
+    return {
+      name: payload.given_name ?? '',
+      lastName: payload.family_name ?? '',
+      email: payload.email ?? '',
+    };
+  }
+
+  /**
    *  Function that validates the username (or email) and password,
    *  if both are correct, generates session token
    * @param {LoginDto} body - Login data
@@ -214,7 +370,6 @@ export class AuthService {
     result: ILoginResponse,
     cookiePrefix: string,
   ): Promise<LoginResponse> {
-    const cookies = this.configService.get<string>('COOKIES');
     const sameSite = ('none' as 'none');
     const tokenName = `${cookiePrefix}token`;
     const refreshTokenName = `${cookiePrefix}refreshToken`;

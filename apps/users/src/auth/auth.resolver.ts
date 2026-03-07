@@ -2,6 +2,8 @@ import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { LoginDto } from '../../../../core/modules/auth/dto/login.dto';
+import { LoginGoogleInput } from '../../../../core/modules/auth/dto/login-google.input';
+import { RegisterGoogleInput } from '../../../../core/modules/auth/dto/register-google.input';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
@@ -12,6 +14,8 @@ import { BaseResponse } from '../../../../core/schemas/base-response.schema';
 import { SendVerificationCodeInput } from '../../../../core/modules/auth/dto/send-verification-code.input';
 import { VerifyCodeInput } from '../../../../core/modules/auth/dto/verify-code.input';
 import { AuthMailService } from '../../../../core/modules/auth/auth-mail.service';
+
+const cookiePrefix = 'lineup_users_';
 
 @Resolver()
 export class AuthResolver {
@@ -32,7 +36,49 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+  }
+
+  /**
+   * Login with Google OAuth.
+   * User must already be registered. Use registerWithGoogle for new users.
+   *
+   * @param {LoginGoogleInput} data - Input containing the Google ID token
+   * @param {any} ctx - GraphQL context with response
+   */
+  @Mutation(() => LoginResponse)
+  async loginWithGoogle(
+    @Args('data') data: LoginGoogleInput,
+    @Context() ctx: any,
+  ) {
+    const res: Response = ctx.res;
+    const result = await this.authService.loginWithGoogle(data);
+    const token = result.token;
+    const refreshToken = result.refreshToken;
+    delete result.token;
+    delete result.refreshToken;
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+  }
+
+  /**
+   * Register a new user with Google OAuth.
+   * Fails if the email is already registered.
+   *
+   * @param {RegisterGoogleInput} data - Input containing the Google ID token and role
+   * @param {any} ctx - GraphQL context with response
+   */
+  @Mutation(() => LoginResponse)
+  async registerWithGoogle(
+    @Args('data') data: RegisterGoogleInput,
+    @Context() ctx: any,
+  ) {
+    const res: Response = ctx.res;
+    const result = await this.authService.registerWithGoogle(data);
+    const token = result.token;
+    const refreshToken = result.refreshToken;
+    delete result.token;
+    delete result.refreshToken;
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
   @Mutation(() => LoginResponse)
@@ -41,7 +87,7 @@ export class AuthResolver {
   ) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.refreshAndSetCookies(req, res, 'lineup_');
+    return await this.authService.refreshAndSetCookies(req, res, cookiePrefix);
   }
 
   @UseGuards(JwtAuthGuard, TokenGuard)
@@ -52,7 +98,7 @@ export class AuthResolver {
   ) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.logout(req, res, user, userResponses.logout, 'lineup_');
+    return await this.authService.logout(req, res, user, userResponses.logout, cookiePrefix);
   }
 
     /**
