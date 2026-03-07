@@ -89,9 +89,7 @@ export class UsersService extends BasicService<User> {
       { username: data.username, email: data.email }
     );
 
-    if (!data.password) {
-      data.password = generateRandomCodeByLength(20);
-    }
+    if (!data.password) data.password = generateRandomCodeByLength(20);
 
     //data.imgCode = await this.validateImage(data.imgCode);
     data.password = await this.hashPassword(data.password);
@@ -189,12 +187,13 @@ export class UsersService extends BasicService<User> {
   }
 
   /**
-   * This function is responsible for generating a username using the user's first and last names
-   * @param {string} firstName - firstName of the user
-   * @param {string} lastName - lastName of the user
+   * Generates a unique username from first and last name.
+   * Used for registration when username is not provided (e.g. Google OAuth).
+   * @param {string} firstName - User's first name
+   * @param {string} [lastName] - User's last name
    * @returns {Promise<string>}
    */
-  private async generateUsername(firstName: string, lastName?: string): Promise<string> {
+  async generateUsername(firstName: string, lastName?: string): Promise<string> {
     const names = this.filterNames(firstName.toLowerCase(), lastName?.toLowerCase());
     let username = names;
     const search = '%' + names + '%';
