@@ -168,6 +168,21 @@ export class BusinessesGettersService extends BasicService<Business> {
     }
 
     /**
+     * Check if a business exists with the given email
+     * @param {string} email - email to check
+     * @returns {Promise<boolean>}
+     */
+    async checkBusinessExistByEmail(email: string): Promise<boolean> {
+        const business = await this.findOneWithOptions({
+            where: { 
+                email: email.toLowerCase(),
+                status: Not(StatusEnum.DELETED)
+            },
+        });
+        return !!business;
+    }
+
+    /**
      * Find Business by email with password (for auth)
      * @param {string} email - email
      * @returns {Promise<Business>}

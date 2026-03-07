@@ -3,6 +3,8 @@ import { UseGuards } from '@nestjs/common';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { AuthMailService } from '../../../../core/modules/auth/auth-mail.service';
 import { LoginDto } from '../../../../core/modules/auth/dto/login.dto';
+import { LoginGoogleInput } from '../../../../core/modules/auth/dto/login-google.input';
+import { RegisterGoogleBusinessInput } from '../../../../core/modules/auth/dto/register-google-business.input';
 import { SendVerificationCodeInput } from '../../../../core/modules/auth/dto/send-verification-code.input';
 import { VerifyCodeInput } from '../../../../core/modules/auth/dto/verify-code.input';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
@@ -13,7 +15,7 @@ import { Request, Response } from 'express';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { BaseResponse } from '../../../../core/schemas/base-response.schema';
 
-const cookiePrefix = 'lineup_users_';
+const cookiePrefix = 'lineup_businesses_';
 
 /**
  * Resolver handling authentication and email verification mutations
@@ -40,6 +42,52 @@ export class AuthResolver {
   ): Promise<LoginResponse> {
     const res: Response = ctx.res;
     const result = await this.authService.validateBusiness(login);
+    const token = result.token;
+    const refreshToken = result.refreshToken;
+    delete result.token;
+    delete result.refreshToken;
+    return await this.authService
+      .setCookies(res, token, refreshToken, result, cookiePrefix);
+  }
+
+  /**
+   * Login with Google OAuth.
+   * Business must already be registered. Use registerWithGoogle for new businesses.
+   *
+   * @param {LoginGoogleInput} data - Input containing the Google ID token
+   * @param ctx - GraphQL context containing the HTTP response
+   * @returns {Promise<LoginResponse>}
+   */
+  @Mutation(() => LoginResponse)
+  async loginWithGoogle(
+    @Args('data') data: LoginGoogleInput,
+    @Context() ctx: any,
+  ): Promise<LoginResponse> {
+    const res: Response = ctx.res;
+    const result = await this.authService.loginWithGoogleBusiness(data);
+    const token = result.token;
+    const refreshToken = result.refreshToken;
+    delete result.token;
+    delete result.refreshToken;
+    return await this.authService
+      .setCookies(res, token, refreshToken, result, cookiePrefix);
+  }
+
+  /**
+   * Register a new business with Google OAuth.
+   * Fails if the email is already registered.
+   *
+   * @param {RegisterGoogleBusinessInput} data - Input containing the Google ID token
+   * @param ctx - GraphQL context containing the HTTP response
+   * @returns {Promise<LoginResponse>}
+   */
+  @Mutation(() => LoginResponse)
+  async registerWithGoogle(
+    @Args('data') data: RegisterGoogleBusinessInput,
+    @Context() ctx: any,
+  ): Promise<LoginResponse> {
+    const res: Response = ctx.res;
+    const result = await this.authService.registerWithGoogleBusiness(data);
     const token = result.token;
     const refreshToken = result.refreshToken;
     delete result.token;

@@ -9,8 +9,11 @@ import { Business, Role, User } from '../../entities';
 import { LogError, LogWarn } from '../../common/helpers/logger.helper';
 import * as argon2 from 'argon2';
 import { userResponses } from '../../common/responses';
+import { businessesResponses } from '../../common/responses';
 import { AdminPermission, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
+import { BusinessesService } from '../businesses/businesses.service';
+import { CreateBusinessInput } from '../businesses/dto/create-business.input';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { getAcceptableDomains, getRequestAgent } from '../../common/helpers/requests.helper';
@@ -18,6 +21,7 @@ import { LoginResponse } from '../../schemas';
 import { OAuth2Client } from 'google-auth-library';
 import { LoginGoogleInput } from './dto/login-google.input';
 import { RegisterGoogleInput } from './dto/register-google.input';
+import { RegisterGoogleBusinessInput } from './dto/register-google-business.input';
 import { CreateUserInput } from '../users/dto/create-user.input';
 
 @Injectable()
@@ -37,6 +41,7 @@ export class AuthService {
     private readonly tokenService: TokensService,
     private readonly configService: ConfigService,
     private readonly businessesGettersService: BusinessesGettersService,
+    private readonly businessesService: BusinessesService,
   ) {
     this.clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') ?? '';
     this.googleClient = new OAuth2Client(this.clientId);
@@ -213,6 +218,46 @@ export class AuthService {
     this.checkStatus(user.status);
     delete user?.password;
     return await this.generateToken(user);
+  }
+
+  /**
+   * Login business with Google OAuth token.
+   * Business must already exist in the database.
+   * @param {LoginGoogleInput} data - Input containing the Google ID token
+   * @returns {Promise<ILoginResponse>}
+   */
+  async loginWithGoogleBusiness(data: LoginGoogleInput): Promise<ILoginResponse> {
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const business = await this.businessesGettersService.findOneByEmailWithPassword(profile.email);
+    this.checkStatus(business.status);
+    delete business?.password;
+    return await this.generateToken(business);
+  }
+
+  /**
+   * Register business with Google OAuth token.
+   * Business must NOT already exist in the database.
+   * @param {RegisterGoogleBusinessInput} data - Input containing the Google ID token
+   * @returns {Promise<ILoginResponse>}
+   */
+  async registerWithGoogleBusiness(data: RegisterGoogleBusinessInput): Promise<ILoginResponse> {
+    const profile = await this.setDataUserFromGoogle(data.token);
+    const businessExists = await this.businessesGettersService.checkBusinessExistByEmail(profile.email);
+    if (businessExists) {
+      LogWarn(this.logger, businessesResponses.create.mailExists.message, this.registerWithGoogleBusiness.name);
+      throw new UnauthorizedException(businessesResponses.create.mailExists);
+    }
+    const businessName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
+    const createData: CreateBusinessInput = {
+      email: profile.email,
+      name: businessName,
+      role: RolesCodesEnum.BUSINESS,
+      password: '',
+    };
+    const business = await this.businessesService.create(createData, ProvidersEnum.GOOGLE);
+    this.checkStatus(business.status);
+    delete business?.password;
+    return await this.generateToken(business);
   }
 
   /**
