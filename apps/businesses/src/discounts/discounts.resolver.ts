@@ -73,12 +73,12 @@ export class DiscountsResolver {
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(DiscountsPermissionsEnum.DISCREAD)
     async findAllMyDiscountsByScope(
-        @Args('input') input: FindDiscountsByScopeInput,
+        @Args('data') data: FindDiscountsByScopeInput,
         @Args('pagination', { type: () => InfinityScrollInput }) pagination: InfinityScrollInput,
         @BusinessDec() businessReq: IBusinessReq,
     ) {
         const result = await this.discountsService
-            .findAllMyDiscountsByScope(input, pagination, businessReq);
+            .findAllMyDiscountsByScope(data, pagination, businessReq);
         return {
             items: result.items.map(toDiscountSchema),
             total: result.total,

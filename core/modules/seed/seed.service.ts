@@ -63,7 +63,6 @@ export class SeedService {
         const business = await this.businessesService.findOneByPath(item.path);
         const businessData2: UpdateBusinessInput = {
             id: business.id,
-            email: item.email,
             name: item.name,
             path: item.path,
             description: item.description,

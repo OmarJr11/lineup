@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BasicService } from '../../common/services';
-import { IBusinessReq } from '../../common/interfaces';
+import { IBusinessReq, IUserOrBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountProductsResponses } from '../../common/responses';
 import { DiscountProduct } from '../../entities';
@@ -58,8 +58,9 @@ export class DiscountProductsSettersService extends BasicService<DiscountProduct
         businessReq: IBusinessReq,
     ) {
         try {
-            const data = { idDiscount, idCreationBusiness: businessReq.businessId };
-            await this.updateEntity(data, discountProduct, businessReq);
+            const formattedDiscountProduct = this.formatDiscountProductForUpdate(discountProduct);
+            const data = { idDiscount };
+            await this.updateEntity(data, formattedDiscountProduct, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.updateDiscount.name, businessReq);
             throw new InternalServerErrorException(this.rCreate.error);
@@ -69,10 +70,10 @@ export class DiscountProductsSettersService extends BasicService<DiscountProduct
     /**
      * Remove discount-product records.
      * @param {DiscountProduct[]} discountProducts - The records to remove.
-     * @param {IBusinessReq} businessReq - The business request.
+     * @param {IUserOrBusinessReq} businessReq - The business request.
      */
     @Transactional()
-    async removeMany(discountProducts: DiscountProduct[], businessReq: IBusinessReq) {
+    async removeMany(discountProducts: DiscountProduct[], businessReq: IUserOrBusinessReq) {
         if (discountProducts.length > 0) {
             try {
                 await this.deleteEntity(discountProducts, { data: businessReq});
@@ -81,5 +82,17 @@ export class DiscountProductsSettersService extends BasicService<DiscountProduct
                 throw new InternalServerErrorException(this.rDelete.error);
             }
         }
+    }
+
+    /**
+     * Format the discount product for the update.
+     * @param {DiscountProduct} discountProduct - The discount product to format.
+     * @returns {DiscountProduct} The formatted discount product.
+     */
+    private formatDiscountProductForUpdate(discountProduct: DiscountProduct): DiscountProduct {
+        delete discountProduct.product;
+        delete discountProduct.discount;
+        delete discountProduct.creationBusiness;
+        return discountProduct;
     }
 }

@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { In, LessThan, LessThanOrEqual, Not, Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
@@ -89,7 +89,7 @@ export class DiscountsGettersService extends BasicService<Discount> {
     async verifyBusinessOwnership(discount: Discount, businessId: number): Promise<void> {
         switch (discount.scope) {
             case DiscountScopeEnum.BUSINESS:
-                if (discount.idCreationBusiness !== businessId) {
+                if (Number(discount.idCreationBusiness) !== Number(businessId)) {
                     LogError(this.logger, this.rList.notFound.message, this.verifyBusinessOwnership.name);
                     throw new ForbiddenException(this.rList.notFound);
                 }
@@ -153,6 +153,15 @@ export class DiscountsGettersService extends BasicService<Discount> {
     }
 
     /**
+     * Find all discounts by IDs.
+     * @param {number[]} ids - The discount IDs.
+     * @returns {Promise<Discount[]>} Array of discounts.
+     */
+    async findAllByIds(ids: number[]): Promise<Discount[]> {
+        return await this.find({ where: { id: In(ids) } });
+    }
+
+    /**
      * Find all discounts with scope = catalog belonging to a business.
      * @param {number} idBusiness - The business ID.
      * @returns {Promise<Discount[]>} Array of catalog-scope discounts.
@@ -188,6 +197,7 @@ export class DiscountsGettersService extends BasicService<Discount> {
 
     /**
      * Find discounts by scope with pagination.
+     * Uses subquery for IDs so LIMIT applies to discounts, not joined rows (avoids fewer/duplicate results).
      * @param {DiscountScopeEnum} scope - The scope filter.
      * @param {number} idBusiness - The business ID.
      * @param {InfinityScrollInput} pagination - Pagination parameters.
@@ -203,19 +213,68 @@ export class DiscountsGettersService extends BasicService<Discount> {
         const skip = (page - 1) * limit;
         const order = pagination.order || 'DESC';
         const orderBy = pagination.orderBy || 'creation_date';
-        const qb = this.createQueryBuilder('d')
+        const baseWhere = () => {
+            const qb = this.createQueryBuilder('d')
+                .where('d.idCreationBusiness = :idBusiness', { idBusiness })
+                .andWhere('d.status <> :status', { status: StatusEnum.DELETED });
+            if (scope !== DiscountScopeEnum.BUSINESS) {
+                qb.andWhere('d.scope = :scope', { scope });
+            }
+            return qb;
+        };
+        const [paginatedDiscounts, total] = await Promise.all([
+            baseWhere()
+                .select('d.id')
+                .orderBy(`d.${orderBy}`, order)
+                .limit(limit)
+                .offset(skip)
+                .getMany(),
+            baseWhere().getCount(),
+        ]);
+        const ids = paginatedDiscounts.map((d) => d.id);
+        if (ids.length === 0) return { items: [], total, page, limit };
+        const items = await this.createQueryBuilder('d')
             .leftJoinAndSelect('d.currency', 'currency')
             .leftJoinAndSelect('d.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage')
             .leftJoinAndSelect('d.catalog', 'catalog')
-            .where('d.idCreationBusiness = :idBusiness', { idBusiness })
-            .andWhere('d.status <> :status', { status: StatusEnum.DELETED })
-            .limit(limit)
-            .offset(skip)
-            .orderBy(`d.${orderBy}`, order);
-        if (scope !== DiscountScopeEnum.BUSINESS) qb.andWhere('d.scope = :scope', { scope });
-        const items = await qb.getMany();
-        const total = items.length;
+            .leftJoinAndSelect('catalog.image', 'catalogImage')
+            .leftJoinAndSelect('d.discountProducts', 'discountProducts')
+            .leftJoinAndSelect('discountProducts.product', 'product', 'product.status <> :status', { status: StatusEnum.DELETED })
+            .leftJoinAndSelect('product.productFiles', 'productFiles')
+            .leftJoinAndSelect('productFiles.file', 'productFile')
+            .where('d.id IN (:...ids)', { ids })
+            .orderBy(`d.${orderBy}`, order)
+            .getMany();
         return { items, total, page, limit };
+    }
+
+    /**
+     * Find all ACTIVE discounts whose endDate has passed (now > endDate).
+     * @returns {Promise<Discount[]>} Array of expired discounts ready to be removed.
+     */
+    async findAllActiveWithEndDatePassed(): Promise<Discount[]> {
+        const now = new Date();
+        return await this.find({
+            where: {
+                status: StatusEnum.ACTIVE,
+                endDate: LessThan(now),
+            }
+        });
+    }
+
+    /**
+     * Find all PENDING discounts whose startDate has been reached (now >= startDate).
+     * @returns {Promise<Discount[]>} Array of pending discounts ready to be activated.
+     */
+    async findAllPendingWithStartDateReached(): Promise<Discount[]> {
+        const now = new Date();
+        return await this.find({
+            where: {
+                status: StatusEnum.PENDING,
+                startDate: LessThanOrEqual(now),
+            }
+        });
     }
 
     /**

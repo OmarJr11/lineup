@@ -236,7 +236,15 @@ export class ProductsGettersService extends BasicService<Product> {
             .leftJoinAndSelect(
                 'p.reactions',
                 'reactions',
-                'reactions.status <> :statusReaction', { statusReaction: StatusEnum.DELETED }
-            );
+                'reactions.status <> :statusReaction',
+                { statusReaction: StatusEnum.DELETED },
+            )
+            .leftJoinAndSelect('p.discountProduct', 'discountProduct')
+            .leftJoinAndSelect(
+                'discountProduct.discount',
+                'discount',
+                'discount.status = :statusDiscount', { statusDiscount: StatusEnum.ACTIVE },
+            )
+            .leftJoinAndSelect('discount.currency', 'discountCurrency');
     }
 }

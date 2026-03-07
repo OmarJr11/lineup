@@ -14,6 +14,7 @@ import { EnvironmentsEnum } from '../../../core/common/enums';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConsumersModule } from '../../../core/consumers';
+import { CronsModule } from '../../../core/crons';
 import { SeedModule } from './seed/seed.module';
 import { RolesAdminModule } from './roles-admin/roles-admin.module';
 
@@ -89,6 +90,7 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
     FilesModule,
     SocialNetworksModule,
     ConsumersModule.register(),
+    CronsModule,
     SeedModule,
     RolesAdminModule,
   ],

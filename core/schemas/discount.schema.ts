@@ -1,5 +1,5 @@
 import { DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../common/enums';
-import { BusinessSchema, CatalogSchema, CurrencySchema } from '.';
+import { BusinessSchema, CatalogSchema, CurrencySchema, DiscountProductSchema } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 /**
@@ -55,4 +55,7 @@ export class DiscountSchema {
 
     @Field({ nullable: true })
     modificationDate?: Date;
+
+    @Field(() => [DiscountProductSchema], { nullable: true })
+    discountProducts?: DiscountProductSchema[];
 }

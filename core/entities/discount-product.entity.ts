@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Business, Discount, Product } from './';
 
@@ -9,7 +9,10 @@ import { Business, Discount, Product } from './';
  */
 @Entity({ name: 'discount_products' })
 export class DiscountProduct extends BaseEntity {
-    @PrimaryColumn('int8', { name: 'id_product' })
+    @PrimaryGeneratedColumn({ type: 'int8' })
+    id: number;
+
+    @Column('int8', { name: 'id_product', unique: true })
     idProduct: number;
 
     @ManyToOne(() => Product, (product) => product.discountProduct)
@@ -29,4 +32,8 @@ export class DiscountProduct extends BaseEntity {
     @ManyToOne(() => Business, (business) => business.creationDiscountProducts)
     @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
     creationBusiness?: Business;
+
+    @ManyToOne(() => Business, (business) => business.modifiedDiscountProducts)
+    @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
+    modificationBusiness?: Business;
 }

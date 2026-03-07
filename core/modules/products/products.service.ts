@@ -442,7 +442,7 @@ export class ProductsService extends BasicService<Product> {
     private async queueForIdProduct(idProduct: number) {
       await this.searchDataQueue.add(
         SearchDataConsumerEnum.SearchDataProduct,
-        { idProduct }
+        { idProduct }, { delay: 1000 * 60 }
       );
     }
 
@@ -459,7 +459,7 @@ export class ProductsService extends BasicService<Product> {
     ) {
       await this.catalogsQueue.add(
         CatalogsConsumerEnum.UpdateProductsCount,
-        { idCatalog, action, businessReq }
+        { idCatalog, action, businessReq }, { delay: 1000 * 60 }
       );
     }
 }

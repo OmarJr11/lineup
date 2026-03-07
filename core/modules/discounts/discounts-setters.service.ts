@@ -5,10 +5,10 @@ import { Repository } from 'typeorm';
 import { Queue } from 'bullmq';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BasicService } from '../../common/services';
-import { IBusinessReq } from '../../common/interfaces';
+import { IBusinessReq, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
-import { AuditOperationEnum } from '../../common/enums';
+import { AuditOperationEnum, StatusEnum } from '../../common/enums';
 import { DiscountsConsumerEnum, QueueNamesEnum } from '../../common/enums/consumers';
 import { Discount, DiscountProduct } from '../../entities';
 import { CreateDiscountInput } from './dto/create-discount.input';
@@ -49,7 +49,12 @@ export class DiscountsSettersService extends BasicService<Discount> {
         businessReq: IBusinessReq,
     ): Promise<Discount> {
         try {
-            return await this.save(data, businessReq);
+            const { startDate, endDate } = this.formatDiscountDateRange(
+                data.startDate,
+                data.endDate,
+            );
+            const status = this.resolveStatusFromStartDate(startDate);
+            return await this.save({ ...data, startDate, endDate, status }, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.createDiscount.name, businessReq);
             throw new InternalServerErrorException(this.rCreate.error);
@@ -70,9 +75,50 @@ export class DiscountsSettersService extends BasicService<Discount> {
         businessReq: IBusinessReq,
     ): Promise<Discount> {
         try {
-            return await this.updateEntity(data, discount, businessReq);
+            let updateData = { ...data };
+            if (data.startDate || data.endDate !== undefined) {
+                const startDate = data.startDate ?? discount.startDate;
+                const endDate = data.endDate ?? discount.endDate;
+                const formatted = this.formatDiscountDateRange(startDate, endDate);
+                if (data.startDate) updateData.startDate = formatted.startDate;
+                if (data.endDate) updateData.endDate = formatted.endDate;
+            }
+            return await this.updateEntity(updateData, discount, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.updateDiscount.name, businessReq);
+            throw new InternalServerErrorException(this.rUpdate.error);
+        }
+    }
+
+    /**
+     * Update multiple discounts.
+     * @param {StatusEnum} status - The status to update.
+     * @param {Discount[]} discounts - The discounts to update.
+     * @param {IUserReq} userReq - The user request.
+     */
+    @Transactional()
+    async updateMany(
+        status: StatusEnum,
+        discounts: Discount[],
+        userReq: IUserOrBusinessReq
+    ) {
+        try {
+            await this.updateEntity({ status }, discounts, userReq);
+            for (const discount of discounts) {
+                const discountProducts = await this.discountProductsGettersService.findAllByDiscountId(discount.id);
+                for (const discountProduct of discountProducts) {
+                    await this.discountsQueue.add(
+                        DiscountsConsumerEnum.RecordAudit,
+                        { 
+                            idProduct: discountProduct.idProduct,
+                            operation: AuditOperationEnum.UPDATE,
+                            businessReq: { businessId: discount.idCreationBusiness, path: 'business' }
+                        },
+                    );
+                }
+            }
+        } catch (error) {
+            LogError(this.logger, error, this.updateMany.name);
             throw new InternalServerErrorException(this.rUpdate.error);
         }
     }
@@ -126,10 +172,10 @@ export class DiscountsSettersService extends BasicService<Discount> {
      * Remove a discount and all its DiscountProduct records.
      * Records audit for each removed DiscountProduct before deletion.
      * @param {Discount} discount - The discount to remove.
-     * @param {IBusinessReq} businessReq - The business request.
+     * @param {IUserOrBusinessReq} businessReq - The business request.
      */
     @Transactional()
-    async removeDiscount(discount: Discount, businessReq: IBusinessReq) {
+    async removeDiscount(discount: Discount, businessReq: IUserOrBusinessReq) {
         try {
             const discountProducts = await this.discountProductsGettersService
                 .findAllByDiscountId(discount.id);
@@ -151,5 +197,35 @@ export class DiscountsSettersService extends BasicService<Discount> {
             LogError(this.logger, error, this.removeDiscount.name, businessReq);
             throw new InternalServerErrorException(this.rDelete.error);
         }
+    }
+
+    /**
+     * Format startDate to 00:00:00 and endDate to 23:59:59.
+     * @param {Date} startDate - The start date.
+     * @param {Date} endDate - The end date.
+     * @returns {{ startDate: Date; endDate: Date }} Formatted dates.
+     */
+    private formatDiscountDateRange(
+        startDate: Date,
+        endDate: Date,
+    ): { startDate: Date; endDate: Date } {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        return { startDate: start, endDate: end };
+    }
+
+    /**
+     * Resolve status from startDate: PENDING if future, ACTIVE if today or past.
+     * @param {Date} startDate - The discount start date.
+     * @returns {StatusEnum} PENDING or ACTIVE.
+     */
+    private resolveStatusFromStartDate(startDate: Date): StatusEnum {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        return start > today ? StatusEnum.PENDING : StatusEnum.ACTIVE;
     }
 }

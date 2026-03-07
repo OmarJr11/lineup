@@ -130,6 +130,9 @@ export class Business extends BaseEntity {
     @OneToMany(() => DiscountProduct, (discountProduct) => discountProduct.creationBusiness)
     creationDiscountProducts?: DiscountProduct[];
 
+    @OneToMany(() => DiscountProduct, (discountProduct) => discountProduct.modificationBusiness)
+    modifiedDiscountProducts?: DiscountProduct[];
+
     @OneToMany(() => DiscountProductAudit, (discountProductAudit) => discountProductAudit.creationBusiness)
     creationDiscountProductAudits?: DiscountProductAudit[];
     

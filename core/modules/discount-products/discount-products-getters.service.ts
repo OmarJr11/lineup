@@ -26,9 +26,9 @@ export class DiscountProductsGettersService extends BasicService<DiscountProduct
     /**
      * Find DiscountProduct by product ID.
      * @param {number} idProduct - The product ID.
-     * @returns {Promise<DiscountProduct | null>} The discount product or null.
+     * @returns {Promise<DiscountProduct>} The discount product or null.
      */
-    async findByProductId(idProduct: number): Promise<DiscountProduct | null> {
+    async findByProductId(idProduct: number): Promise<DiscountProduct> {
         return await this.findOneWithOptions({
             where: { idProduct },
             relations: this.relations,

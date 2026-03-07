@@ -7,6 +7,9 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class DiscountProductSchema {
     @Field(() => Int)
+    id: number;
+
+    @Field(() => Int)
     idProduct: number;
 
     @Field(() => ProductSchema, { nullable: true })

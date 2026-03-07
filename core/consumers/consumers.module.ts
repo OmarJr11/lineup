@@ -19,6 +19,7 @@ import { SearchModule } from '../modules/search/search.module';
 import { MailModule } from '../modules/mail/mail.module';
 import { ProductRatingsModule } from '../modules/product-ratings/product-ratings.module';
 import { DiscountProductAuditsModule } from '../modules/discount-product-audits/discount-product-audits.module';
+import { DiscountsModule } from '../modules/discounts/discounts.module';
 
 @Module({})
 export class ConsumersModule {
@@ -38,6 +39,8 @@ export class ConsumersModule {
         SearchModule,
         MailModule,
         ProductRatingsModule,
+        DiscountProductAuditsModule,
+        DiscountsModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [

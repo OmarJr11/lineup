@@ -50,7 +50,7 @@ export class Discount extends BaseEntity {
     @JoinColumn([{ name: 'id_catalog', referencedColumnName: 'id' }])
     catalog?: Catalog;
 
-    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
+    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.PENDING })
     status: StatusEnum;
 
     @Column('int8', { name: 'id_creation_business' })

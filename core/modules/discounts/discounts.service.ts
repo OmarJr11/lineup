@@ -18,8 +18,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { discountsResponses } from 'core/common/responses';
-import { LogError } from 'core/common/helpers';
+import { discountsResponses } from '../../common/responses';
+import { LogError } from '../../common/helpers/logger.helper';
 
 /**
  * Orchestrating service for discount operations.
