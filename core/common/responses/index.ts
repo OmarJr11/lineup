@@ -26,3 +26,6 @@ export * from './product-ratings.response'; //25
 export * from './product-skus.response'; //26
 export * from './inventory.response'; //27
 export * from './stock-movements.response'; //28
+export * from './discounts.response'; //29
+export * from './discount-products.response'; //30
+export * from './discount-product-audits.response'; //31

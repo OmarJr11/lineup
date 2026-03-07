@@ -1,5 +1,6 @@
 export * from './catalogs.consumer';
 export * from './consumers.module';
+export * from './discounts.consumer';
 export * from './mails.consumer';
 export * from './queues.manager';
 export * from './search-data.consumer';

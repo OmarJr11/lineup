@@ -14,6 +14,7 @@ export class QueuesManager {
       searchData: QueueNamesEnum.searchData,
       mails: QueueNamesEnum.mails,
       reviews: QueueNamesEnum.reviews,
+      discounts: QueueNamesEnum.discounts,
     };
   }
 
@@ -27,12 +28,14 @@ export class QueuesManager {
     @InjectQueue(QueuesManager.queueNames.searchData) searchDataQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.mails) mailsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.reviews) reviewsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.discounts) discountsQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
     this.queues[QueuesManager.queueNames.catalogs] = catalogsQueue;
     this.queues[QueuesManager.queueNames.searchData] = searchDataQueue;
     this.queues[QueuesManager.queueNames.mails] = mailsQueue;
     this.queues[QueuesManager.queueNames.reviews] = reviewsQueue;
+    this.queues[QueuesManager.queueNames.discounts] = discountsQueue;
 
     if (
       Object.keys(this.queues).length !=

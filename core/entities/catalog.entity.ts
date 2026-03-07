@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Business, CatalogSearchIndex, CatalogVisit, File, Product, ProductSearchIndex } from '.';
+import { Business, CatalogSearchIndex, CatalogVisit, Discount, File, Product, ProductSearchIndex } from '.';
 import { StatusEnum } from '../common/enums';
 import { BaseEntity } from './base.entity';
 
@@ -55,4 +55,7 @@ export class Catalog extends BaseEntity {
 
     @OneToMany(() => ProductSearchIndex, (index) => index.catalog)
     productSearchIndexes?: ProductSearchIndex[];
+
+    @OneToMany(() => Discount, (discount) => discount.catalog)
+    discounts?: Discount[];
 }

@@ -3,5 +3,6 @@ export enum QueueNamesEnum {
   catalogs = 'catalogs-queue',
   searchData = 'search-data-queue',
   mails = 'mails-queue',
-  reviews = 'reviews-queue'
+  reviews = 'reviews-queue',
+  discounts = 'discounts-queue',
 }

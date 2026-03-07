@@ -12,12 +12,6 @@ export class UpdateBusinessInput {
 
   @Field({ nullable: true })
   @IsOptional()
-  @MaxLength(50)
-  @IsString()
-  email?: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
   @MaxLength(100)
   @IsString()
   name?: string;
