@@ -214,7 +214,6 @@ export class AuthService {
     result: ILoginResponse,
     cookiePrefix: string,
   ): Promise<LoginResponse> {
-    const cookies = this.configService.get<string>('COOKIES');
     const sameSite = ('none' as 'none');
     const tokenName = `${cookiePrefix}token`;
     const refreshTokenName = `${cookiePrefix}refreshToken`;

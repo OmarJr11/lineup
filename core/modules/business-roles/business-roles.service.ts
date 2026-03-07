@@ -43,7 +43,7 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
   @Transactional()
   async create(idBusiness: number, idRole: number, user: IUserOrBusinessReq) {
     const existing = await this.businessRolesGettersService
-      .findOneOrFail(idBusiness, idRole);
+      .findOne(idBusiness, idRole);
     if (existing) {
       LogError(this.logger, this.rCreate.alreadyExists.message, this.create.name, user);
       throw new BadRequestException(this.rCreate.alreadyExists);
