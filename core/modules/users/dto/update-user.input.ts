@@ -34,4 +34,10 @@ export class UpdateUserInput {
     @MaxLength(50)
     @Transform(ImageCode)
     imgCode?: string;
+
+    @Field(() => Number, { nullable: true })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    idState?: number;
 }

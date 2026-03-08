@@ -6,10 +6,18 @@ import { ProductRatingsModule } from '../../../../core/modules/product-ratings/p
 import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 import { AuthModule } from '../../../../core/modules/auth/auth.module';
+import { ProductsModule as ProductsModuleCore } from '../../../../core/modules/products/products.module';
 
 @Module({
     providers: [ProductsResolver, ProductRatingsResolver],
     exports: [ProductsResolver, ProductRatingsResolver],
-    imports: [ProductReactionsModule, ProductRatingsModule, RolesModule, TokensModule, AuthModule],
+    imports: [
+        ProductReactionsModule,
+        ProductRatingsModule,
+        RolesModule,
+        TokensModule,
+        AuthModule,
+        ProductsModuleCore
+    ],
 })
 export class ProductsModule {}

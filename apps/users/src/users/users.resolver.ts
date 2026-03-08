@@ -1,5 +1,5 @@
 import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
-import { ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
+import { CookiesPrefixEnum, ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
 import { toUserSchema } from '../../../../core/common/functions';
 import { CreateUserInput } from '../../../../core/modules/users/dto/create-user.input';
 import { UsersService } from '../../../../core/modules/users/users.service';
@@ -15,6 +15,8 @@ import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { ChangePasswordInput } from '../../../../core/common/dtos';
 import { Permissions, Response, UserDec } from '../../../../core/common/decorators';
 import { Response as ResponseExpress } from 'express';
+
+const cookiePrefix = CookiesPrefixEnum.USERS;
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => UserSchema)
@@ -38,7 +40,7 @@ export class UsersResolver {
     const { token, refreshToken } =
     await this.tokensService.generateTokens(user);
     const result = { ...this._uCreate.success, user };
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
   @Query(() => UserSchema, { name: 'userById' })

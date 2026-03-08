@@ -14,8 +14,9 @@ import { BaseResponse } from '../../../../core/schemas/base-response.schema';
 import { SendVerificationCodeInput } from '../../../../core/modules/auth/dto/send-verification-code.input';
 import { VerifyCodeInput } from '../../../../core/modules/auth/dto/verify-code.input';
 import { AuthMailService } from '../../../../core/modules/auth/auth-mail.service';
+import { CookiesPrefixEnum } from '../../../../core/common/enums';
 
-const cookiePrefix = 'lineup_users_';
+const cookiePrefix = CookiesPrefixEnum.USERS;
 
 @Resolver()
 export class AuthResolver {

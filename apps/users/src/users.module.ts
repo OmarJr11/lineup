@@ -19,6 +19,7 @@ import { WishlistsModule } from './wishlists/wishlists.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
+import { StatesModule } from './states/states.module';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { VerificationCodesModule } from './verification-codes/verification-codes
     VisitsModule,
     SearchModule,
     VerificationCodesModule,
+    StatesModule,
   ],
 })
 export class UsersModule implements NestModule {
