@@ -2,7 +2,20 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessFollower, BusinessVisit, CatalogVisit, Currency, File, ProductRating, ProductReaction, ProductVisit, Role, Token, UserRole } from '.';
+import {
+    BusinessFollower,
+    BusinessVisit,
+    CatalogVisit,
+    Currency,
+    File,
+    ProductRating,
+    ProductReaction,
+    ProductVisit,
+    Role,
+    State,
+    Token,
+    UserRole
+} from '.';
 
 @Entity({ schema: 'system', name: 'users' })
 export class User extends BaseEntity {
@@ -36,6 +49,13 @@ export class User extends BaseEntity {
     @Column({ type: 'varchar', name: 'image_code', length: 50, nullable: true })
     imageCode?: string;
 
+    @Column('int8', { name: 'id_state', nullable: true })
+    idState?: number;
+
+    @ManyToOne(() => State, (state) => state.users)
+    @JoinColumn([{ name: 'id_state', referencedColumnName: 'id' }])
+    state?: State;
+
     @OneToMany(() => Role, (role) => role.creationUser)
     createdRoles?: Role[];
 
@@ -65,6 +85,12 @@ export class User extends BaseEntity {
 
     @OneToMany(() => Currency, (currency) => currency.creationUser)
     createdCurrencies?: Currency[];
+
+    @OneToMany(() => State, (state) => state.creationUser)
+    createdStates?: State[];
+
+    @OneToMany(() => State, (state) => state.modificationUser)
+    modifiedStates?: State[];
 
     @OneToMany(() => BusinessVisit, (visit) => visit.creationUser)
     businessVisits?: BusinessVisit[];

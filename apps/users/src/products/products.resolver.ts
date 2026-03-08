@@ -1,13 +1,15 @@
 import { Resolver, Mutation, Query, Args, Int } from '@nestjs/graphql';
 import { ProductReactionsService } from '../../../../core/modules/product-reactions/product-reactions.service';
 import { ProductReactionsGettersService } from '../../../../core/modules/product-reactions/product-reactions-getters.service';
-import { ProductReactionSchema } from '../../../../core/schemas';
+import { PaginatedProducts, ProductReactionSchema, ProductSchema } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { ReactionTypeEnum, StatusEnum } from '../../../../core/common/enums';
-import { toProductReactionSchema } from '../../../../core/common/functions';
+import { toProductReactionSchema, toProductSchema } from '../../../../core/common/functions';
+import { InfinityScrollInput } from '../../../../core/common/dtos';
+import { ProductsService } from '../../../../core/modules/products/products.service';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => ProductReactionSchema)
@@ -16,7 +18,61 @@ export class ProductsResolver {
     constructor(
         private readonly productReactionsService: ProductReactionsService,
         private readonly productReactionsGettersService: ProductReactionsGettersService,
+        private readonly productsService: ProductsService
     ) {}
+
+    
+    @Query(() => PaginatedProducts, { name: 'findAllProducts' })
+    async findAll(
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAll(pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
+    @Query(() => PaginatedProducts, { name: 'getAllByCatalog' })
+    async getAllByCatalog(
+      @Args('idCatalog', { type: () => Int }) idCatalog: number,
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByCatalog(idCatalog, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
+    @Query(() => PaginatedProducts, { name: 'getAllByBusiness' })
+    async getAllByBusiness(
+      @Args('idBusiness', { type: () => Int }) idBusiness: number,
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByBusiness(idBusiness, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
+    @Query(() => ProductSchema, { name: 'findOneProduct' })
+    async findOne(@Args('id', { type: () => Int }) id: number) {
+      return toProductSchema(await this.productsService.findOne(id));
+    }
 
     /**
      * Add a like to a product.

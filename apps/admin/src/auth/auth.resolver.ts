@@ -9,8 +9,9 @@ import { userResponses } from '../../../../core/common/responses';
 import { Request, Response } from 'express';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { BaseResponse } from '../../../../core/schemas/base-response.schema';
+import { CookiesPrefixEnum } from '../../../../core/common/enums';
 
-const cookiePrefix = 'lineup_admin_';
+const cookiePrefix = CookiesPrefixEnum.ADMIN;
 
 @Resolver()
 export class AuthResolver {

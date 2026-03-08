@@ -1,6 +1,6 @@
 import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
 import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
-import { BusinessSchema, LoginResponse, PaginatedBusinesses } from '../../../../core/schemas';
+import { BusinessSchema, LoginResponse } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { IBusinessReq } from '../../../../core/common/interfaces';
@@ -10,11 +10,13 @@ import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/cre
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
 import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
 import { businessesResponses } from '../../../../core/common/responses';
-import { ChangePasswordInput, InfinityScrollInput } from '../../../../core/common/dtos';
+import { ChangePasswordInput } from '../../../../core/common/dtos';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
-import { VerificationCodesService } from '../../../../core/modules/verification-codes/verification-codes.service';
 import { Response as ResponseExpress } from 'express';
+import { CookiesPrefixEnum } from '../../../../core/common/enums';
+
+const cookiePrefix = CookiesPrefixEnum.BUSINESSES;
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessSchema)
@@ -37,32 +39,7 @@ export class BusinessesResolver {
     const { token, refreshToken } =
     await this.tokensService.generateTokens(business);
     const result = { ...this._bCreate.success, business };
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
-  }
-
-  @Query(() => BusinessSchema, { name: 'findOneBusiness' })
-  async findOne(@Args('id', { type: () => Int }) id: number) {
-    return toBusinessSchema(await this.businessesService.findOne(id));
-  }
-
-  @Query(() => BusinessSchema, { name: 'findBusinessByPath' })
-  async findByPath(@Args('path', { type: () => String }) path: string) {
-    return toBusinessSchema(await this.businessesService.findOneByPath(path));
-  }
-
-  @Query(() => PaginatedBusinesses, { name: 'findAllBusinesses' })
-  async findAll(
-    @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput
-  ) {
-    const items = (await this.businessesService.findAll(pagination))
-      .map(business => toBusinessSchema(business));
-    return {
-      items,
-      total: items.length,
-      page: pagination.page,
-      limit: pagination.limit
-    };
+    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
   @Query(() => BusinessSchema, { name: 'myBusiness' })

@@ -28,6 +28,7 @@ export * from './paginated.schema';
 export * from './social-network.schema';
 export * from './social-network-business.schema';
 export * from './currency.schema';
+export * from './state.schema';
 export * from './record-visit-response.schema';
 export * from './business-search-index.schema';
 export * from './catalog-search-index.schema';

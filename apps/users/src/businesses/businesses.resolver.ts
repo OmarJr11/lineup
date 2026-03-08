@@ -1,19 +1,22 @@
 import { Resolver, Mutation, Query, Args, Int } from '@nestjs/graphql';
 import { BusinessFollowersService } from '../../../../core/modules/business-followers/business-followers.service';
 import { BusinessFollowersGettersService } from '../../../../core/modules/business-followers/business-followers-getters.service';
-import { BusinessFollowerSchema } from '../../../../core/schemas';
+import { BusinessFollowerSchema, BusinessSchema, PaginatedBusinesses } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { StatusEnum } from '../../../../core/common/enums';
-import { toBusinessFollowerSchema } from '../../../../core/common/functions';
+import { toBusinessFollowerSchema, toBusinessSchema } from '../../../../core/common/functions';
+import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
+import { InfinityScrollInput } from 'core/common/dtos';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessFollowerSchema)
 @UseGuards(JwtAuthGuard, TokenGuard)
 export class BusinessesResolver {
     constructor(
+        private readonly businessesService: BusinessesService,
         private readonly businessFollowersService: BusinessFollowersService,
         private readonly businessFollowersGettersService: BusinessFollowersGettersService,
     ) {}
@@ -45,6 +48,32 @@ export class BusinessesResolver {
         @UserDec() user: IUserReq,
     ): Promise<boolean> {
         return await this.businessFollowersService.unfollowBusiness(idBusiness, user);
+    }
+
+
+    @Query(() => BusinessSchema, { name: 'findOneBusiness' })
+    async findOne(@Args('id', { type: () => Int }) id: number) {
+      return toBusinessSchema(await this.businessesService.findOne(id));
+    }
+  
+    @Query(() => BusinessSchema, { name: 'findBusinessByPath' })
+    async findByPath(@Args('path', { type: () => String }) path: string) {
+      return toBusinessSchema(await this.businessesService.findOneByPath(path));
+    }
+  
+    @Query(() => PaginatedBusinesses, { name: 'findAllBusinesses' })
+    async findAll(
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.businessesService.findAll(pagination))
+        .map(business => toBusinessSchema(business));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
     }
 
     /**

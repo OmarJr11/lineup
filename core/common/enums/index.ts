@@ -16,3 +16,4 @@ export * from './discount-scope.enum';
 export * from './audit-operation.enum';
 export * from './templates.enum';
 export * from './verification-code-channel.enum';
+export * from './cookies.enum';

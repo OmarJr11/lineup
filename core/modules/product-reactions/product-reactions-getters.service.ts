@@ -114,6 +114,17 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
                     'reactions.status <> :statusReaction',
                     { statusReaction: StatusEnum.DELETED }
                 )
+                .leftJoinAndSelect('product.catalog', 'catalog')
+                .leftJoinAndSelect('catalog.image', 'catalogImage')
+                .leftJoinAndSelect('product.business', 'business')
+                .leftJoinAndSelect('business.image', 'businessImage')
+                .leftJoinAndSelect('product.discountProduct', 'discountProduct')
+                .leftJoinAndSelect(
+                    'discountProduct.discount',
+                    'discount',
+                    'discount.status = :statusDiscount', { statusDiscount: StatusEnum.ACTIVE }
+                )
+                .leftJoinAndSelect('discount.currency', 'discountCurrency')
                 .where('pr.idCreationUser = :idCreationUser', { idCreationUser })
                 .andWhere('pr.type = :type', { type: ReactionTypeEnum.LIKE })
                 .andWhere('pr.status <> :status', { status: StatusEnum.DELETED })

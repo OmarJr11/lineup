@@ -411,7 +411,6 @@ export class AuthService {
     }
 
     const idUser = Number((decoded as any).sub);
-
     const result = await this.refreshToken(refreshToken, token);
     const newToken = result.token;
     const newRefresh = result.refreshToken;
@@ -440,8 +439,8 @@ export class AuthService {
       const tokenName = `${cookiePrefix}token`;
       const refreshName = `${cookiePrefix}refreshToken`;
       const dataToken: ILogout = {
-          token: req.cookies.token,
-          refreshToken: req.cookies.refreshToken,
+          token: req.cookies[tokenName] ?? req.cookies.token,
+          refreshToken: req.cookies[refreshName] ?? req.cookies.refreshToken,
           domain: agent,
           secure: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
           httpOnly: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
@@ -462,23 +461,17 @@ export class AuthService {
         );
       }
 
-      const domain = dataToken.domain;
-      const hasValidDomain =
-        typeof domain === 'string' && domain.length > 0 && domain !== 'localhost' && domain.includes('.');
-
-      const cookieOptions: {
-        path: string;
-        domain?: string;
-        secure?: boolean;
-        httpOnly?: boolean;
-      } = {
+      // Cookie options must match EXACTLY those used in setCookies.
+      // setCookies does NOT set domain (host-only cookie), so we must not add it here.
+      // Adding domain causes clearCookie to fail in production (e.g. API at api.example.com,
+      // frontend at app.example.com - cookie is for api.example.com, not app.example.com).
+      const cookieOptions = {
         path: '/',
-        secure: dataToken.secure,
-        httpOnly: dataToken.httpOnly,
+        secure: true,
+        httpOnly: true,
+        sameSite: 'none' as const,
       };
 
-      if (hasValidDomain) cookieOptions.domain = domain;
-      
       // Clear both prefixed and default cookie names to be safe
       res.clearCookie(tokenName, cookieOptions);
       res.clearCookie(refreshName, cookieOptions);

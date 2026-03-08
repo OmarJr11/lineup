@@ -20,6 +20,7 @@ import { LogError } from '../../common/helpers/logger.helper';
 import { RolesService } from '../roles/roles.service';
 import { UserRolesService } from '../user-roles/user-roles.service';
 import { InfinityScrollInput } from '../../common/dtos';
+import { StatesGettersService } from '../states/states-getters.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
@@ -37,7 +38,8 @@ export class UsersService extends BasicService<User> {
     private readonly usersSettersService: UsersSettersService,
     private readonly usersGettersService: UsersGettersService,
     private readonly rolesService: RolesService,
-    private readonly userRolesService: UserRolesService
+    private readonly userRolesService: UserRolesService,
+    private readonly statesGettersService: StatesGettersService
   ) {
     super(userRepository, userRequest);
   }
@@ -137,14 +139,12 @@ export class UsersService extends BasicService<User> {
    * @returns {Promise<User>} 
    */
   async update(data: UpdateUserInput, user: IUserReq): Promise<User> {
+    await this.statesGettersService.findById(data.idState);
     const userToUpdate = await this.usersGettersService.findOne(data.id);
     await this.validateUserId(data.id, user);
     data.username = data.username?.toLowerCase();
     const exist = await this.usersGettersService.findByUsername(data.username);
-    if (
-      data.username &&
-      !!exist
-    ) {
+    if ( data.username && !!exist ) {
       LogError(this.logger, this._uUpdate.usernameExists, this.update.name, user);
       throw new NotAcceptableException(this._uUpdate.usernameExists);
     }

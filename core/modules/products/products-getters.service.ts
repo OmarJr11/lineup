@@ -12,15 +12,6 @@ import { Product } from '../../entities';
 export class ProductsGettersService extends BasicService<Product> {
     private logger = new Logger(ProductsGettersService.name);
     private readonly rList = productsResponses.list;
-    private readonly relations = [
-        'catalog', 'catalog.image',
-        'business', 'business.image',
-        'currency',
-        'productFiles', 'productFiles.file',
-        'variations',
-        'skus',
-        'reactions'
-    ];
 
     constructor(
       @InjectRepository(Product)
@@ -96,9 +87,7 @@ export class ProductsGettersService extends BasicService<Product> {
      * @returns {Promise<Product[]>} Array of found products.
      */
     async findManyWithRelations(ids: number[]): Promise<Product[]> {
-        if (!ids?.length) {
-            return [];
-        }
+        if (!ids?.length) return [];
         const uniqueIds = [...new Set(ids)];
         return await this.getQueryRelations(this.createQueryBuilder('p'))
             .where('p.id IN (:...ids)', { ids: uniqueIds })
