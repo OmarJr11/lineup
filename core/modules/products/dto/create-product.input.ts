@@ -4,6 +4,7 @@ import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLeng
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
 import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
+import { InitialStockItemInput } from '../../product-skus/dto/initial-stock-item.input';
 
 @InputType()
 export class CreateProductInput {
@@ -65,4 +66,11 @@ export class CreateProductInput {
     @ValidateNested({ each: true })
     @Type(() => ProductVariationInput)
     variations?: ProductVariationInput[];
+
+    @Field(() => [InitialStockItemInput], { nullable: true })
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => InitialStockItemInput)
+    initialStock?: InitialStockItemInput[];
 }
