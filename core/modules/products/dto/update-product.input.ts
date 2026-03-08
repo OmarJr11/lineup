@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
 import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
+import { InitialStockItemInput } from '../../product-skus/dto/initial-stock-item.input';
 
 @InputType()
 export class UpdateProductInput {
@@ -76,4 +77,11 @@ export class UpdateProductInput {
   @ValidateNested({ each: true })
   @Type(() => ProductVariationInput)
   variations?: ProductVariationInput[];
+
+  @Field(() => [InitialStockItemInput], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InitialStockItemInput)
+  initialStock?: InitialStockItemInput[];
 }

@@ -18,10 +18,12 @@ import { ProductImageInput } from './dto/product-image.input';
 import { ProductFilesGettersService } from '../product-files/product-files-getters.service';
 import { ProductVariationsSettersService } from '../product-variations/product-variations-setters.service';
 import { ProductVariationsGettersService } from '../product-variations/product-variations-getters.service';
+import { ProductSkusService } from '../product-skus/product-skus.service';
 import { ProductSkusSettersService } from '../product-skus/product-skus-setters.service';
 import { ProductSkusGettersService } from '../product-skus/product-skus-getters.service';
 import { cartesianProduct, generateSkuCode } from '../../common/helpers/cartesian-product.helper';
 import { ProductVariationInput } from './dto/product-variation.input';
+import { InitialStockItemInput } from '../product-skus/dto/initial-stock-item.input';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { ActionsEnum, CatalogsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
@@ -42,6 +44,7 @@ export class ProductsService extends BasicService<Product> {
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
       private readonly productVariationsGettersService: ProductVariationsGettersService,
+      private readonly productSkusService: ProductSkusService,
       private readonly productSkusSettersService: ProductSkusSettersService,
       private readonly productSkusGettersService: ProductSkusGettersService,
       private readonly catalogsGettersService: CatalogsGettersService,
@@ -66,13 +69,15 @@ export class ProductsService extends BasicService<Product> {
       const idCatalog = data.idCatalog;
       const idBusiness = businessReq.businessId;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
-      const { images, variations } = this.extractProductRelations(data);
+      const { images, variations, initialStock } = this.extractProductRelations(data);
       const product = await this.productsSettersService.create(data, businessReq);
       if (images && images.length > 0) await this
         .createProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this
         .createProductVariations(product.id, variations, businessReq);
       await this.createProductSkus(product.id, variations ?? [], businessReq);
+      if (initialStock && initialStock.length > 0) await this
+        .applyInitialStock(product.id, initialStock, businessReq);
       await this.enqueueProductCreationJobs(
         product.id,
         idCatalog,
@@ -144,13 +149,15 @@ export class ProductsService extends BasicService<Product> {
       const product = await this.productsGettersService.findOneByBusinessId(data.id, idBusiness);
       const idCatalog = data.idCatalog || product.idCatalog;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
-      const { images, variations } = this.extractProductRelations(data);
+      const { images, variations, initialStock } = this.extractProductRelations(data);
       await this.productsSettersService.update(product, data, businessReq);
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
       if (variations !== undefined) {
         await this.updateProductVariations(product.id, variations, businessReq);
         await this.syncProductSkus(product.id, businessReq);
       }
+      if (initialStock && initialStock.length > 0) await this
+        .applyInitialStock(product.id, initialStock, businessReq);
       await this.queueForIdProduct(product.id);
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
@@ -180,12 +187,15 @@ export class ProductsService extends BasicService<Product> {
     private extractProductRelations(data: CreateProductInput | UpdateProductInput): {
       images?: ProductImageInput[];
       variations?: ProductVariationInput[];
+      initialStock?: InitialStockItemInput[];
     } {
       const images = data.images;
       const variations = data.variations;
+      const initialStock = data.initialStock;
       delete data.images;
       delete data.variations;
-      return { images, variations };
+      delete data.initialStock;
+      return { images, variations, initialStock };
     }
 
     /**
@@ -322,6 +332,33 @@ export class ProductsService extends BasicService<Product> {
             idProduct: productId
           }, businessReq);
         }
+      }
+    }
+
+    /**
+     * Apply initial stock to SKUs after product creation.
+     * Array index maps to SKU order (same as createProductSkus).
+     * @param {number} productId - The product ID
+     * @param {InitialStockItemInput[]} initialStock - Stock adjustments per SKU
+     * @param {IBusinessReq} businessReq - The business request
+     */
+    private async applyInitialStock(
+      productId: number,
+      initialStock: InitialStockItemInput[],
+      businessReq: IBusinessReq
+    ): Promise<void> {
+      const skus = await this.productSkusGettersService.findAllByProduct(productId);
+      for (let i = 0; i < initialStock.length && i < skus.length; i++) {
+        const item = initialStock[i];
+        if (item.quantityDelta === 0) continue;
+        await this.productSkusService.adjustStock(
+          {
+            idProductSku: skus[i].id,
+            quantityDelta: item.quantityDelta,
+            notes: item.notes,
+          },
+          businessReq,
+        );
       }
     }
 
