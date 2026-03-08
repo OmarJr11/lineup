@@ -9,7 +9,7 @@ import { IUserReq } from '../../../../core/common/interfaces';
 import { StatusEnum } from '../../../../core/common/enums';
 import { toBusinessFollowerSchema, toBusinessSchema } from '../../../../core/common/functions';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
-import { InfinityScrollInput } from 'core/common/dtos';
+import { InfinityScrollInput } from '../../../../core/common/dtos';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessFollowerSchema)
