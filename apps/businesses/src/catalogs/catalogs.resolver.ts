@@ -16,7 +16,10 @@ import { CatalogsPermissionsEnum } from '../../../../core/common/enums';
 @UsePipes(new ValidationPipe())
 @Resolver(() => CatalogSchema)
 export class CatalogsResolver {
-  constructor(private readonly catalogsService: CatalogsService) {}
+
+  constructor(
+    private readonly catalogsService: CatalogsService,
+  ) {}
 
   @Mutation(() => CatalogSchema, { name: 'createCatalog' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
@@ -70,6 +73,28 @@ export class CatalogsResolver {
   @Query(() => CatalogSchema, { name: 'findOneCatalogByPath' })
   async findOneByPath(@Args('path', { type: () => String }) path: string) {
     return toCatalogSchema(await this.catalogsService.findOneByPath(path));
+  }
+
+  /**
+   * Get catalogs of a business by its ID with infinite scroll pagination.
+   * @param {number} idBusiness - The business ID.
+   * @param {InfinityScrollInput} pagination - Pagination parameters (page, limit, order, orderBy).
+   */
+  @Query(() => PaginatedCatalogs, { name: 'findCatalogsByBusinessId' })
+  async findCatalogsByBusinessId(
+    @Args('idBusiness', { type: () => Int }) idBusiness: number,
+    @Args('pagination', { type: () => InfinityScrollInput })
+    pagination: InfinityScrollInput
+  ) {
+    const items = (
+      await this.catalogsService.findAllByBusinessId(idBusiness, pagination)
+    ).map((catalog) => toCatalogSchema(catalog));
+    return {
+      items,
+      total: items.length,
+      page: pagination.page,
+      limit: pagination.limit ?? 10,
+    };
   }
 
   @Mutation(() => CatalogSchema, { name: 'updateCatalog' })

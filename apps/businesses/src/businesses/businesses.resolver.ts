@@ -42,6 +42,11 @@ export class BusinessesResolver {
     return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
   }
 
+  @Query(() => BusinessSchema, { name: 'findBusinessByPath' })
+  async findByPath(@Args('path', { type: () => String }) path: string) {
+    return toBusinessSchema(await this.businessesService.findOneByPath(path));
+  }
+
   @Query(() => BusinessSchema, { name: 'myBusiness' })
   @UseGuards(JwtAuthGuard, TokenGuard)
   async myBusiness(

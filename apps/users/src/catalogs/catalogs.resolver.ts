@@ -1,9 +1,9 @@
 import { Resolver, Query, Args, Int } from '@nestjs/graphql';
-import { CatalogsGettersService } from '../../../../core/modules/catalogs/catalogs-getters.service';
 import { UsePipes, ValidationPipe } from '@nestjs/common';
 import { CatalogSchema, PaginatedCatalogs } from '../../../../core/schemas';
 import { toCatalogSchema } from '../../../../core/common/functions';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
+import { CatalogsService } from '../../../../core/modules/catalogs/catalogs.service';
 
 /**
  * Resolver for catalog queries in the users context.
@@ -12,7 +12,7 @@ import { InfinityScrollInput } from '../../../../core/common/dtos';
 @UsePipes(new ValidationPipe())
 @Resolver(() => CatalogSchema)
 export class CatalogsResolver {
-  constructor(private readonly catalogsGettersService: CatalogsGettersService) {}
+  constructor(private readonly catalogsService: CatalogsService) {}
 
   /**
    * Find a catalog by its ID.
@@ -20,7 +20,7 @@ export class CatalogsResolver {
    */
   @Query(() => CatalogSchema, { name: 'findOneCatalog' })
   async findOne(@Args('id', { type: () => Int }) id: number) {
-    return toCatalogSchema(await this.catalogsGettersService.findOne(id));
+    return toCatalogSchema(await this.catalogsService.findOne(id));
   }
 
   /**
@@ -35,7 +35,7 @@ export class CatalogsResolver {
     pagination: InfinityScrollInput
   ) {
     const items = (
-      await this.catalogsGettersService.findAllByBusinessId(idBusiness, pagination)
+      await this.catalogsService.findAllByBusinessId(idBusiness, pagination)
     ).map((catalog) => toCatalogSchema(catalog));
     return {
       items,
