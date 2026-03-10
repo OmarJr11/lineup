@@ -13,6 +13,7 @@ import { InfinityScrollInput } from '../../common/dtos';
 @Injectable()
 export class UsersGettersService extends BasicService<User> {
     private logger: Logger = new Logger(UsersGettersService.name);
+    private readonly _relations = ['state', 'profileImage'];
     private readonly _uList = userResponses.list;
     private readonly _uToken = userResponses.token;
 
@@ -35,6 +36,8 @@ export class UsersGettersService extends BasicService<User> {
         const order = query.order || 'DESC';
         const orderBy = query.orderBy || 'creation_date';
         return await this.createQueryBuilder('u')
+            .leftJoinAndSelect('u.state', 'state')
+            .leftJoinAndSelect('u.profileImage', 'profileImage')
             .where('u.status <> :status', { status: StatusEnum.DELETED })
             .limit(limit)
             .offset(skip)
@@ -50,6 +53,7 @@ export class UsersGettersService extends BasicService<User> {
     async findOne(id: number): Promise<User> {
         const user = await this.findOneWithOptionsOrFail({
             where: { id, status: Not(StatusEnum.DELETED) },
+            relations: this._relations
         }).catch((error) => {
             LogError(this.logger, error, this.findOne.name);
             throw new NotAcceptableException(this._uList.userNotFound);
@@ -118,6 +122,7 @@ export class UsersGettersService extends BasicService<User> {
     async findByUsername(username: string): Promise<User> {
         return await this.findOneWithOptions({
             where: { username, status: Not(StatusEnum.DELETED) },
+            relations: this._relations
         });
     }
 
@@ -129,6 +134,7 @@ export class UsersGettersService extends BasicService<User> {
     async findByUsernameOrFail(username: string): Promise<User> {
         return await this.findOneWithOptionsOrFail({
             where: { username, status: Not(StatusEnum.DELETED) },
+            relations: this._relations
         }).catch((error) => {
             LogError(this.logger, error, this.findByUsernameOrFail.name);
             throw new NotAcceptableException(this._uList.userNotFound);
@@ -165,8 +171,8 @@ export class UsersGettersService extends BasicService<User> {
         email: string,
         status: StatusEnum
     ): Promise<User> {
-        return await this.findOneWithOptionsOrFail({
-            where: { id, email, status },
+        return await this.findOneWithOptionsOrFail({ 
+            where: { id, email, status }
         }).catch((error) => {
             LogError(this.logger, error, this.findOneByIdUserAndToken.name);
             throw new UnauthorizedException(this._uToken.tokenNotValid);
@@ -181,6 +187,8 @@ export class UsersGettersService extends BasicService<User> {
     async searchUsersByUsername(username: string): Promise<User[]> {
         return await this.userRepository
             .createQueryBuilder('u')
+            .leftJoinAndSelect('u.state', 'state')
+            .leftJoinAndSelect('u.profileImage', 'profileImage')
             .where('u.status <> :status', { status: StatusEnum.DELETED })
             .andWhere('u.username iLIKE :username', { username })
             .getMany();
@@ -190,14 +198,11 @@ export class UsersGettersService extends BasicService<User> {
      * function responsible for the validation of the fields that have to be unique in users
      *
      * @param {UserUniqueFieldsDto} data - unique fields for users
-     * @param {*} response - response in case of error
      * @param {number} [id]
      */
     async validateUniqueFields(data: UserUniqueFieldsDto, id?: number) {
         let query = this.userRepository.createQueryBuilder('u');
-        if (id) {
-            query = query.andWhere('u.id <> :id', { id });
-        }
+        if (id) query = query.andWhere('u.id <> :id', { id });
         query = query
             .andWhere('(u.email iLIKE :email', { email: data.email })
             .andWhere('u.status <> :status', { status: StatusEnum.DELETED })

@@ -12,4 +12,5 @@ export interface IFileUploadInterface {
     name: string;
     extension: string;
     directory: string;
+    tags?: string[];
 }

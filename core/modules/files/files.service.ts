@@ -14,12 +14,22 @@ import { IFileUploadInterface } from '../../common/interfaces/file.interface';
 import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
+/** Minimum confidence score (0-1) for Vision API labels to be included */
+const VISION_LABEL_MIN_CONFIDENCE = 0.7;
+
+/** Maximum number of labels to store per image */
+const VISION_LABEL_MAX_COUNT = 10;
+
+/** Vision API REST endpoint for label detection */
+const VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate';
+
 @Injectable({ scope: Scope.REQUEST })
 export class FilesService extends BasicService<File> {
   private logger: Logger = new Logger(FilesService.name);
   private client: S3Client;
   private bucketName: string;
   private s3_region: string;
+  private visionApiKey: string | undefined;
 
   private readonly rUpload = filesResponses.upload;
 
@@ -33,6 +43,7 @@ export class FilesService extends BasicService<File> {
     super(filesRepository, userRequest);
     this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
     this.s3_region = this.configService.get<string>('AWS_BUCKET_REGION');
+    this.visionApiKey = this.configService.get<string>('GOOGLE_VISION_API_KEY');
     if (!this.s3_region || !this.bucketName) {
       throw new Error('AWS_BUCKET_REGION or AWS_BUCKET_NAME not found in environment variables');
     }
@@ -80,11 +91,14 @@ export class FilesService extends BasicService<File> {
       ? this.getFileUrl(directory)
       : await this.getPresignedSignedUrl(directory);
 
-    let fileToSave: IFileUploadInterface = {
+    const labels = await this.extractLabelsFromImage(file);
+
+    const fileToSave: IFileUploadInterface = {
       url,
       name: key,
       extension: file.mimetype.split('/')[1],
       directory: data.directory,
+      ...(labels.length > 0 && { tags: labels }),
     };
 
     return await this.save(fileToSave, user).catch((error) => {
@@ -115,6 +129,51 @@ export class FilesService extends BasicService<File> {
       LogError(this.logger, error, this.getPresignedSignedUrl.name);
       throw new InternalServerErrorException(this.rUpload.error);
     });
+  }
+
+  /**
+   * Extracts labels from an image using Google Cloud Vision API (REST with API Key)
+   * @param {IFileInterface} file The file to analyze (must be an image)
+   * @returns {Promise<string[]>} Array of label descriptions, empty if not an image or on error
+   */
+  private async extractLabelsFromImage(file: IFileInterface): Promise<string[]> {
+    const isImage = file.mimetype?.startsWith('image/');
+    if (!isImage || !this.visionApiKey) {
+      return [];
+    }
+    try {
+      const response = await fetch(
+        `${VISION_API_URL}?key=${this.visionApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: { content: file.buffer.toString('base64') },
+                features: [{ type: 'LABEL_DETECTION', maxResults: VISION_LABEL_MAX_COUNT }],
+              },
+            ],
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Vision API responded with ${response.status}`);
+      }
+      const data = (await response.json()) as { responses?: Array<{ labelAnnotations?: Array<{ description?: string; score?: number }> }> };
+      const labelAnnotations = data.responses?.[0]?.labelAnnotations ?? [];
+      return labelAnnotations
+        .filter((label) => (label.score ?? 0) >= VISION_LABEL_MIN_CONFIDENCE)
+        .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+        .slice(0, VISION_LABEL_MAX_COUNT)
+        .map((label) => label.description ?? '')
+        .filter((description) => description.length > 0);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to extract labels from image via Vision API: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      return [];
+    }
   }
 
   /**
