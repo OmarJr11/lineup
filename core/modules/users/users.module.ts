@@ -7,13 +7,15 @@ import { UsersGettersService } from './users.getters.service';
 import { RolesModule } from '../roles/roles.module';
 import { UserRolesModule } from '../user-roles/user-roles.module';
 import { StatesModule } from '../states/states.module';
+import { FilesModule } from '../files/files.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     RolesModule,
     UserRolesModule,
-    StatesModule
+    StatesModule,
+    FilesModule
   ],
   providers: [
     UsersService,

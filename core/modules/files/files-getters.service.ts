@@ -31,5 +31,18 @@ export class FilesGettersService extends BasicService<File> {
             throw new InternalServerErrorException(this.rUpload.error);
         });
     }
-}
 
+    /**
+     * Get image by name
+     * @param {string} name - The name of the image to search for
+     * @returns {Promise<File>} - Returns a promise that resolves to a File entity
+     */
+    async getImageByName(name: string): Promise<File> {
+        try {
+            return await this.findOneWithOptionsOrFail({ where: { name } });
+        } catch (error) {
+            LogError(this.logger, error, this.getImageByName.name);
+            throw new InternalServerErrorException(this.rUpload.error);
+        };
+    }
+}

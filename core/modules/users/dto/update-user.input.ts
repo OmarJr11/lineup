@@ -5,12 +5,6 @@ import { ImageCode } from '../../../common/transforms';
 
 @InputType()
 export class UpdateUserInput {
-    @Field(() => Number)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    id: number;
-
     @Field({ nullable: true })
     @IsOptional()
     @MaxLength(50)
@@ -33,7 +27,7 @@ export class UpdateUserInput {
     @IsOptional()
     @MaxLength(50)
     @Transform(ImageCode)
-    imgCode?: string;
+    imageCode?: string;
 
     @Field(() => Number, { nullable: true })
     @IsOptional()
