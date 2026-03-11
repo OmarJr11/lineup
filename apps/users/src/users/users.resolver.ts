@@ -7,6 +7,7 @@ import { UserSchema } from '../../../../core/schemas';
 import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { UpdateUserInput } from '../../../../core/modules/users/dto/update-user.input';
+import { UpdateUserEmailInput } from '../../../../core/modules/users/dto/update-user-email.input';
 import { ICookieInterceptor, IUserReq } from '../../../../core/common/interfaces';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
@@ -72,6 +73,23 @@ export class UsersResolver {
     return toUserSchema(updatedUser);
   }
 
+  /**
+   * Updates the email of the authenticated user.
+   * @param data - The new email
+   * @param user - Authenticated user from JWT
+   * @returns The updated user schema
+   */
+  @Mutation(() => UserSchema, { name: 'updateUserEmail' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(UsersPermissionsEnum.USRUPDOWN)
+  async updateUserEmail(
+    @Args('data') data: UpdateUserEmailInput,
+    @UserDec() user: IUserReq
+  ): Promise<UserSchema> {
+    const updatedUser = await this.usersService.updateEmail(data, user);
+    return toUserSchema(updatedUser);
+  }
+
   @Mutation(() => Boolean, { name: 'changePassword' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRUPDOWN)
@@ -86,11 +104,8 @@ export class UsersResolver {
   @Mutation(() => Boolean, { name: 'removeUser' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRDELOWN)
-  async removeUser(
-    @Args('id', { type: () => Int }) id: number,
-    @UserDec() user: IUserReq
-  ): Promise<boolean> {
-    await this.usersService.remove(id, user);
+  async removeUser(@UserDec() user: IUserReq): Promise<boolean> {
+    await this.usersService.remove(user.userId, user);
     return true;
   }
 }

@@ -133,6 +133,26 @@ export class BusinessesSettersService extends BasicService<Business> {
     }
 
     /**
+     * Update business email
+     * @param {Business} business - The business to update
+     * @param {string} email - The new email
+     * @param {IBusinessReq} businessReq - The logged business
+     * @returns {Promise<Business>}
+     */
+    async updateEmail(
+        business: Business,
+        email: string,
+        businessReq: IBusinessReq
+    ): Promise<Business> {
+        try {
+            return await this.updateEntity({ email }, business, businessReq);
+        } catch (error) {
+            LogError(this.logger, error, this.updateEmail.name, businessReq);
+            throw new InternalServerErrorException(this._ucUpdate.error);
+        }
+    }
+
+    /**
      * Update business password
      * @param {Business} business - The business to update
      * @param {string} hashedPassword - The new hashed password

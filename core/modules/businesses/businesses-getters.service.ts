@@ -168,6 +168,24 @@ export class BusinessesGettersService extends BasicService<Business> {
     }
 
     /**
+     * Validates that the email is unique, excluding the business with the given id.
+     * @param {string} email - Email to validate
+     * @param {number} excludeId - Business ID to exclude from the check (current business)
+     */
+    async validateBusinessEmailUnique(email: string, excludeId: number): Promise<void> {
+        const business = await this
+            .createQueryBuilder('b')
+            .where('LOWER(b.email) = LOWER(:email)', { email })
+            .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('b.id <> :excludeId', { excludeId })
+            .getOne();
+        if (business) {
+            LogError(this.logger, this._uList.mailExists.message, this.validateBusinessEmailUnique.name);
+            throw new NotAcceptableException(this._uList.mailExists);
+        }
+    }
+
+    /**
      * Check if a business exists with the given email
      * @param {string} email - email to check
      * @returns {Promise<boolean>}

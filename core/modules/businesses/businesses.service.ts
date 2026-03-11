@@ -5,6 +5,7 @@ import { Request } from 'express';
 import { ChangePasswordInput } from '../../common/dtos';
 import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
+import { UpdateBusinessEmailInput } from './dto/update-business-email.input';
 import { Business } from '../../entities';
 import { BasicService } from '../../common/services';
 import { Repository } from 'typeorm';
@@ -135,6 +136,19 @@ export class BusinessesService extends BasicService<Business> {
       { idBusiness: business.id }
     );
     return await this.businessesGettersService.findOne(data.id);
+  }
+
+  /**
+   * Update business email
+   * @param {UpdateBusinessEmailInput} data - The new email
+   * @param {IBusinessReq} businessReq - The business making the request
+   * @returns {Promise<Business>}
+   */
+  async updateEmail(data: UpdateBusinessEmailInput, businessReq: IBusinessReq): Promise<Business> {
+    const business = await this.businessesGettersService.findOne(businessReq.businessId);
+    await this.businessesGettersService.validateBusinessEmailUnique(data.email, businessReq.businessId);
+    await this.businessSettersService.updateEmail(business, data.email, businessReq);
+    return await this.businessesGettersService.findOne(businessReq.businessId);
   }
 
   /**
