@@ -9,6 +9,7 @@ import { BusinessesService } from '../../../../core/modules/businesses/businesse
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
 import { UpdateBusinessInput } from '../../../../core/modules/businesses/dto/update-business.input';
+import { UpdateBusinessEmailInput } from '../../../../core/modules/businesses/dto/update-business-email.input';
 import { businessesResponses } from '../../../../core/common/responses';
 import { ChangePasswordInput } from '../../../../core/common/dtos';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
@@ -87,14 +88,32 @@ export class BusinessesResolver {
     return toBusinessSchema(business);
   }
 
+  /**
+   * Updates the email of the authenticated business.
+   * @param data - The new email
+   * @param businessReq - Authenticated business from JWT
+   * @returns The updated business schema
+   */
+  @Mutation(() => BusinessSchema, { name: 'updateBusinessEmail' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
+  @Response(businessesResponses.update)
+  async updateBusinessEmail(
+    @Args('data') data: UpdateBusinessEmailInput,
+    @BusinessDec() businessReq: IBusinessReq
+  ) {
+    const business = await this.businessesService.updateEmail(data, businessReq);
+    return toBusinessSchema(business);
+  }
+
   @Mutation(() => BusinessSchema, { name: 'removeBusiness' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(BusinessesPermissionsEnum.BURDELOWN)
   @Response(businessesResponses.delete)
   async removeBusiness(
-    @Args('id', { type: () => Int }) id: number,
     @BusinessDec() businessReq: IBusinessReq
   ) {
-    return await this.businessesService.remove(id, businessReq);
+    return await this.businessesService
+      .remove(businessReq.businessId, businessReq);
   }
 }

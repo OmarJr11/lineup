@@ -54,6 +54,22 @@ export class UsersSettersService extends BasicService<User> {
     }
 
     /**
+     * Update user email
+     * @param {User} user - The user to update
+     * @param {string} email - The new email
+     * @param {IUserReq} userLogged - The logged user
+     * @returns {Promise<User>}
+     */
+    async updateEmail(user: User, email: string, userLogged: IUserReq): Promise<User> {
+        try {
+            return await this.updateEntity({ email }, user, userLogged);
+        } catch (error) {
+            LogError(this.logger, error, this.updateEmail.name);
+            throw new InternalServerErrorException(this._ucUpdate.error);
+        }
+    }
+
+    /**
      * Update user password
      * @param {User} user - The user to update
      * @param {string} hashedPassword - The new hashed password

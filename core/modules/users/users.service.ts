@@ -10,6 +10,7 @@ import { User } from '../../entities';
 import { ChangePasswordInput } from '../../common/dtos';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
+import { UpdateUserEmailInput } from './dto/update-user-email.input';
 import { UsersSettersService } from './users.setters.service';
 import { UsersGettersService } from './users.getters.service';
 import { userResponses } from '../../common/responses';
@@ -146,7 +147,6 @@ export class UsersService extends BasicService<User> {
       await this.filesGettersService.getImageByName(data.imageCode);
     }
     const userToUpdate = await this.usersGettersService.findOne(user.userId);
-    await this.validateUserId(user.userId, user);
     data.username = data.username?.toLowerCase();
     const exist = await this.usersGettersService.findByUsername(data.username);
     if ( data.username && !!exist && Number(exist.id) !== Number(userToUpdate.id) ) {
@@ -155,6 +155,23 @@ export class UsersService extends BasicService<User> {
     }
     await this.usersSettersService.update(data, userToUpdate, user);
     return await this.usersGettersService.findOne(user.userId);
+  }
+
+  /**
+   * Update user email
+   * @param {UpdateUserEmailInput} data - The new email
+   * @param {IUserReq} userReq - The user making the request
+   * @returns {Promise<User>}
+   */
+  async updateEmail(data: UpdateUserEmailInput, userReq: IUserReq): Promise<User> {
+    const userToUpdate = await this.usersGettersService.findOne(userReq.userId);
+    await this.validateUserId(userReq.userId, userReq);
+    await this.usersGettersService.validateUniqueFields(
+      { username: userToUpdate.username, email: data.email },
+      userReq.userId
+    );
+    await this.usersSettersService.updateEmail(userToUpdate, data.email, userReq);
+    return await this.usersGettersService.findOne(userReq.userId);
   }
 
   /**
@@ -187,7 +204,6 @@ export class UsersService extends BasicService<User> {
    */
   async remove(id: number, user: IUserReq) {
     const userToDelete = await this.usersGettersService.findOne(id);
-    await this.validateUserId(id, user);
     await this.usersSettersService.remove(userToDelete, user);
   }
 
