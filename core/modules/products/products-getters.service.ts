@@ -179,6 +179,34 @@ export class ProductsGettersService extends BasicService<Product> {
     }
 
     /**
+     * Get all Products by tag (name or slug) with pagination.
+     * @param {string} tagNameOrSlug - Tag name or slug to filter by.
+     * @param {InfinityScrollInput} query - Query parameters for pagination.
+     * @returns {Promise<Product[]>} Array of products with the given tag.
+     */
+    async findAllByTag(tagNameOrSlug: string, query: InfinityScrollInput): Promise<Product[]> {
+        const page = query.page || 1;
+        const limit = query.limit || 10;
+        const skip = (page - 1) * limit;
+        const order = query.order || 'DESC';
+        const orderBy = query.orderBy || 'creation_date';
+        const subQuery = this.createQueryBuilder('sub')
+            .select('sub.id')
+            .innerJoin('sub.productTags', 'pt')
+            .innerJoin('pt.tag', 'tag')
+            .where('sub.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('(tag.name = :tagNameOrSlug OR tag.slug = :tagNameOrSlug)', { tagNameOrSlug })
+            .orderBy(`sub.${orderBy}`, order)
+            .limit(limit)
+            .offset(skip);
+        return await this.getQueryRelations(this.createQueryBuilder('p'))
+            .where(`p.id IN (${subQuery.getQuery()})`)
+            .setParameters(subQuery.getParameters())
+            .orderBy(`p.${orderBy}`, order)
+            .getMany();
+    }
+
+    /**
      * Get all product IDs by catalog (for discount assignment).
      * @param {number} idCatalog - The catalog ID.
      * @returns {Promise<number[]>} Array of product IDs.
@@ -234,6 +262,8 @@ export class ProductsGettersService extends BasicService<Product> {
                 'discount',
                 'discount.status = :statusDiscount', { statusDiscount: StatusEnum.ACTIVE },
             )
-            .leftJoinAndSelect('discount.currency', 'discountCurrency');
+            .leftJoinAndSelect('discount.currency', 'discountCurrency')
+            .leftJoinAndSelect('p.productTags', 'productTags')
+            .leftJoinAndSelect('productTags.tag', 'tag');
     }
 }

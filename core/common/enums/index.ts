@@ -17,3 +17,4 @@ export * from './audit-operation.enum';
 export * from './templates.enum';
 export * from './verification-code-channel.enum';
 export * from './cookies.enum';
+export * from './directories.enum';

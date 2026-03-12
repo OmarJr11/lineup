@@ -36,6 +36,28 @@ export const filesResponses = {
             message: 'The File(s) has been successfully uploaded.',
         },
     },
+    update: {
+        noPermission: {
+            code: 700200,
+            status: false,
+            message: 'You do not have the necessary permissions to perform this action.',
+        },
+        invalidInput: {
+            code: 700201,
+            status: false,
+            message: 'Invalid input.',
+        },
+        error: {
+            code: 700299,
+            status: false,
+            message: 'The File(s) could not be updated, an error has occurred.',
+        },
+        success: {
+            code: 710200,
+            status: true,
+            message: 'The File(s) has been successfully updated.',
+        },
+    },
     list: {
         noPermission: {
             code: 700300,

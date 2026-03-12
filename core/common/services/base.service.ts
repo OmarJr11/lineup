@@ -13,19 +13,18 @@ import {
     SelectQueryBuilder,
 } from 'typeorm';
 import { getEntityManagerOrTransactionManager } from 'typeorm-transactional-cls-hooked';
-import { IBusinessReq, ILogin, ILoginReturn, IUserOrBusinessReq } from '../interfaces';
+import { IUserOrBusinessReq } from '../interfaces';
 import { StatusEnum, OrderEnum } from '../enums';
-import { invalidReferersRequest } from '../helpers/requests.helper';
 import {
     ICoordinate,
     IExtraDataToSave,
     IInfiniteScroll,
     IPaginationOptions,
-    IReqWithCookies,
     IUserReq,
 } from '../interfaces';
 import { getCoordinateFromObject } from '../libs/pyn-pon-coordinates.lib';
 import _ = require('lodash');
+import { File } from '../../entities';
 
 export class BasicService<Entity extends ObjectLiteral> {
     private _connectionName = 'default';
@@ -725,6 +724,66 @@ export class BasicService<Entity extends ObjectLiteral> {
 
         await this.repository.update(entity.id, data);
         return this.cleanObjects(await this.repository.findOneOrFail({ where: { id: entity.id } as any }));
+    }
+
+    /**
+     *  Update the entity in the database
+     *
+     * @param {*} data - Data to update the entity
+     * @param {File | File[]} files - File to update
+     * @param {IUserOrBusinessReq} [userOrBusiness] - User or business who executed the action
+     * @returns {Promise<any>} with the updated entity
+     */
+    protected async updateFile(
+        data: any,
+        files: File | File[],
+        userOrBusiness?: IUserOrBusinessReq
+    ): Promise<any> {
+        if (this._request !== undefined) {
+            const { ip, coordinate } = this.getIpAndCoordinate();
+            data.modificationIp = ip;
+            data.modificationCoordinate = coordinate;
+        }
+
+        if(userOrBusiness.userId) {
+            data.modificationUser = userOrBusiness
+                ? Number(userOrBusiness.userId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['userId']
+                        : null;
+        } else {
+            data.modificationBusiness = userOrBusiness
+                ? Number(userOrBusiness.businessId)
+                : !this._request
+                    ? null
+                    : this._request.user
+                        ? +this._request.user['businessId']
+                        : null;
+        }
+        data.modificationDate = new Date();
+        data = this.cleanDataBeforeInsert(data);
+
+        const entityColumns = this.repository.metadata.columns.map(col => col.propertyName);
+        Object.keys(data).forEach(key => {
+            if (!entityColumns.includes(key)) { delete data[key]; }
+        });
+
+
+        if (files instanceof Array) {
+            for (const deepFile of files) {
+                await this.repository.update({ name: deepFile.name } as any, data);
+            }
+            const names: string[] = files.map((e) => e.name);
+            const updatedFiles = await this.repository.find({
+                where: { name: In(names) } as any,
+            });
+            return updatedFiles;
+        }
+
+        await this.repository.update({ name: files.name } as any, data);
+        return this.cleanObjects(await this.repository.findOneOrFail({ where: { name: files.name } as any }));
     }
 
     /**

@@ -62,11 +62,9 @@ export class CreateUserInput {
     @MaxLength(50)
     telephone?: string;
 
-    @Field({ nullable: true })
     @IsEmpty()
     emailValidated?: boolean;
 
-    @Field({ nullable: true })
     @IsEmpty()
     provider?: string;
 }

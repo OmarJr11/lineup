@@ -10,7 +10,8 @@ import {
     ProductSearchIndexSchema,
     ProductSkuSchema,
     ProductVariationSchema,
-    ProductVisitSchema
+    ProductVisitSchema,
+    TagSchema
 } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
@@ -53,8 +54,8 @@ export class ProductSchema{
     @Field(() => CatalogSchema, { nullable: true })
     catalog?: CatalogSchema;
 
-    @Field(() => [String])
-    tags: string[];
+    @Field(() => [TagSchema], { nullable: true })
+    tags?: TagSchema[];
 
     @Field(() => StatusEnum)
     status: StatusEnum;

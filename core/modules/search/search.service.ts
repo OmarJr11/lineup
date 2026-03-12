@@ -76,9 +76,7 @@ export class SearchService {
         const limit = Math.min(pagination.limit || 10, 50);
         const offset = (page - 1) * limit;
 
-        if (!searchTerm) {
-            return this.fetchRandomItems(target, limit, offset, page);
-        }
+        if (!searchTerm) { return this.fetchRandomItems(target, limit, offset, page); }
 
         try {
             const rows = await this.executeSearchQuery(target, searchTerm, limit, offset);

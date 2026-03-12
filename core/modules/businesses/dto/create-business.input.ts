@@ -27,15 +27,12 @@ export class CreateBusinessInput {
     @IsEnum(RolesCodesEnum)
     role: RolesCodesEnum;
 
-    @Field({ nullable: true })
     @IsEmpty()
     path?: string;
 
-    @Field({ nullable: true })
     @IsEmpty()
     emailValidated?: boolean;
 
-    @Field({ nullable: true })
     @IsEmpty()
     provider?: string;
 }

@@ -56,11 +56,12 @@ export class SearchIndexService {
      * @returns {string} Plain text from the product.
      */
     buildProductRawText(product: Product): string {
+        const tagNames = product.tags?.map((t) => t.name).filter(Boolean) ?? [];
         const parts: string[] = [
             product.title,
             product.subtitle ?? '',
             product.description ?? '',
-            Array.isArray(product.tags) ? product.tags.join(' ') : '',
+            tagNames.join(' '),
         ];
         if (product.catalog?.title) parts.push(product.catalog.title);
         if (product.business?.name) parts.push(product.business.name);

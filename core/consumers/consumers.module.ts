@@ -5,12 +5,14 @@ import {
   CatalogsConsumer,
   DiscountsConsumer,
   MailsConsumer,
+  ProductsConsumer,
   QueuesManager,
   ReviewsConsumer,
   SearchDataConsumer,
 } from '.';
 import { QueueLogsConsumer } from './queue-logs.consumer';
 import { FilesModule } from '../modules/files/files.module';
+import { ProductTagsModule } from '../modules/product-tags/product-tags.module';
 import { UsersModule } from '../modules/users/users.module';
 import { BusinessesModule } from '../modules/businesses/businesses.module';
 import { ProductsModule } from '../modules/products/products.module';
@@ -20,6 +22,8 @@ import { MailModule } from '../modules/mail/mail.module';
 import { ProductRatingsModule } from '../modules/product-ratings/product-ratings.module';
 import { DiscountProductAuditsModule } from '../modules/discount-product-audits/discount-product-audits.module';
 import { DiscountsModule } from '../modules/discounts/discounts.module';
+import { GeminiModule } from '../modules/gemini/gemini.module';
+import { TagsModule } from '../modules/tags/tags.module';
 
 @Module({})
 export class ConsumersModule {
@@ -32,6 +36,7 @@ export class ConsumersModule {
         BullModule.registerQueue({ name: QueuesManager.queueNames.mails }),
         TypeOrmModule.forFeature([]),
         FilesModule,
+        ProductTagsModule,
         UsersModule,
         BusinessesModule,
         ProductsModule,
@@ -41,12 +46,15 @@ export class ConsumersModule {
         ProductRatingsModule,
         DiscountProductAuditsModule,
         DiscountsModule,
+        GeminiModule,
+        TagsModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
         CatalogsConsumer,
         DiscountsConsumer,
         MailsConsumer,
+        ProductsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,
         ReviewsConsumer,

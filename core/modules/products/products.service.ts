@@ -26,13 +26,16 @@ import { ProductVariationInput } from './dto/product-variation.input';
 import { InitialStockItemInput } from '../product-skus/dto/initial-stock-item.input';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
-import { ActionsEnum, CatalogsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
+import { ActionsEnum, CatalogsConsumerEnum, ProductsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
+import { TagsService } from '../tags/tags.service';
+import { ProductTagsService } from '../product-tags/product-tags.service';
+import { FilesGettersService } from '../files/files-getters.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
-    private logger = new Logger(CatalogsService.name);
-    
+    private logger = new Logger(ProductsService.name);
+
     constructor(
       @Inject(REQUEST)
       private readonly businessRequest: Request,
@@ -40,6 +43,8 @@ export class ProductsService extends BasicService<Product> {
       private readonly productRepository: Repository<Product>,
       private readonly productsSettersService: ProductsSettersService,
       private readonly productsGettersService: ProductsGettersService,
+      private readonly tagsService: TagsService,
+      private readonly productTagsService: ProductTagsService,
       private readonly productFilesSettersService: ProductFilesSettersService,
       private readonly productFilesGettersService: ProductFilesGettersService,
       private readonly productVariationsSettersService: ProductVariationsSettersService,
@@ -48,10 +53,13 @@ export class ProductsService extends BasicService<Product> {
       private readonly productSkusSettersService: ProductSkusSettersService,
       private readonly productSkusGettersService: ProductSkusGettersService,
       private readonly catalogsGettersService: CatalogsGettersService,
+      private readonly filesGettersService: FilesGettersService,
       @InjectQueue(QueueNamesEnum.catalogs)
       private readonly catalogsQueue: Queue,
       @InjectQueue(QueueNamesEnum.searchData)
       private readonly searchDataQueue: Queue,
+      @InjectQueue(QueueNamesEnum.products)
+      private readonly productsQueue: Queue,
     ) {
       super(productRepository, businessRequest);
     }
@@ -70,6 +78,12 @@ export class ProductsService extends BasicService<Product> {
       const idBusiness = businessReq.businessId;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations, initialStock } = this.extractProductRelations(data);
+
+      let tags: string[] | undefined;
+      if (images && images.length > 0) {
+        tags = await this.getTagsFromImages(images.map((image) => image.imageCode));
+      }
+
       const product = await this.productsSettersService.create(data, businessReq);
       if (images && images.length > 0) await this
         .createProductImages(product.id, images, businessReq);
@@ -78,12 +92,15 @@ export class ProductsService extends BasicService<Product> {
       await this.createProductSkus(product.id, variations ?? [], businessReq);
       if (initialStock && initialStock.length > 0) await this
         .applyInitialStock(product.id, initialStock, businessReq);
+
       await this.enqueueProductCreationJobs(
         product.id,
         idCatalog,
+        tags,
         ActionsEnum.Increment,
         businessReq
       );
+
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 
@@ -125,6 +142,19 @@ export class ProductsService extends BasicService<Product> {
     }
 
     /**
+     * Get all Products by tag (name or slug) with pagination.
+     * @param {string} tagNameOrSlug - Tag name or slug to filter by.
+     * @param {InfinityScrollInput} query - Query parameters for pagination.
+     * @returns {Promise<Product[]>} Array of products with the given tag.
+     */
+    async findAllByTag(
+      tagNameOrSlug: string,
+      query: InfinityScrollInput
+    ): Promise<Product[]> {
+      return await this.productsGettersService.findAllByTag(tagNameOrSlug, query);
+    }
+
+    /**
      * Find a product by its ID.
      * @param {number} id - The ID of the product to find.
      * @returns {Promise<Product>} The found Product.
@@ -150,15 +180,26 @@ export class ProductsService extends BasicService<Product> {
       const idCatalog = data.idCatalog || product.idCatalog;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
       const { images, variations, initialStock } = this.extractProductRelations(data);
+
+      let tags: string[] | undefined;
+      if (images && images.length > 0) {
+        tags = await this.getTagsFromImages(images.map((image) => image.imageCode));
+      }
+
       await this.productsSettersService.update(product, data, businessReq);
+
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
       if (variations !== undefined) {
         await this.updateProductVariations(product.id, variations, businessReq);
         await this.syncProductSkus(product.id, businessReq);
       }
-      if (initialStock && initialStock.length > 0) await this
-        .applyInitialStock(product.id, initialStock, businessReq);
+      if (initialStock && initialStock.length > 0) await this.applyInitialStock(product.id, initialStock, businessReq);
+      
       await this.queueForIdProduct(product.id);
+      if (tags && tags.length > 0) {
+        await this.queueForTags(product.id, tags, businessReq);
+      }
+
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
 
@@ -180,11 +221,13 @@ export class ProductsService extends BasicService<Product> {
     }
 
     /**
-     * Extract images and variations from product input data and remove them from the data object.
+     * Extract images, variations, and tags from product input data and remove them from the data object.
      * @param {CreateProductInput | UpdateProductInput} data - The product input data.
-     * @returns Extracted relations.
+     * @returns { { images?: ProductImageInput[]; variations?: ProductVariationInput[]; initialStock?: InitialStockItemInput[]; } } Extracted relations.
      */
-    private extractProductRelations(data: CreateProductInput | UpdateProductInput): {
+    private extractProductRelations(
+      data: CreateProductInput | UpdateProductInput
+    ): {
       images?: ProductImageInput[];
       variations?: ProductVariationInput[];
       initialStock?: InitialStockItemInput[];
@@ -460,16 +503,22 @@ export class ProductsService extends BasicService<Product> {
      * and increments the catalog products count.
      * @param {number} idProduct - The ID of the created product.
      * @param {number} idCatalog - The ID of the catalog containing the product.
+     * @param {string[]} tags - The tags of the product.
      * @param {ActionsEnum} action - The action to perform.
+     * @param {IBusinessReq} businessReq - The business request object.
      */
     private async enqueueProductCreationJobs(
       idProduct: number,
       idCatalog: number,
+      tags: string[],
       action: ActionsEnum,
       businessReq: IBusinessReq
     ) {
       await this.queueForIdProduct(idProduct);
       await this.queueForIdCatalog(idCatalog, action, businessReq);
+      if(tags && tags.length > 0) {
+        await this.queueForTags(idProduct, tags, businessReq);
+      }
     }
 
     /**
@@ -498,5 +547,37 @@ export class ProductsService extends BasicService<Product> {
         CatalogsConsumerEnum.UpdateProductsCount,
         { idCatalog, action, businessReq }, { delay: 1000 * 60 }
       );
+    }
+
+    /**
+     * Queues the background job for the tags.
+     * @param {number} idProduct - The ID of the product.
+     * @param {string[]} tags - The tags of the product.
+     * @param {IBusinessReq} businessReq - The business request object.
+     */
+    private async queueForTags(
+      idProduct: number,
+      tags: string[],
+      businessReq: IBusinessReq
+    ) {
+      await this.productsQueue.add(
+        ProductsConsumerEnum.TranslateTagsAndUpdateProduct,
+        { idProduct, tags, businessReq },
+        { delay: 1000 * 60 }
+      );
+    }
+
+    /**
+     * Get tags from images.
+     * @param {string[]} images - The images to get tags from.
+     * @returns {Promise<string[]>} The tags from the images.
+     */
+    private async getTagsFromImages(images: string[]): Promise<string[]> {
+      const files = await this.filesGettersService.getImageByNames(images);
+      const tags: string[] = [];
+      for (const file of files) {
+        if (file.tags && file.tags.length > 0) { file.tags.forEach(tag => tags.push(tag)); }
+      }
+      return [...new Set(tags)];
     }
 }

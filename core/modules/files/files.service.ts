@@ -1,4 +1,11 @@
-import { Inject, Injectable, InternalServerErrorException, Logger, NotAcceptableException, Scope } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotAcceptableException,
+  Scope
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +20,7 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3
 import { IFileUploadInterface } from '../../common/interfaces/file.interface';
 import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { DirectoriesEnum } from '../../common/enums';
 
 /** Minimum confidence score (0-1) for Vision API labels to be included */
 const VISION_LABEL_MIN_CONFIDENCE = 0.7;
@@ -91,8 +99,8 @@ export class FilesService extends BasicService<File> {
       ? this.getFileUrl(directory)
       : await this.getPresignedSignedUrl(directory);
 
-    const labels = await this.extractLabelsFromImage(file);
-
+    const labels = data.directory === DirectoriesEnum.PRODUCTS 
+      ? await this.extractLabelsFromImage(file) : [];
     const fileToSave: IFileUploadInterface = {
       url,
       name: key,
@@ -101,10 +109,12 @@ export class FilesService extends BasicService<File> {
       ...(labels.length > 0 && { tags: labels }),
     };
 
-    return await this.save(fileToSave, user).catch((error) => {
+    try {
+      return await this.save(fileToSave, user);
+    } catch (error) {
       LogError(this.logger, error, this.uploadFile.name, user);
       throw new InternalServerErrorException(this.rUpload.error);
-    });
+    }
   }
 
   /**
