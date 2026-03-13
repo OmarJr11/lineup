@@ -12,6 +12,7 @@ export * from './paginated.schema';
 export * from './business-role.schema';
 export * from './business-follower.schema';
 export * from './product.schema';
+export * from './product-tag.schema';
 export * from './tag.schema';
 export * from './product-file.schema';
 export * from './product-variation.schema';

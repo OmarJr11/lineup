@@ -9,6 +9,7 @@ import {
     ProductReactionSchema,
     ProductSearchIndexSchema,
     ProductSkuSchema,
+    ProductTagSchema,
     ProductVariationSchema,
     ProductVisitSchema,
     TagSchema
@@ -54,8 +55,8 @@ export class ProductSchema{
     @Field(() => CatalogSchema, { nullable: true })
     catalog?: CatalogSchema;
 
-    @Field(() => [TagSchema], { nullable: true })
-    tags?: TagSchema[];
+    @Field(() => [ProductTagSchema], { nullable: true })
+    productTags?: ProductTagSchema[];
 
     @Field(() => StatusEnum)
     status: StatusEnum;
