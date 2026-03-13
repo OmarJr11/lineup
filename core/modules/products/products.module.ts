@@ -30,10 +30,6 @@ import { ProductTagsModule } from '../product-tags/product-tags.module';
       {
         name: QueueNamesEnum.searchData,
         defaultJobOptions: { removeOnComplete: true },
-      },
-      {
-        name: QueueNamesEnum.products,
-        defaultJobOptions: { removeOnComplete: true },
       }
     ),
     CatalogsModule,

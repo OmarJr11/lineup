@@ -98,6 +98,7 @@ export class BusinessesSettersService extends BasicService<Business> {
                 tags: data.tags,
                 followers: data.followers ?? 0,
                 visits: data.visits ?? 0,
+                isOnline: data.isOnline ?? false,
                 status: StatusEnum.ACTIVE,
             };
             const saved = await this.save(business);

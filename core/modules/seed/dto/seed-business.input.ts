@@ -13,4 +13,5 @@ export interface ISeedBusinessData {
     visits?: number;
     password?: string;
     imgCode?: string;
+    isOnline?: boolean;
 }

@@ -28,7 +28,6 @@ import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { ActionsEnum, CatalogsConsumerEnum, ProductsConsumerEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
-import { TagsService } from '../tags/tags.service';
 import { ProductTagsService } from '../product-tags/product-tags.service';
 import { FilesGettersService } from '../files/files-getters.service';
 
@@ -43,7 +42,6 @@ export class ProductsService extends BasicService<Product> {
       private readonly productRepository: Repository<Product>,
       private readonly productsSettersService: ProductsSettersService,
       private readonly productsGettersService: ProductsGettersService,
-      private readonly tagsService: TagsService,
       private readonly productTagsService: ProductTagsService,
       private readonly productFilesSettersService: ProductFilesSettersService,
       private readonly productFilesGettersService: ProductFilesGettersService,
@@ -58,8 +56,6 @@ export class ProductsService extends BasicService<Product> {
       private readonly catalogsQueue: Queue,
       @InjectQueue(QueueNamesEnum.searchData)
       private readonly searchDataQueue: Queue,
-      @InjectQueue(QueueNamesEnum.products)
-      private readonly productsQueue: Queue,
     ) {
       super(productRepository, businessRequest);
     }
@@ -92,6 +88,11 @@ export class ProductsService extends BasicService<Product> {
       await this.createProductSkus(product.id, variations ?? [], businessReq);
       if (initialStock && initialStock.length > 0) await this
         .applyInitialStock(product.id, initialStock, businessReq);
+
+      if(tags && tags.length > 0) {
+        await this.productTagsService
+          .processAndUpdateProductTags(product.id, tags, businessReq);
+      }
 
       await this.enqueueProductCreationJobs(
         product.id,
@@ -155,6 +156,20 @@ export class ProductsService extends BasicService<Product> {
     }
 
     /**
+     * Get all Products by multiple tags (name or slug) with pagination.
+     * Returns products that have at least one of the specified tags.
+     * @param {string[]} tagNamesOrSlugs - Tag names or slugs to filter by.
+     * @param {InfinityScrollInput} query - Query parameters for pagination.
+     * @returns {Promise<Product[]>} Array of products matching any of the given tags.
+     */
+    async findAllByTags(
+      tagNamesOrSlugs: string[],
+      query: InfinityScrollInput
+    ): Promise<Product[]> {
+      return await this.productsGettersService.findAllByTags(tagNamesOrSlugs, query);
+    }
+
+    /**
      * Find a product by its ID.
      * @param {number} id - The ID of the product to find.
      * @returns {Promise<Product>} The found Product.
@@ -195,10 +210,11 @@ export class ProductsService extends BasicService<Product> {
       }
       if (initialStock && initialStock.length > 0) await this.applyInitialStock(product.id, initialStock, businessReq);
       
-      await this.queueForIdProduct(product.id);
       if (tags && tags.length > 0) {
-        await this.queueForTags(product.id, tags, businessReq);
+        await this.productTagsService
+          .processAndUpdateProductTags(product.id, tags, businessReq);
       }
+      await this.queueForIdProduct(product.id);
 
       return await this.productsGettersService.findOneWithRelations(product.id);
     }
@@ -516,9 +532,6 @@ export class ProductsService extends BasicService<Product> {
     ) {
       await this.queueForIdProduct(idProduct);
       await this.queueForIdCatalog(idCatalog, action, businessReq);
-      if(tags && tags.length > 0) {
-        await this.queueForTags(idProduct, tags, businessReq);
-      }
     }
 
     /**
@@ -546,24 +559,6 @@ export class ProductsService extends BasicService<Product> {
       await this.catalogsQueue.add(
         CatalogsConsumerEnum.UpdateProductsCount,
         { idCatalog, action, businessReq }, { delay: 1000 * 60 }
-      );
-    }
-
-    /**
-     * Queues the background job for the tags.
-     * @param {number} idProduct - The ID of the product.
-     * @param {string[]} tags - The tags of the product.
-     * @param {IBusinessReq} businessReq - The business request object.
-     */
-    private async queueForTags(
-      idProduct: number,
-      tags: string[],
-      businessReq: IBusinessReq
-    ) {
-      await this.productsQueue.add(
-        ProductsConsumerEnum.TranslateTagsAndUpdateProduct,
-        { idProduct, tags, businessReq },
-        { delay: 1000 * 60 }
       );
     }
 

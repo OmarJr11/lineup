@@ -27,11 +27,10 @@ export class SearchIndexService {
     ) {}
 
     /**
-     * Enhances raw entity data into search-optimized text using Gemini.
-     * Falls back to raw text if the API fails.
+     * Enhances search text using Gemini.
      * @param {string} rawText - Plain text from entity.
      * @param {Function} promptBuilder - Function that builds the user prompt.
-     * @returns {string} Enhanced text for tsvector.
+     * @returns {Promise<string>} Enhanced text for tsvector.
      */
     async enhanceSearchText(
         rawText: string,
@@ -43,26 +42,28 @@ export class SearchIndexService {
                 systemInstruction: SEARCH_ENHANCEMENT_SYSTEM_INSTRUCTION,
                 config: { temperature: 0.3, maxOutputTokens: 512 },
             });
-            return (result.text || rawText).trim();
+            const text = result.text || rawText;
+            return this.normalizeToContinuousText(text);
         } catch (error) {
             LogError(this.logger, error, this.enhanceSearchText.name);
-            return rawText;
+            return this.normalizeToContinuousText(rawText);
         }
     }
 
     /**
-     * Builds plain text from a Product for search enhancement.
+     * Builds plain text from a Product for search_vector.
+     * Includes: title, subtitle, description, status, idCurrency, variations, skus.
      * @param {Product} product - Product entity with relations.
      * @returns {string} Plain text from the product.
      */
     buildProductRawText(product: Product): string {
-        const tagNames = product.tags?.map((t) => t.name).filter(Boolean) ?? [];
         const parts: string[] = [
-            product.title,
+            product.title ?? '',
             product.subtitle ?? '',
             product.description ?? '',
-            tagNames.join(' '),
+            product.status ?? '',
         ];
+        if (product.idCurrency != null) parts.push(String(product.idCurrency));
         if (product.catalog?.title) parts.push(product.catalog.title);
         if (product.business?.name) parts.push(product.business.name);
         if (product.variations?.length) {
@@ -71,6 +72,17 @@ export class SearchIndexService {
                 .join(' ');
             parts.push(varText);
         }
+        if (product.skus?.length) {
+            const skuText = product.skus
+                .map((s) => [s.skuCode, ...Object.values(s.variationOptions ?? {})].join(' '))
+                .join(' ');
+            parts.push(skuText);
+        }
+        if(product.productTags?.length) {
+            const tagText = product.productTags.map((t) => t.tag.name).join(' ');
+            parts.push(tagText);
+        }
+
         return parts.filter(Boolean).join(' ').trim();
     }
 
@@ -121,20 +133,27 @@ export class SearchIndexService {
         const idCatalog = product.idCatalog;
         const likes = product.likes ?? 0;
         const visits = product.visits ?? 0;
-
         const ratingAverage = product.ratingAverage ?? 0;
+        const price = product.price ?? null;
+        const locationsText =
+            product.business?.locations
+                ?.map((l) => l.formattedAddress)
+                .filter(Boolean)
+                .join(' ') || null;
 
         await this.dataSource.query(
-            `INSERT INTO product_search_index (id_product, id_business, id_catalog, search_vector, likes, visits, rating_average, creation_date, modification_date)
-             VALUES ($1, $2, $3, to_tsvector($4, $5), $6, $7, $8, NOW(), NOW())
+            `INSERT INTO product_search_index (id_product, id_business, id_catalog, search_vector, likes, visits, rating_average, price, locations_text, creation_date, modification_date)
+             VALUES ($1, $2, $3, to_tsvector($4, $5), $6, $7, $8, $9, $10, NOW(), NOW())
              ON CONFLICT (id_product)
              DO UPDATE SET
                search_vector = to_tsvector($4, $5),
                likes = $6,
                visits = $7,
                rating_average = $8,
+               price = $9,
+               locations_text = $10,
                modification_date = NOW()`,
-            [idProduct, idBusiness, idCatalog, TEXT_SEARCH_CONFIG, enhancedText, likes, visits, ratingAverage],
+            [idProduct, idBusiness, idCatalog, TEXT_SEARCH_CONFIG, enhancedText, likes, visits, ratingAverage, price, locationsText],
         );
     }
 
@@ -356,5 +375,24 @@ export class SearchIndexService {
             `UPDATE product_search_index SET rating_average = $1, modification_date = NOW() WHERE id_product = $2`,
             [ratingAverage, idProduct],
         );
+    }
+    
+    /**
+     * Enhances raw entity data into search-optimized text using Gemini.
+     * Falls back to raw text if the API fails.
+     * @param {string} rawText - Plain text from entity.
+     * @param {Function} promptBuilder - Function that builds the user prompt.
+     * @returns {string} Enhanced text for tsvector.
+     */
+    /**
+     * Normalizes text to continuous format for to_tsvector.
+     * Replaces newlines with spaces and collapses multiple spaces.
+     * @param {string} text - Raw or enhanced text.
+     * @returns {string} Continuous text suitable for tsvector.
+     */
+    private normalizeToContinuousText(text: string): string {
+        return (text || '')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 }

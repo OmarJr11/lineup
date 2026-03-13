@@ -49,6 +49,9 @@ export class Business extends BaseEntity {
     @Column('int8', { default: 0 })
     visits: number;
 
+    @Column('boolean', { name: 'is_online', default: false })
+    isOnline: boolean;
+
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 

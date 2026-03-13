@@ -16,7 +16,8 @@ const TRANSLATE_TAGS_SYSTEM_INSTRUCTION = `You are a specialized translator. Tra
 - Output format: one translation per line, no numbering, no explanations, no extra text.
 - Use common Latin American Spanish terms when applicable.
 - If a tag is already in Spanish, return it as is.
-- Never skip or merge tags. Each input tag produces exactly one output line.`;
+- Never skip or merge tags. Each input tag produces exactly one output line.
+- IMPORTANT: Always translate English words to their Spanish equivalent. Do not leave anglicisms or loanwords unchanged (e.g. "Gadget" → "aparato" or "dispositivo", not "Gadget").`;
 
 /**
  * Service for managing product-tag relationships.

@@ -4,7 +4,8 @@ import { Business, Catalog, Product } from '.';
 
 /**
  * Search index entity for full-text search over products.
- * One row per product. Holds tsvector for ranking, idBusiness owner, and denormalized likes/visits.
+ * One row per product. Holds tsvector for ranking (title, subtitle, description, status,
+ * variations, skus from Product, ProductVariation, ProductSku), idBusiness owner, and denormalized likes/visits.
  */
 @Entity({ name: 'product_search_index' })
 @Index(['idProduct'], { unique: true })
@@ -33,7 +34,10 @@ export class ProductSearchIndex extends BaseEntity {
     @JoinColumn([{ name: 'id_catalog', referencedColumnName: 'id' }])
     catalog?: Catalog;
 
-    /** Full-text search vector (title, subtitle, description, tags). */
+    /**
+     * Full-text search vector. Contains: title, subtitle, description, status,
+     * idCurrency, variations (title + options), skus (skuCode + variationOptions).
+     */
     @Column({ type: 'tsvector', name: 'search_vector', nullable: true })
     searchVector?: string;
 
@@ -49,4 +53,12 @@ export class ProductSearchIndex extends BaseEntity {
      */
     @Column({ type: 'decimal', precision: 3, scale: 2, name: 'rating_average', default: 0 })
     ratingAverage: number;
+
+    /** Denormalized from Product: price. Optional, used for filtering search by price range. */
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+    price?: number;
+
+    /** Denormalized from Business.locations: concatenated formatted addresses for filtering by location. */
+    @Column({ type: 'text', name: 'locations_text', nullable: true })
+    locationsText?: string;
 }
