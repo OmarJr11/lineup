@@ -1,7 +1,7 @@
 import { StatusEnum } from '../common/enums/status.enum';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, Discount, File, Location, Product, ProductFile, ProductSearchIndex, ProductSku, ProductVariation, SocialNetworkBusiness, Token, DiscountProduct, DiscountProductAudit } from '.';
+import { BusinessRole, BusinessFollower, BusinessVisit, BusinessSearchIndex, Catalog, CatalogSearchIndex, Discount, File, Location, Product, ProductFile, ProductSearchIndex, ProductSku, ProductVariation, SocialNetworkBusiness, Token, DiscountProduct, DiscountProductAudit, Tag } from '.';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
@@ -48,6 +48,9 @@ export class Business extends BaseEntity {
 
     @Column('int8', { default: 0 })
     visits: number;
+
+    @Column('boolean', { name: 'is_online', default: false })
+    isOnline: boolean;
 
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
@@ -135,5 +138,7 @@ export class Business extends BaseEntity {
 
     @OneToMany(() => DiscountProductAudit, (discountProductAudit) => discountProductAudit.creationBusiness)
     creationDiscountProductAudits?: DiscountProductAudit[];
-    
+
+    @OneToMany(() => Tag, (tag) => tag.creationBusiness)
+    businessTags?: Tag[];
 }

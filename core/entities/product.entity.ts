@@ -1,7 +1,7 @@
 import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, DiscountProduct, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, Currency, DiscountProduct, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductTag, Tag, ProductVariation, ProductVisit } from '.';
 
 export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
@@ -47,8 +47,13 @@ export class Product extends BaseEntity {
     @JoinColumn([{ name: 'id_catalog', referencedColumnName: 'id' }])
     catalog?: Catalog;
 
-    @Column('simple-array')
-    tags: string[];
+    @OneToMany(() => ProductTag, (productTag) => productTag.product)
+    productTags?: ProductTag[];
+
+    /** Tags derived from productTags. Used by schema and search index. */
+    get tags(): Tag[] {
+        return this.productTags?.map((pt) => pt.tag).filter((t): t is Tag => !!t) ?? [];
+    }
 
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;

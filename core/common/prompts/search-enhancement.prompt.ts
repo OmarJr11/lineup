@@ -21,10 +21,29 @@ Rules:
  * @returns The prompt string to send to the model.
  */
 export function buildProductSearchEnhancementPrompt(productData: string): string {
-  return `Generate search-optimized text for this product.
-Goal: a user searching by description, use, material, occasion, or feature should find it even without knowing the exact name.
-Include: name and variants, what it is for, occasions for use, materials if applicable, related categories, synonyms and colloquial terms.
-Respond in Spanish only.
+  return `Generate dense, search-optimized text for this product. The output will be indexed for full-text search (PostgreSQL tsvector).
+
+GOAL: A user searching by any of these should find the product even without knowing its exact name:
+- Description, use, material, occasion, or feature
+- Problem it solves or need it fulfills
+- Who it is for (audience: niños, adultos, mascotas, regalo, etc.)
+- When/where to use it (ocasiones, eventos, temporadas)
+- Related categories and product types
+- Synonyms, colloquial terms, regional variants (Latino/Spain)
+- Common misspellings or alternative names
+
+INCLUDE in your output:
+1. Name and all variants (formal, informal, abbreviations)
+2. What it is for, uses, and applications
+3. Occasions: regalo, cumpleaños, boda, navidad, baby shower, aniversario, etc.
+4. Materials, ingredients, or composition when applicable
+5. Size, format, unit, or presentation if relevant
+6. Related categories and product types (e.g. "pan" → panadería, repostería, desayuno)
+7. Search phrases users might type: "donde comprar", "para regalar", "ideal para", "barato", "en oferta", "original", "artesanal"
+8. Expand implicit concepts: e.g. "zapatos deportivos" → running, tenis, gimnasio, ejercicio, fitness
+9. Both technical and common terms: e.g. "smartphone" and "celular", "móvil"
+
+OUTPUT: One continuous paragraph in Spanish. No bullets, no titles, no "Texto mejorado:". Maximum 1000 words. Reply ONLY with the enhanced text.
 
 Product data:
 ---

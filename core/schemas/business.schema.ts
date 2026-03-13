@@ -58,6 +58,9 @@ export class BusinessSchema {
   @Field(() => Int)
   visits: number;
 
+  @Field({ description: 'Whether the business operates online' })
+  isOnline: boolean;
+
   @Field(() => StatusEnum)
   status: StatusEnum;
 

@@ -64,13 +64,6 @@ export class UpdateProductInput {
   @Type(() => ProductImageInput)
   images?: ProductImageInput[];
 
-  @Field(() => [String])
-  @IsOptional()
-  @IsNotEmpty()
-  @IsArray()
-  @IsString({ each: true })
-  tags: string[];
-
   @Field(() => [ProductVariationInput], { nullable: true })
   @IsOptional()
   @IsArray()

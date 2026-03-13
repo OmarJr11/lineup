@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { InfinityScrollInput } from '../../common/dtos';
+import { InfinityScrollInput, ProductSearchFiltersInput } from '../../common/dtos';
 import { IPaginatedResult } from '../../common/interfaces';
 import { SearchTargetEnum } from '../../common/enums';
 import { Business, Catalog, Product } from '../../entities';
@@ -60,29 +60,34 @@ export class SearchService {
      *
      * Validates and normalizes the search term, then delegates to the search index tables.
      * Returns entities ranked by relevance, with pagination metadata for infinite scroll.
+     * Product filters (minPrice, maxPrice, location, minRating) apply when target is PRODUCTS or ALL.
      *
-     * @param pagination - Pagination and search params: page, limit, search (query text).
+     * @param {InfinityScrollInput} pagination - Pagination and search params: page, limit, search (query text).
      *                    Limit is capped at 50. Search term is trimmed; empty returns no results.
-     * @param target - Scope: ALL (all three), BUSINESSES, CATALOGS, or PRODUCTS.
-     * @returns Object with items (array of entities + __typename), total count, page, limit.
+     * @param {SearchTargetEnum} target - Scope: ALL (all three), BUSINESSES, CATALOGS, or PRODUCTS.
+     * @param {ProductSearchFiltersInput} productFilters - Optional filters for products: minPrice, maxPrice, location, minRating.
+     * @returns {Promise<IPaginatedResult<SearchResultItem>>} Object with items (array of entities + __typename), total count, page, limit.
      *          On error or empty search, returns empty items and total 0.
      */
     async search(
         pagination: InfinityScrollInput,
         target: SearchTargetEnum,
+        productFilters?: ProductSearchFiltersInput,
     ): Promise<IPaginatedResult<SearchResultItem>> {
         const searchTerm = (pagination.search || '').trim();
         const page = pagination.page || 1;
         const limit = Math.min(pagination.limit || 10, 50);
         const offset = (page - 1) * limit;
+        const hasProductFilters = this.hasActiveProductFilters(productFilters);
+        const effectiveTarget = hasProductFilters ? SearchTargetEnum.PRODUCTS : target;
 
         if (!searchTerm) {
-            return this.fetchRandomItems(target, limit, offset, page);
+            return this.fetchRandomItems(effectiveTarget, limit, offset, page, productFilters);
         }
 
         try {
-            const rows = await this.executeSearchQuery(target, searchTerm, limit, offset);
-            const total = await this.executeCountQuery(target, searchTerm);
+            const rows = await this.executeSearchQuery(effectiveTarget, searchTerm, limit, offset, productFilters);
+            const total = await this.executeCountQuery(effectiveTarget, searchTerm, productFilters);
             const items = await this.fetchEntitiesFromRows(rows);
             return { items, total, page, limit };
         } catch (error) {
@@ -234,6 +239,7 @@ export class SearchService {
      * @param limit - Page size.
      * @param offset - Number of records to skip.
      * @param page - Current page number.
+     * @param productFilters - Optional filters for products.
      * @returns Object with items (random entities + __typename), total count, page, limit.
      */
     private async fetchRandomItems(
@@ -241,10 +247,11 @@ export class SearchService {
         limit: number,
         offset: number,
         page: number,
+        productFilters?: ProductSearchFiltersInput,
     ): Promise<IPaginatedResult<SearchResultItem>> {
         try {
-            const rows = await this.executeRandomQuery(target, limit, offset);
-            const total = await this.executeRandomCountQuery(target);
+            const rows = await this.executeRandomQuery(target, limit, offset, productFilters);
+            const total = await this.executeRandomCountQuery(target, productFilters);
             const items = await this.fetchEntitiesFromRows(rows);
             return { items, total, page, limit };
         } catch (error) {
@@ -254,20 +261,69 @@ export class SearchService {
     }
 
     /**
+     * Returns true if any product filter is set.
+     * When filters are active, search is restricted to PRODUCTS only (businesses/catalogs excluded).
+     */
+    private hasActiveProductFilters(filters?: ProductSearchFiltersInput): boolean {
+        if (!filters) return false;
+        return (
+            filters.minPrice != null ||
+            filters.maxPrice != null ||
+            (filters.location?.trim()?.length ?? 0) > 0 ||
+            filters.minRating != null
+        );
+    }
+
+    /**
+     * Builds product filter conditions for product_search_index.
+     * @param productFilters - Optional filters.
+     * @returns Object with SQL conditions and params.
+     */
+    private buildProductFilterConditions(productFilters?: ProductSearchFiltersInput): {
+        conditions: string[];
+        params: unknown[];
+    } {
+        const conditions: string[] = [];
+        const params: unknown[] = [];
+        if (!productFilters) return { conditions, params };
+        let idx = 1;
+        if (productFilters.minPrice != null) {
+            params.push(Number(productFilters.minPrice));
+            conditions.push(`p.price IS NOT NULL AND (p.price)::numeric >= ($${idx++})::numeric`);
+        }
+        if (productFilters.maxPrice != null) {
+            params.push(Number(productFilters.maxPrice));
+            conditions.push(`p.price IS NOT NULL AND (p.price)::numeric <= ($${idx++})::numeric`);
+        }
+        if (productFilters.location?.trim()) {
+            params.push(`%${productFilters.location.trim()}%`);
+            conditions.push(`psi.locations_text ILIKE $${idx++}`);
+        }
+        if (productFilters.minRating != null) {
+            params.push(Number(productFilters.minRating));
+            conditions.push(`(psi.rating_average)::numeric >= ($${idx++})::numeric`);
+        }
+        return { conditions, params };
+    }
+
+    /**
      * Executes random query against businesses, catalogs, and/or products.
      *
      * @param target - Which entities to query.
      * @param limit - Page size.
      * @param offset - Number of records to skip.
+     * @param productFilters - Optional filters for products.
      * @returns Ordered array of SearchResultRow (id, type) in random order.
      */
     private async executeRandomQuery(
         target: SearchTargetEnum,
         limit: number,
         offset: number,
+        productFilters?: ProductSearchFiltersInput,
     ): Promise<SearchResultRow[]> {
         const parts: string[] = [];
-        const params: unknown[] = [];
+        const allParams: unknown[] = [];
+        let paramOffset = 0;
 
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.BUSINESSES) {
             parts.push(`(SELECT id, 'business' AS type, 0::float AS rank FROM businesses WHERE status <> 'deleted')`);
@@ -278,18 +334,25 @@ export class SearchService {
                 WHERE c.status <> 'deleted')`);
         }
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
-            parts.push(`(SELECT p.id, 'product' AS type, 0::float AS rank FROM products p
+            const { conditions, params } = this.buildProductFilterConditions(productFilters);
+            const filterClause = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
+            paramOffset = params.length;
+            allParams.push(...params);
+            parts.push(`(SELECT p.id, 'product' AS type, 0::float AS rank
+                FROM products p
+                INNER JOIN product_search_index psi ON psi.id_product = p.id
                 INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
                 INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
-                WHERE p.status <> 'deleted')`);
+                WHERE p.status <> 'deleted'${filterClause})`);
         }
 
         if (parts.length === 0) {
             return [];
         }
 
-        const sql = `SELECT * FROM (${parts.join(' UNION ALL ')}) AS combined ORDER BY RANDOM() LIMIT $1 OFFSET $2`;
-        const rows = await this.dataSource.query<SearchResultRow[]>(sql, [limit, offset]);
+        allParams.push(limit, offset);
+        const sql = `SELECT * FROM (${parts.join(' UNION ALL ')}) AS combined ORDER BY RANDOM() LIMIT $${paramOffset + 1} OFFSET $${paramOffset + 2}`;
+        const rows = await this.dataSource.query<SearchResultRow[]>(sql, allParams);
         return Array.isArray(rows) ? rows : [];
     }
 
@@ -297,10 +360,15 @@ export class SearchService {
      * Counts total records for random fetch (businesses + catalogs + products).
      *
      * @param target - Which entities to count.
+     * @param productFilters - Optional filters for products.
      * @returns Total number of records across the selected scope.
      */
-    private async executeRandomCountQuery(target: SearchTargetEnum): Promise<number> {
+    private async executeRandomCountQuery(
+        target: SearchTargetEnum,
+        productFilters?: ProductSearchFiltersInput,
+    ): Promise<number> {
         const parts: string[] = [];
+        const allParams: unknown[] = [];
 
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.BUSINESSES) {
             parts.push(`(SELECT COUNT(*)::int FROM businesses WHERE status <> 'deleted')`);
@@ -311,10 +379,15 @@ export class SearchService {
                 WHERE c.status <> 'deleted')`);
         }
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
-            parts.push(`(SELECT COUNT(*)::int FROM products p
+            const { conditions, params } = this.buildProductFilterConditions(productFilters);
+            const filterClause = conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '';
+            allParams.push(...params);
+            parts.push(`(SELECT COUNT(*)::int
+                FROM products p
+                INNER JOIN product_search_index psi ON psi.id_product = p.id
                 INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
                 INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
-                WHERE p.status <> 'deleted')`);
+                WHERE p.status <> 'deleted'${filterClause})`);
         }
 
         if (parts.length === 0) {
@@ -322,7 +395,9 @@ export class SearchService {
         }
 
         const sql = `SELECT (${parts.join(' + ')}) AS total`;
-        const result = await this.dataSource.query<{ total: number }[]>(sql);
+        const result = allParams.length > 0
+            ? await this.dataSource.query<{ total: number }[]>(sql, allParams)
+            : await this.dataSource.query<{ total: number }[]>(sql);
         return result?.[0]?.total ?? 0;
     }
 
@@ -350,6 +425,7 @@ export class SearchService {
         searchTerm: string,
         limit: number,
         offset: number,
+        productFilters?: ProductSearchFiltersInput,
     ): Promise<SearchResultRow[]> {
         const tsQuery = 'plainto_tsquery($1, $2)';
         const config = this.TEXT_SEARCH_CONFIG;
@@ -388,6 +464,15 @@ export class SearchService {
         }
 
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
+            const { conditions, params } = this.buildProductFilterConditions(productFilters);
+            const baseIdx = 4;
+            const filterClause =
+                conditions.length > 0
+                    ? ` AND ${conditions
+                          .map((c, i) => c.replace(/\$\d+/, `$${baseIdx + i}`))
+                          .join(' AND ')}`
+                    : '';
+            const productParams: unknown[] = [config, searchTerm, fetchLimit, ...params];
             const rows = await this.dataSource.query<SearchResultRow[]>(
                 `SELECT psi.id_product AS id, 'product' AS type,
                     ts_rank(psi.search_vector, ${tsQuery}) AS rank
@@ -395,10 +480,10 @@ export class SearchService {
                 INNER JOIN products p ON p.id = psi.id_product AND p.status <> 'deleted'
                 INNER JOIN catalogs c ON c.id = psi.id_catalog AND c.status <> 'deleted'
                 INNER JOIN businesses b ON b.id = psi.id_business AND b.status <> 'deleted'
-                WHERE psi.search_vector IS NOT NULL AND psi.search_vector @@ ${tsQuery}
+                WHERE psi.search_vector IS NOT NULL AND psi.search_vector @@ ${tsQuery}${filterClause}
                 ORDER BY rank DESC
                 LIMIT $3`,
-                [config, searchTerm, fetchLimit],
+                productParams,
             );
             allRows.push(...(Array.isArray(rows) ? rows : []));
         }
@@ -418,7 +503,11 @@ export class SearchService {
      * @param {string} searchTerm - Normalized search text.
      * @returns {Promise<number>} Total number of matching records across the selected scope.
      */
-    private async executeCountQuery(target: SearchTargetEnum, searchTerm: string): Promise<number> {
+    private async executeCountQuery(
+        target: SearchTargetEnum,
+        searchTerm: string,
+        productFilters?: ProductSearchFiltersInput,
+    ): Promise<number> {
         const tsQuery = 'plainto_tsquery($1, $2)';
         const config = this.TEXT_SEARCH_CONFIG;
         let total = 0;
@@ -444,13 +533,18 @@ export class SearchService {
             total += result?.[0]?.c ?? 0;
         }
         if (target === SearchTargetEnum.ALL || target === SearchTargetEnum.PRODUCTS) {
+            const { conditions, params } = this.buildProductFilterConditions(productFilters);
+            const filterClause = conditions.length > 0
+                ? ` AND ${conditions.map((c, i) => c.replace(/\$\d+/, `$${3 + i}`)).join(' AND ')}`
+                : '';
+            const productParams = [config, searchTerm, ...params];
             const result = await this.dataSource.query<{ c: number }[]>(
                 `SELECT COUNT(*)::int AS c FROM product_search_index psi
                 INNER JOIN products p ON p.id = psi.id_product AND p.status <> 'deleted'
                 INNER JOIN catalogs c ON c.id = psi.id_catalog AND c.status <> 'deleted'
                 INNER JOIN businesses b ON b.id = psi.id_business AND b.status <> 'deleted'
-                WHERE psi.search_vector IS NOT NULL AND psi.search_vector @@ ${tsQuery}`,
-                [config, searchTerm],
+                WHERE psi.search_vector IS NOT NULL AND psi.search_vector @@ ${tsQuery}${filterClause}`,
+                productParams,
             );
             total += result?.[0]?.c ?? 0;
         }

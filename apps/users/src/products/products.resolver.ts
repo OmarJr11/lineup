@@ -69,6 +69,49 @@ export class ProductsResolver {
       };
     }
 
+    /**
+     * Get products filtered by tag name or slug.
+     * @param {string} tagNameOrSlug - Tag name or slug (e.g. "pan" or "pan-artesanal").
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     */
+    @Query(() => PaginatedProducts, { name: 'getAllByTag' })
+    async getAllByTag(
+      @Args('tagNameOrSlug', { type: () => String }) tagNameOrSlug: string,
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByTag(tagNameOrSlug, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
+    /**
+     * Get products filtered by multiple tag names or slugs.
+     * Returns products that have at least one of the specified tags.
+     * @param {string[]} tagNamesOrSlugs - Tag names or slugs (e.g. ["pan", "integral", "sin-gluten"]).
+     * @param {InfinityScrollInput} pagination - Pagination parameters.
+     */
+    @Query(() => PaginatedProducts, { name: 'getAllByTags' })
+    async getAllByTags(
+      @Args('tagNamesOrSlugs', { type: () => [String] }) tagNamesOrSlugs: string[],
+      @Args('pagination', { type: () => InfinityScrollInput })
+      pagination: InfinityScrollInput
+    ) {
+      const items = (await this.productsService.findAllByTags(tagNamesOrSlugs, pagination))
+        .map(product => toProductSchema(product));
+      return {
+        items,
+        total: items.length,
+        page: pagination.page,
+        limit: pagination.limit
+      };
+    }
+
     @Query(() => ProductSchema, { name: 'findOneProduct' })
     async findOne(@Args('id', { type: () => Int }) id: number) {
       return toProductSchema(await this.productsService.findOne(id));

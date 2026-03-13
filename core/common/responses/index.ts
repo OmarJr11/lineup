@@ -30,3 +30,4 @@ export * from './discounts.response'; //29
 export * from './discount-products.response'; //30
 export * from './discount-product-audits.response'; //31
 export * from './states.response'; //32
+export * from './product-tags.response'; //33

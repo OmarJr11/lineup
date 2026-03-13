@@ -6,6 +6,7 @@ import { ProductSchema } from './product.schema';
 /**
  * GraphQL schema for ProductSearchIndex entity.
  * Used for full-text search over products with denormalized metrics.
+ * search_vector contains: title, subtitle, description, status, variations, skus.
  */
 @ObjectType()
 export class ProductSearchIndexSchema {
@@ -41,4 +42,10 @@ export class ProductSearchIndexSchema {
 
     @Field(() => Float, { description: 'Average rating (0.00–5.00)' })
     ratingAverage: number;
+
+    @Field(() => Float, { nullable: true, description: 'Denormalized price for filtering by price range' })
+    price?: number;
+
+    @Field({ nullable: true, description: 'Denormalized business locations for filtering by location' })
+    locationsText?: string;
 }
