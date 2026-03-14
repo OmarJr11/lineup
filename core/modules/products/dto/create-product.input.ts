@@ -16,6 +16,7 @@ export class CreateProductInput {
     title: string;
 
     @Field()
+    @IsOptional()
     @IsNotEmpty()
     @MinLength(3)
     @MaxLength(255)

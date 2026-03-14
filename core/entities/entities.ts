@@ -22,6 +22,7 @@ import {
     Token,
     User,
     UserRole,
+    UserSearch,
     Location,
     SocialNetwork,
     SocialNetworkBusiness,
@@ -73,5 +74,6 @@ export const entities = [
     StockMovement,
     Discount,
     DiscountProduct,
-    DiscountProductAudit
+    DiscountProductAudit,
+    UserSearch
 ]

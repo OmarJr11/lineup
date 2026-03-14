@@ -1,7 +1,9 @@
 import { Resolver, Query, Args } from '@nestjs/graphql';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SearchService } from '../../../../core/modules/search/search.service';
+import { UserSearchesService } from '../../../../core/modules/user-searches/user-searches.service';
 import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
+import { UserDec } from '../../../../core/common/decorators';
 import { InfinityScrollInput, ProductSearchFiltersInput } from '../../../../core/common/dtos';
 import { SearchTargetEnum } from '../../../../core/common/enums';
 import { PaginatedSearchResults, PaginatedBusinesses, PaginatedCatalogs, PaginatedProducts } from '../../../../core/schemas';
@@ -10,15 +12,20 @@ import type { SearchResultItem } from '../../../../core/modules/search/search.se
 import type { Business } from '../../../../core/entities';
 import type { Catalog } from '../../../../core/entities';
 import type { Product } from '../../../../core/entities';
+import type { IUserReq } from '../../../../core/common/interfaces';
 
 /**
  * Resolver for full-text search over businesses, catalogs, and products.
  * Supports both authenticated users and anonymous visitors.
+ * Records search terms for logged-in users to build personalized collections.
  */
 @UsePipes(new ValidationPipe())
 @Resolver()
 export class SearchResolver {
-    constructor(private readonly searchService: SearchService) {}
+    constructor(
+        private readonly searchService: SearchService,
+        private readonly userSearchesService: UserSearchesService,
+    ) {}
 
     /**
      * Performs full-text search across businesses, catalogs, and/or products.
@@ -34,8 +41,13 @@ export class SearchResolver {
         @Args('target', { type: () => SearchTargetEnum }) target: SearchTargetEnum,
         @Args('productFilters', { type: () => ProductSearchFiltersInput, nullable: true })
         productFilters?: ProductSearchFiltersInput,
+        @UserDec() user?: IUserReq | null,
     ): Promise<PaginatedSearchResults> {
         const result = await this.searchService.search(pagination, target, productFilters);
+        const searchTerm = (pagination?.search ?? '').trim();
+        if (user && searchTerm.length > 0) {
+            this.userSearchesService.recordSearch(searchTerm, user);
+        }
         const items = result.items.map(({ item, __typename }: SearchResultItem) => {
             const schema = __typename === 'BusinessSchema'
                 ? toBusinessSchema(item as Business)

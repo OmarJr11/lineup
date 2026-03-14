@@ -14,7 +14,8 @@ import {
     Role,
     State,
     Token,
-    UserRole
+    UserRole,
+    UserSearch
 } from '.';
 
 @Entity({ schema: 'system', name: 'users' })
@@ -100,6 +101,9 @@ export class User extends BaseEntity {
 
     @OneToMany(() => CatalogVisit, (visit) => visit.creationUser)
     catalogVisits?: CatalogVisit[];
+
+    @OneToMany(() => UserSearch, (search) => search.creationUser)
+    userSearches?: UserSearch[];
 
     @ManyToOne(() => File, (files) => files.userProfileImages)
     @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
