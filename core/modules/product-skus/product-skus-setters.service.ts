@@ -7,8 +7,10 @@ import { IBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productSkusResponses } from '../../common/responses';
 import { ProductSku } from '../../entities';
+import { VariationOptions } from '../../common/types';
 import { CreateProductSkuInput } from './dto/create-product-sku.input';
 import { UpdateProductSkuInput } from './dto/update-product-sku.input';
+import { VariationOptionItemInput } from './dto/variation-option-item.input';
 
 /**
  * Write service responsible for persisting product SKU records.
@@ -39,7 +41,12 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
         businessReq: IBusinessReq,
     ): Promise<ProductSku> {
         try {
-            const payload = { ...data, quantity: data.quantity ?? 0 };
+            const variationOptionsRecord = this.toVariationOptionsRecord(data.variationOptions);
+            const payload = {
+                ...data,
+                variationOptions: variationOptionsRecord,
+                quantity: data.quantity ?? 0,
+            };
             return await this.save(payload, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.create.name, businessReq);
@@ -81,5 +88,20 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
             LogError(this.logger, error, this.remove.name, businessReq);
             throw new InternalServerErrorException(this.rDelete.error);
         }
+    }
+
+    /** Converts an array of { variationTitle: string; option: string } to a VariationOptions record.
+     * 
+     * @param {VariationOptionItemInput[]} items - The array of variation option items.
+     * @returns {VariationOptions | undefined} The variation options record.
+     */
+    private toVariationOptionsRecord(
+        items?: VariationOptionItemInput[],
+    ): VariationOptions | undefined {
+        if (!items?.length) return undefined;
+        return items.reduce((acc, { variationTitle, option }) => {
+            acc[variationTitle] = option;
+            return acc;
+        }, {} as VariationOptions) as VariationOptions;
     }
 }

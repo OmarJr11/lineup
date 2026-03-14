@@ -1,13 +1,15 @@
 import { Type } from 'class-transformer';
 import {
+    IsArray,
     IsNotEmpty,
     IsNumber,
-    IsObject,
     IsOptional,
     IsString,
     MaxLength,
     Min,
+    ValidateNested,
 } from 'class-validator';
+import { VariationOptionItemInput } from './variation-option-item.input';
 
 /**
  * DTO for creating a product SKU.
@@ -25,8 +27,10 @@ export class CreateProductSkuInput {
     skuCode: string;
 
     @IsNotEmpty()
-    @IsObject()
-    variationOptions: Record<string, string>;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => VariationOptionItemInput)
+    variationOptions: VariationOptionItemInput[];
 
     @IsOptional()
     @Type(() => Number)
@@ -38,4 +42,9 @@ export class CreateProductSkuInput {
     @Type(() => Number)
     @IsNumber()
     price?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    idCurrency?: number;
 }

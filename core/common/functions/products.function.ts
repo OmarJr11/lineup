@@ -3,7 +3,7 @@ import { ProductRatingSchema, ProductSchema, ProductReactionSchema, ProductSkuSc
 
 /**
  * Maps ProductSku entity to ProductSkuSchema.
- * variationOptions (Record<string, string>) is compatible with the JSON scalar in the schema.
+ * variationOptions (VariationOptions) is compatible with the JSON scalar in the schema.
  */
 function toProductSkuSchema(sku: ProductSku): ProductSkuSchema {
     return {

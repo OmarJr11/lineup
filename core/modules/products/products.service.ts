@@ -22,6 +22,7 @@ import { ProductSkusService } from '../product-skus/product-skus.service';
 import { ProductSkusSettersService } from '../product-skus/product-skus-setters.service';
 import { ProductSkusGettersService } from '../product-skus/product-skus-getters.service';
 import { cartesianProduct, generateSkuCode } from '../../common/helpers/cartesian-product.helper';
+import { CreateProductVariationInput } from './dto/create-product-variation.input';
 import { ProductVariationInput } from './dto/product-variation.input';
 import { InitialStockItemInput } from '../product-skus/dto/initial-stock-item.input';
 import { Queue } from 'bullmq';
@@ -30,6 +31,7 @@ import { ActionsEnum, CatalogsConsumerEnum, ProductsConsumerEnum, QueueNamesEnum
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 import { ProductTagsService } from '../product-tags/product-tags.service';
 import { FilesGettersService } from '../files/files-getters.service';
+import { VariationOptions } from '../../common/types';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
@@ -73,21 +75,29 @@ export class ProductsService extends BasicService<Product> {
       const idCatalog = data.idCatalog;
       const idBusiness = businessReq.businessId;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
-      const { images, variations, initialStock } = this.extractProductRelations(data);
+      const { images, variations, initialQuantity, price, idCurrency, getPriceForSku } = this.extractProductRelations(data);
 
       let tags: string[] | undefined;
       if (images && images.length > 0) {
         tags = await this.getTagsFromImages(images.map((image) => image.imageCode));
       }
 
+      data.hasVariations = (variations?.length ?? 0) > 0;
       const product = await this.productsSettersService.create(data, businessReq);
       if (images && images.length > 0) await this
         .createProductImages(product.id, images, businessReq);
       if (variations && variations.length > 0) await this
         .createProductVariations(product.id, variations, businessReq);
-      await this.createProductSkus(product.id, variations ?? [], businessReq);
-      if (initialStock && initialStock.length > 0) await this
-        .applyInitialStock(product.id, initialStock, businessReq);
+      await this.createProductSkus(product.id, variations ?? [], { price, idCurrency, getPriceForSku }, businessReq);
+      const hasVariations = (variations?.length ?? 0) > 0;
+      if (hasVariations) {
+        const initialStockFromVariations = this.buildInitialStockFromVariations(variations ?? []);
+        if (initialStockFromVariations.length > 0) {
+          await this.applyInitialStock(product.id, initialStockFromVariations, businessReq);
+        }
+      } else if (initialQuantity != null && initialQuantity !== 0) {
+        await this.applyInitialStock(product.id, [{ quantityDelta: initialQuantity }], businessReq);
+      }
 
       if(tags && tags.length > 0) {
         await this.productTagsService
@@ -194,21 +204,31 @@ export class ProductsService extends BasicService<Product> {
       const product = await this.productsGettersService.findOneByBusinessId(data.id, idBusiness);
       const idCatalog = data.idCatalog || product.idCatalog;
       await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(idCatalog, idBusiness);
-      const { images, variations, initialStock } = this.extractProductRelations(data);
+      const { images, variations, initialQuantity, price, idCurrency, getPriceForSku } = this.extractProductRelations(data);
 
       let tags: string[] | undefined;
       if (images && images.length > 0) {
         tags = await this.getTagsFromImages(images.map((image) => image.imageCode));
       }
 
+      if (variations !== undefined) {
+        (data as unknown as Record<string, unknown>).hasVariations = variations.length > 0;
+      }
       await this.productsSettersService.update(product, data, businessReq);
 
       if (images && images.length > 0) await this.updateProductImages(product.id, images, businessReq);
       if (variations !== undefined) {
-        await this.updateProductVariations(product.id, variations, businessReq);
-        await this.syncProductSkus(product.id, businessReq);
+        const updateVariations = variations as ProductVariationInput[];
+        await this.updateProductVariations(product.id, updateVariations, businessReq);
+        await this.syncProductSkus(product.id, { price, idCurrency, getPriceForSku, inputVariations: updateVariations }, businessReq);
       }
-      if (initialStock && initialStock.length > 0) await this.applyInitialStock(product.id, initialStock, businessReq);
+      if (price != null || idCurrency != null) {
+        await this.updateSkusPriceAndCurrency(product.id, { price, idCurrency }, businessReq);
+      }
+      const hasVariationsUpdate = variations !== undefined ? variations.length > 0 : product.hasVariations;
+      if (!hasVariationsUpdate && initialQuantity != null && initialQuantity !== 0) {
+        await this.applyInitialStock(product.id, [{ quantityDelta: initialQuantity }], businessReq);
+      }
       
       if (tags && tags.length > 0) {
         await this.productTagsService
@@ -237,24 +257,51 @@ export class ProductsService extends BasicService<Product> {
     }
 
     /**
-     * Extract images, variations, and tags from product input data and remove them from the data object.
+     * Extract images, variations, initialStock, price, and idCurrency from product input data and remove them from the data object.
+     * Price and idCurrency are stored at SKU level, not product level.
      * @param {CreateProductInput | UpdateProductInput} data - The product input data.
-     * @returns { { images?: ProductImageInput[]; variations?: ProductVariationInput[]; initialStock?: InitialStockItemInput[]; } } Extracted relations.
+     * @returns Extracted relations and price fields for SKUs.
      */
     private extractProductRelations(
       data: CreateProductInput | UpdateProductInput
     ): {
       images?: ProductImageInput[];
-      variations?: ProductVariationInput[];
-      initialStock?: InitialStockItemInput[];
+      variations?: (CreateProductVariationInput | ProductVariationInput)[];
+      initialQuantity?: number;
+      price?: number;
+      idCurrency?: number;
+      getPriceForSku?: (variationOptions: VariationOptions) => { price: number; idCurrency: number } | undefined;
     } {
       const images = data.images;
       const variations = data.variations;
-      const initialStock = data.initialStock;
+      const initialQuantity = data.initialQuantity;
+      const hasVariations = (variations?.length ?? 0) > 0;
+      const getPriceForSku = hasVariations ? this.buildGetPriceForSku(variations ?? []) : undefined;
+      const price = hasVariations ? undefined : data.priceCurrency?.price;
+      const idCurrency = hasVariations ? undefined : data.priceCurrency?.idCurrency;
       delete data.images;
       delete data.variations;
-      delete data.initialStock;
-      return { images, variations, initialStock };
+      delete data.initialQuantity;
+      delete data.priceCurrency;
+      return { images, variations, initialQuantity, price, idCurrency, getPriceForSku };
+    }
+
+    /**
+     * Builds a function that returns price for a SKU based on its variation options.
+     * Uses the first variation that has optionPrices.
+     */
+    private buildGetPriceForSku(
+      variations: (CreateProductVariationInput | ProductVariationInput)[]
+    ): (variationOptions: VariationOptions) => { price: number; idCurrency: number } | undefined {
+      const pricingVariation = variations.find((v) => v.optionPrices?.length);
+      if (!pricingVariation?.optionPrices?.length) return () => undefined;
+      const priceByOption = new Map(
+        pricingVariation.optionPrices.map((p) => [p.option, { price: p.price, idCurrency: p.idCurrency }])
+      );
+      return (variationOptions: VariationOptions) => {
+        const option = variationOptions[pricingVariation.title];
+        return option != null ? priceByOption.get(option) : undefined;
+      };
     }
 
     /**
@@ -320,12 +367,18 @@ export class ProductsService extends BasicService<Product> {
      */
     private async createProductVariations(
       productId: number,
-      variations: ProductVariationInput[],
+      variations: CreateProductVariationInput[],
       businessReq: IBusinessReq
     ): Promise<void> {
       for (const variation of variations) {
-        variation.idProduct = productId;
-        await this.productVariationsSettersService.create(variation, businessReq);
+        await this.productVariationsSettersService.create(
+          {
+            title: variation.title,
+            options: variation.options.map((o) => o.value),
+            idProduct: productId,
+          } as unknown as ProductVariationInput,
+          businessReq
+        );
       }
     }
 
@@ -380,25 +433,25 @@ export class ProductsService extends BasicService<Product> {
             await this.productVariationsSettersService.update(existing, {
               id: variation.id,
               title: variation.title,
-              options: variation.options,
+              options: variation.options.map((o) => o.value),
               idProduct: productId
-            }, businessReq);
+            } as unknown as ProductVariationInput, businessReq);
           }
         } else {
           await this.productVariationsSettersService.create({
             title: variation.title,
-            options: variation.options,
+            options: variation.options.map((o) => o.value),
             idProduct: productId
-          }, businessReq);
+          } as unknown as ProductVariationInput, businessReq);
         }
       }
     }
 
     /**
      * Apply initial stock to SKUs after product creation.
-     * Array index maps to SKU order (same as createProductSkus).
+     * Matches by variationOptions when provided; otherwise by index (backward compat) or single SKU for simple products.
      * @param {number} productId - The product ID
-     * @param {InitialStockItemInput[]} initialStock - Stock adjustments per SKU
+     * @param {InitialStockItemInput[]} initialStock - Stock adjustments per SKU (with optional variationOptions)
      * @param {IBusinessReq} businessReq - The business request
      */
     private async applyInitialStock(
@@ -407,97 +460,204 @@ export class ProductsService extends BasicService<Product> {
       businessReq: IBusinessReq
     ): Promise<void> {
       const skus = await this.productSkusGettersService.findAllByProduct(productId);
-      for (let i = 0; i < initialStock.length && i < skus.length; i++) {
-        const item = initialStock[i];
+      const skuByKey = new Map(skus.map((s) => [this.toSkuKey(s.variationOptions ?? {}), s]));
+      for (const item of initialStock) {
         if (item.quantityDelta === 0) continue;
+        const optionsRecord = this.toVariationOptionsRecord(item.variationOptions);
+        const key = optionsRecord != null ? this.toSkuKey(optionsRecord) : '{}';
+        const sku = skuByKey.get(key);
+        if (!sku) continue;
         await this.productSkusService.adjustStock(
-          {
-            idProductSku: skus[i].id,
-            quantityDelta: item.quantityDelta,
-            notes: item.notes,
-          },
+          { idProductSku: sku.id, quantityDelta: item.quantityDelta, notes: item.notes },
           businessReq,
         );
       }
+    }
+
+    /** Converts VariationOptionItemInput[] to VariationOptions. */
+    private toVariationOptionsRecord(
+      items?: { variationTitle: string; option: string }[]
+    ): VariationOptions | undefined {
+      if (!items?.length) return undefined;
+      return items.reduce((acc, { variationTitle, option }) => {
+        acc[variationTitle] = option;
+        return acc;
+      }, {} as VariationOptions);
+    }
+
+    /** Normalizes variationOptions to a comparable key (sorted keys). */
+    private toSkuKey(variationOptions: VariationOptions): string {
+      return JSON.stringify(
+        Object.keys(variationOptions)
+          .sort()
+          .reduce((acc, k) => {
+            acc[k] = variationOptions[k];
+            return acc;
+          }, {} as VariationOptions)
+      );
     }
 
     /**
      * Create product SKUs. For products without variations: one SKU with empty variationOptions.
      * For products with variations: one SKU per combination (cartesian product).
      * All SKUs are created with quantity 0; use the stock management feature to set quantities.
+     * Price per SKU: from priceData for simple products, or from getPriceForSku for variations.
+     * @param {number} productId - The product ID
+     * @param {CreateProductVariationInput[]} variations - The variations of the product (from CreateProductInput)
+     * @param {Object} priceData - Price data: price/idCurrency for simple, or getPriceForSku for variations
+     * @param {IBusinessReq} businessReq - The business request
      */
     private async createProductSkus(
       productId: number,
-      variations: ProductVariationInput[],
+      variations: (CreateProductVariationInput | ProductVariationInput)[],
+      priceData: {
+        price?: number;
+        idCurrency?: number;
+        getPriceForSku?: (variationOptions: VariationOptions) => { price: number; idCurrency: number } | undefined;
+      },
       businessReq: IBusinessReq
-    ): Promise<void> {
+    ) {
+      const toVariationOptionsArray = (record: VariationOptions) =>
+        Object.entries(record).map(([variationTitle, option]) => ({ variationTitle, option }));
+      const skuPayload = (variationOptions: Record<string, string>, quantity = 0) => {
+        const priceInfo = variations.length === 0
+          ? (priceData.price != null && priceData.idCurrency != null
+            ? { price: priceData.price, idCurrency: priceData.idCurrency }
+            : undefined)
+          : priceData.getPriceForSku?.(variationOptions);
+        return {
+          idProduct: productId,
+          skuCode: generateSkuCode(productId, variationOptions),
+          variationOptions: toVariationOptionsArray(variationOptions),
+          quantity,
+          ...(priceInfo ? { price: priceInfo.price, idCurrency: priceInfo.idCurrency } : {}),
+        };
+      };
       if (variations.length === 0) {
-        const skuCode = generateSkuCode(productId, {});
-        await this.productSkusSettersService.create(
-          { idProduct: productId, skuCode, variationOptions: {}, quantity: 0 },
-          businessReq,
-        );
+        await this.productSkusSettersService.create(skuPayload({}, 0), businessReq);
         return;
       }
-      const variationDefs = variations.map(v => ({ title: v.title, options: v.options }));
-      const titles = variationDefs.map(v => v.title);
-      const optionArrays = variationDefs.map(v => v.options);
+      const variationDefs = variations.map((v) => ({
+        title: v.title,
+        options: v.options.map((o) => o.value),
+        optionsWithStock: v.options,
+      }));
+      const titles = variationDefs.map((v) => v.title);
+      const optionArrays = variationDefs.map((v) => v.options);
       const combinations = cartesianProduct(optionArrays);
       for (const combo of combinations) {
-        const variationOptions: Record<string, string> = {};
+        const variationOptions: VariationOptions = {};
         titles.forEach((title, i) => { variationOptions[title] = combo[i]; });
-        const skuCode = generateSkuCode(productId, variationOptions);
-        await this.productSkusSettersService.create(
-          { idProduct: productId, skuCode, variationOptions, quantity: 0 },
-          businessReq,
-        );
+        await this.productSkusSettersService.create(skuPayload(variationOptions, 0), businessReq);
       }
+    }
+
+    /** Builds InitialStockItemInput[] from variations for applyInitialStock (creates StockMovement records). */
+    private buildInitialStockFromVariations(
+      variations: (CreateProductVariationInput | ProductVariationInput)[]
+    ): InitialStockItemInput[] {
+      if (variations.length === 0) return [];
+      const variationDefs = variations.map((v) => ({
+        title: v.title,
+        options: v.options.map((o) => o.value),
+        optionsWithStock: v.options,
+      }));
+      const titles = variationDefs.map((v) => v.title);
+      const optionArrays = variationDefs.map((v) => v.options);
+      const combinations = cartesianProduct(optionArrays);
+      return combinations
+        .map((combo) => {
+          const variationOptions = titles.map((title, i) => ({ variationTitle: title, option: combo[i] }));
+          const firstOption = variationDefs[0]?.optionsWithStock?.find((o) => o.value === combo[0]);
+          const quantityDelta = firstOption?.initialStock ?? 0;
+          return { variationOptions, quantityDelta };
+        })
+        .filter((item) => item.quantityDelta !== 0);
     }
 
     /**
      * Sync product SKUs to match current variations. Removes obsolete SKUs, creates new ones,
-     * preserves quantity for existing matching SKUs.
+     * preserves quantity and price for existing matching SKUs.
+     * For variations: uses getPriceForSku per SKU when provided, else keeps existing SKU prices.
      */
     private async syncProductSkus(
       productId: number,
+      priceData: {
+        price?: number;
+        idCurrency?: number;
+        getPriceForSku?: (variationOptions: VariationOptions) => { price: number; idCurrency: number } | undefined;
+        inputVariations?: ProductVariationInput[];
+      },
       businessReq: IBusinessReq
     ): Promise<void> {
       const variations = await this.productVariationsGettersService.findAllByProduct(productId);
+      const inputVariations = priceData.inputVariations;
       const existingSkus = await this.productSkusGettersService.findAllByProduct(productId);
       const quantityByKey = new Map<string, number>();
+      const priceByKey = new Map<string, { price: number; idCurrency: number }>();
       for (const sku of existingSkus) {
         const key = JSON.stringify(Object.keys(sku.variationOptions).sort().reduce((acc, k) => {
           acc[k] = sku.variationOptions[k]; return acc;
-        }, {} as Record<string, string>));
+        }, {} as VariationOptions));
         quantityByKey.set(key, sku.quantity);
+        if (sku.price != null && sku.idCurrency != null) {
+          priceByKey.set(key, { price: Number(sku.price), idCurrency: sku.idCurrency });
+        }
       }
+      const firstSkuWithPrice = existingSkus.find(s => s.price != null && s.idCurrency != null);
+      const defaultPrice = priceData.price != null && priceData.idCurrency != null
+        ? { price: priceData.price, idCurrency: priceData.idCurrency }
+        : (firstSkuWithPrice ? { price: Number(firstSkuWithPrice.price!), idCurrency: firstSkuWithPrice.idCurrency! } : undefined);
       for (const sku of existingSkus) {
         await this.productSkusSettersService.remove(sku, businessReq);
       }
+      const toVariationOptionsArray = (record: VariationOptions) =>
+        Object.entries(record).map(([variationTitle, option]) => ({ variationTitle, option }));
+      const skuPayload = (variationOptions: VariationOptions, quantity: number, priceInfo?: { price: number; idCurrency: number }) => ({
+        idProduct: productId,
+        skuCode: generateSkuCode(productId, variationOptions),
+        variationOptions: toVariationOptionsArray(variationOptions),
+        quantity,
+        ...(priceInfo ? { price: priceInfo.price, idCurrency: priceInfo.idCurrency } : {}),
+      });
+      const getPriceForCombo = (variationOptions: VariationOptions) =>
+        priceByKey.get(JSON.stringify(variationOptions)) ??
+        priceData.getPriceForSku?.(variationOptions) ??
+        defaultPrice;
       if (variations.length === 0) {
-        const skuCode = generateSkuCode(productId, {});
         const key = '{}';
         const quantity = quantityByKey.get(key) ?? 0;
-        await this.productSkusSettersService.create(
-          { idProduct: productId, skuCode, variationOptions: {}, quantity },
-          businessReq,
-        );
+        const priceInfo = getPriceForCombo({});
+        await this.productSkusSettersService.create(skuPayload({}, quantity, priceInfo), businessReq);
         return;
       }
-      const variationDefs = variations.map(v => ({ title: v.title, options: v.options }));
-      const titles = variationDefs.map(v => v.title);
-      const optionArrays = variationDefs.map(v => v.options);
+      const variationDefs = variations.map((v) => ({ title: v.title, options: v.options }));
+      const titles = variationDefs.map((v) => v.title);
+      const optionArrays = variationDefs.map((v) => v.options);
       const combinations = cartesianProduct(optionArrays);
+      const firstVariationOptions = inputVariations?.[0]?.options;
       for (const combo of combinations) {
         const variationOptions: Record<string, string> = {};
         titles.forEach((title, i) => { variationOptions[title] = combo[i]; });
-        const key = JSON.stringify(variationOptions);
-        const quantity = quantityByKey.get(key) ?? 0;
-        const skuCode = generateSkuCode(productId, variationOptions);
-        await this.productSkusSettersService.create(
-          { idProduct: productId, skuCode, variationOptions, quantity },
-          businessReq,
-        );
+        const quantity = quantityByKey.get(JSON.stringify(variationOptions)) ?? 0;
+        const priceInfo = getPriceForCombo(variationOptions);
+        await this.productSkusSettersService.create(skuPayload(variationOptions, quantity, priceInfo), businessReq);
+      }
+    }
+
+    /**
+     * Updates price and idCurrency on all SKUs of a product.
+     * Used when updating product with new price/currency without changing variations.
+     */
+    private async updateSkusPriceAndCurrency(
+      productId: number,
+      priceData: { price?: number; idCurrency?: number },
+      businessReq: IBusinessReq
+    ): Promise<void> {
+      if (priceData.price == null || priceData.idCurrency == null) return;
+      const skus = await this.productSkusGettersService.findAllByProduct(productId);
+      for (const sku of skus) {
+        await this.productSkusSettersService.update(sku, { price: priceData.price, idCurrency: priceData.idCurrency }, businessReq);
       }
     }
 

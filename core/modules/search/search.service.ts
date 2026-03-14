@@ -289,11 +289,11 @@ export class SearchService {
         let idx = 1;
         if (productFilters.minPrice != null) {
             params.push(Number(productFilters.minPrice));
-            conditions.push(`p.price IS NOT NULL AND (p.price)::numeric >= ($${idx++})::numeric`);
+            conditions.push(`psi.price IS NOT NULL AND (psi.price)::numeric >= ($${idx++})::numeric`);
         }
         if (productFilters.maxPrice != null) {
             params.push(Number(productFilters.maxPrice));
-            conditions.push(`p.price IS NOT NULL AND (p.price)::numeric <= ($${idx++})::numeric`);
+            conditions.push(`psi.price IS NOT NULL AND (psi.price)::numeric <= ($${idx++})::numeric`);
         }
         if (productFilters.location?.trim()) {
             params.push(`%${productFilters.location.trim()}%`);

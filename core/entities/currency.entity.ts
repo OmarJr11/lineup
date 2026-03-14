@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Product, User } from '.';
+import { ProductSku, User } from '.';
 
 @Entity({ name: 'currencies' })
 export class Currency extends BaseEntity {
@@ -24,6 +24,6 @@ export class Currency extends BaseEntity {
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;
 
-    @OneToMany(() => Product, (product) => product.currency)
-    products?: Product[];
+    @OneToMany(() => ProductSku, (productSku) => productSku.currency)
+    productSkus?: ProductSku[];
 }
