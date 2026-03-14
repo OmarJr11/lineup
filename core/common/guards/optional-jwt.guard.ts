@@ -51,9 +51,9 @@ export class OptionalJwtAuthGuard implements CanActivate {
     }
 
     private getRequest(context: ExecutionContext): Request | null {
-        const httpReq = context.switchToHttp().getRequest();
-        if (httpReq) return httpReq;
         const gqlCtx = GqlExecutionContext.create(context);
-        return gqlCtx.getContext()?.req ?? null;
+        const gqlReq = gqlCtx.getContext()?.req;
+        if (gqlReq) return gqlReq;
+        return context.switchToHttp().getRequest();
     }
 }

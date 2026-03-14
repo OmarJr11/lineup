@@ -34,3 +34,4 @@ export * from './discount-product.entity';
 export * from './discount-product-audit.entity';
 export * from './validation-mail.entity';
 export * from './verification-code.entity';
+export * from './user-search.entity';

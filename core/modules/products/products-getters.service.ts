@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { InfinityScrollInput } from '../../common/dtos';
 import { StatusEnum } from '../../common/enums';
@@ -83,16 +83,37 @@ export class ProductsGettersService extends BasicService<Product> {
 
     /**
      * Find products by IDs with relations. Returns only found ones; ignores missing/deleted.
+     * Uses repository.find when query builder returns empty (avoids parameter/join issues).
      * @param {number[]} ids - Product IDs to fetch.
      * @returns {Promise<Product[]>} Array of found products.
      */
     async findManyWithRelations(ids: number[]): Promise<Product[]> {
         if (!ids?.length) return [];
         const uniqueIds = [...new Set(ids)];
-        return await this.getQueryRelations(this.createQueryBuilder('p'))
+        let products = await this.getQueryRelations(this.createQueryBuilder('p'))
             .where('p.id IN (:...ids)', { ids: uniqueIds })
             .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
             .getMany();
+        if (products.length === 0) {
+            products = await this.find({
+                where: { id: In(uniqueIds), status: Not(StatusEnum.DELETED) },
+                relations: [
+                    'productFiles',
+                    'productFiles.file',
+                    'catalog',
+                    'catalog.image',
+                    'business',
+                    'business.image',
+                    'business.locations',
+                    'currency',
+                    'variations',
+                    'skus',
+                    'productTags',
+                    'productTags.tag',
+                ],
+            });
+        }
+        return products;
     }
 
     /**
@@ -236,6 +257,34 @@ export class ProductsGettersService extends BasicService<Product> {
             .setParameters(subQuery.getParameters())
             .orderBy(`p.${orderBy}`, order)
             .getMany();
+    }
+
+    /**
+     * Gets product IDs by tag IDs, in random order.
+     * Excludes deleted products, catalogs, and businesses.
+     * @param {number[]} tagIds - Tag IDs to filter by.
+     * @param {number} limit - Max number of product IDs to return.
+     * @returns {Promise<number[]>} Array of product IDs.
+     */
+    async findProductIdsByTagIds(tagIds: number[], limit: number): Promise<number[]> {
+        if (tagIds.length === 0) return [];
+        const rows = await this.createQueryBuilder('p')
+            .innerJoin('p.productTags', 'pt')
+            .innerJoin('pt.tag', 't', 't.id IN (:...tagIds)', { tagIds })
+            .innerJoin('p.catalog', 'c', 'c.status <> :catalogStatus', {
+                catalogStatus: StatusEnum.DELETED,
+            })
+            .innerJoin('p.business', 'b', 'b.status <> :businessStatus', {
+                businessStatus: StatusEnum.DELETED,
+            })
+            .where('p.status <> :productStatus', { productStatus: StatusEnum.DELETED })
+            .select('p.id', 'id')
+            .orderBy('RANDOM()')
+            .limit(limit)
+            .getRawMany<{ id: string }>();
+        return (rows ?? [])
+            .map((r) => Number(r?.id))
+            .filter((id): id is number => !Number.isNaN(id));
     }
 
     /**

@@ -141,6 +141,38 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
     }
 
     /**
+     * Gets distinct tag IDs from products the user has liked.
+     * Excludes deleted products and deleted reactions.
+     * @param {number} idUser - The user ID.
+     * @param {number} [limit=10] - Max number of tag IDs to return.
+     * @returns {Promise<number[]>} Array of tag IDs.
+     */
+    async getTagIdsFromLikedProducts(
+        idUser: number,
+        limit: number = 10,
+    ): Promise<number[]> {
+        const rows = await this.createQueryBuilder('pr')
+            .innerJoin('pr.product', 'p', 'p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .innerJoin('p.productTags', 'pt')
+            .innerJoin('pt.tag', 't')
+            .where('pr.idCreationUser = :idUser', { idUser })
+            .andWhere('pr.type = :type', { type: ReactionTypeEnum.LIKE })
+            .andWhere('pr.status <> :reactionStatus', {
+                reactionStatus: StatusEnum.DELETED,
+            })
+            .select('t.id', 'idTag')
+            .orderBy('t.id')
+            .getRawMany<{ idTag: string }>();
+        const allIds = (rows ?? [])
+            .map((r) => Number(r?.idTag))
+            .filter((id): id is number => !Number.isNaN(id));
+        const uniqueIds = [...new Set(allIds)];
+        return uniqueIds.slice(0, limit);
+    }
+
+    /**
      * Count reactions by product ID and type.
      * @param {number} idProduct - The product ID.
      * @param {ReactionTypeEnum} type - The reaction type.

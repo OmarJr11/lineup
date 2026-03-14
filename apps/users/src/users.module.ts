@@ -18,6 +18,7 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
+import { CollectionsModule } from './collections/collections.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
 import { StatesModule } from './states/states.module';
 
@@ -95,6 +96,7 @@ import { StatesModule } from './states/states.module';
     WishlistsModule,
     VisitsModule,
     SearchModule,
+    CollectionsModule,
     VerificationCodesModule,
     StatesModule,
   ],

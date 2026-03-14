@@ -41,3 +41,4 @@ export * from './discount.schema';
 export * from './discount-product.schema';
 export * from './discount-product-audit.schema';
 export * from './stock-movement.schema';
+export * from './product-collection.schema';
