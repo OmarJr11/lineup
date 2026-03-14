@@ -1,10 +1,10 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
+import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
+import { PriceCurrencyOnlyForSimpleProductsValidator } from '../../../common/validators/price-currency-only-for-simple-products.validator';
 import { ProductImageInput } from './product-image.input';
-import { ProductVariationInput } from './product-variation.input';
-import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
-import { InitialStockItemInput } from '../../product-skus/dto/initial-stock-item.input';
+import { CreateProductVariationInput } from './create-product-variation.input';
+import { PriceCurrencyInput } from './price-currency.input';
 
 @InputType()
 export class CreateProductInput {
@@ -28,19 +28,13 @@ export class CreateProductInput {
     @IsString()
     description: string;
 
-    @Field({ nullable: true })
+    /** Price for products without variations. Must be omitted when variations are provided. */
+    @Field(() => PriceCurrencyInput, { nullable: true })
     @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    price?: number;
-
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    idCurrency?: number;
+    @Validate(PriceCurrencyOnlyForSimpleProductsValidator)
+    @ValidateNested()
+    @Type(() => PriceCurrencyInput)
+    priceCurrency?: PriceCurrencyInput;
 
     @Field()
     @IsNotEmpty()
@@ -55,23 +49,21 @@ export class CreateProductInput {
     @Type(() => ProductImageInput)
     images: ProductImageInput[];
 
-    @Field(() => [String])
-    @IsNotEmpty()
-    @IsArray()
-    @IsString({ each: true })
-    tags: string[];
-
-    @Field(() => [ProductVariationInput], { nullable: true })
+    /** Variations with options (value + initialStock). Stock is applied via adjustStock to create StockMovement records. */
+    @Field(() => [CreateProductVariationInput], { nullable: true })
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => ProductVariationInput)
-    variations?: ProductVariationInput[];
+    @Type(() => CreateProductVariationInput)
+    variations?: CreateProductVariationInput[];
 
-    @Field(() => [InitialStockItemInput], { nullable: true })
+    /** For simple products only. Stock for variations is defined in each option via initialStock. */
+    @Field(() => Int, { nullable: true })
     @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => InitialStockItemInput)
-    initialStock?: InitialStockItemInput[];
+    @Type(() => Number)
+    @IsNumber()
+    initialQuantity?: number;
+
+    @IsEmpty()
+    hasVariations?: boolean;
 }

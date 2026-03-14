@@ -1,11 +1,12 @@
 import GraphQLJSON from 'graphql-type-json';
+import { VariationOptions } from '../common/types';
 import { StatusEnum } from '../common/enums';
-import { BusinessSchema, ProductSchema } from '.';
+import { BusinessSchema, CurrencySchema, ProductSchema } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 /**
  * GraphQL schema for ProductSku.
- * variationOptions uses JSON scalar to expose Record<string, string> (e.g. {"Color":"Amarillo","Talla":"M"}).
+ * variationOptions uses JSON scalar to expose VariationOptions (e.g. {"Color":"Amarillo","Talla":"M"}).
  */
 @ObjectType()
 export class ProductSkuSchema {
@@ -25,13 +26,19 @@ export class ProductSkuSchema {
      * Variation options as key-value object, e.g. {"Color":"Amarillo","Talla":"M"}.
      */
     @Field(() => GraphQLJSON, { description: 'Variation options as key-value object' })
-    variationOptions: Record<string, string>;
+    variationOptions: VariationOptions;
 
     @Field(() => Int)
     quantity: number;
 
     @Field(() => Float, { nullable: true })
     price?: number;
+
+    @Field(() => Int, { nullable: true })
+    idCurrency?: number;
+
+    @Field(() => CurrencySchema, { nullable: true })
+    currency?: CurrencySchema;
 
     @Field(() => StatusEnum)
     status: StatusEnum;

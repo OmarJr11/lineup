@@ -54,7 +54,7 @@ export class ProductSearchIndex extends BaseEntity {
     @Column({ type: 'decimal', precision: 3, scale: 2, name: 'rating_average', default: 0 })
     ratingAverage: number;
 
-    /** Denormalized from Product: price. Optional, used for filtering search by price range. */
+    /** Denormalized from Product SKUs (min price). Optional, used for filtering search by price range. */
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     price?: number;
 

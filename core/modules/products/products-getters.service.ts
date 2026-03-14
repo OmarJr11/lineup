@@ -105,9 +105,9 @@ export class ProductsGettersService extends BasicService<Product> {
                     'business',
                     'business.image',
                     'business.locations',
-                    'currency',
                     'variations',
                     'skus',
+                    'skus.currency',
                     'productTags',
                     'productTags.tag',
                 ],
@@ -325,7 +325,6 @@ export class ProductsGettersService extends BasicService<Product> {
                 'locations',
                 'locations.status <> :statusLocation', { statusLocation: StatusEnum.DELETED }
             )
-            .leftJoinAndSelect('p.currency', 'currency')
             .leftJoinAndSelect(
                 'p.variations',
                 'variations',
@@ -336,6 +335,7 @@ export class ProductsGettersService extends BasicService<Product> {
                 'skus',
                 'skus.status <> :statusSkus', { statusSkus: StatusEnum.DELETED }
             )
+            .leftJoinAndSelect('skus.currency', 'currency')
             .leftJoinAndSelect(
                 'p.reactions',
                 'reactions',

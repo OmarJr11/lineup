@@ -1,10 +1,10 @@
-import { Field, InputType } from '@nestjs/graphql';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
+import { Field, InputType, Int } from '@nestjs/graphql';
+import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PriceCurrencyOnlyForSimpleProductsValidator } from '../../../common/validators/price-currency-only-for-simple-products.validator';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
-import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
-import { InitialStockItemInput } from '../../product-skus/dto/initial-stock-item.input';
+import { PriceCurrencyInput } from './price-currency.input';
 
 @InputType()
 export class UpdateProductInput {
@@ -36,19 +36,13 @@ export class UpdateProductInput {
   @IsString()
   description?: string;
 
-  @Field({ nullable: true })
+  /** Price for products without variations. Must be omitted when variations are provided. */
+  @Field(() => PriceCurrencyInput, { nullable: true })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Validate(PriceCurrencyPairValidator)
-  price?: number;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Validate(PriceCurrencyPairValidator)
-  idCurrency?: number;
+  @Validate(PriceCurrencyOnlyForSimpleProductsValidator)
+  @ValidateNested()
+  @Type(() => PriceCurrencyInput)
+  priceCurrency?: PriceCurrencyInput;
 
   @Field()
   @IsOptional()
@@ -71,10 +65,13 @@ export class UpdateProductInput {
   @Type(() => ProductVariationInput)
   variations?: ProductVariationInput[];
 
-  @Field(() => [InitialStockItemInput], { nullable: true })
+  /** For simple products only. Stock for variations is defined in each option via initialStock. */
+  @Field(() => Int, { nullable: true })
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => InitialStockItemInput)
-  initialStock?: InitialStockItemInput[];
+  @Type(() => Number)
+  @IsNumber()
+  initialQuantity?: number;
+
+  @IsEmpty()
+  hasVariations?: boolean;
 }

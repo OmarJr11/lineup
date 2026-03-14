@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { VariationOptions } from '../common/types';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Product, StockMovement } from './';
+import { Business, Currency, Product, StockMovement } from './';
 
 /**
  * Entity representing a Stock Keeping Unit (SKU) for a product.
@@ -9,6 +10,7 @@ import { Business, Product, StockMovement } from './';
  * or a product without variations. The quantity field holds the stock for that combination.
  */
 @Entity({ name: 'product_skus' })
+@Check(`(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`)
 export class ProductSku extends BaseEntity {
     @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
@@ -30,15 +32,22 @@ export class ProductSku extends BaseEntity {
      * Empty object {} for products without variations.
      */
     @Column({ type: 'jsonb', name: 'variation_options', default: {} })
-    variationOptions: Record<string, string>;
+    variationOptions: VariationOptions;
 
     /** Stock quantity for this SKU. */
     @Column({ type: 'int', default: 0 })
     quantity: number;
 
-    /** Optional price override per SKU (if it differs from the product base price). */
+    /** Price for this SKU. Must be paired with idCurrency when set. */
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     price?: number;
+
+    @Column('int8', { name: 'id_currency', nullable: true })
+    idCurrency?: number;
+
+    @ManyToOne(() => Currency, (currency) => currency.productSkus, { nullable: true })
+    @JoinColumn([{ name: 'id_currency', referencedColumnName: 'id' }])
+    currency?: Currency;
 
     @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
     status: StatusEnum;

@@ -2,7 +2,6 @@ import { StatusEnum } from '../common/enums';
 import {
     BusinessSchema,
     CatalogSchema,
-    CurrencySchema,
     DiscountProductSchema,
     ProductFileSchema,
     ProductRatingSchema,
@@ -29,15 +28,6 @@ export class ProductSchema{
 
     @Field()
     description: string;
-
-    @Field(() => Float, { nullable: true })
-    price?: number;
-
-    @Field(() => Int, { nullable: true })
-    idCurrency?: number;
-
-    @Field(() => CurrencySchema, { nullable: true })
-    currency?: CurrencySchema;
 
     @Field(() => Int)
     likes: number;
@@ -72,6 +62,9 @@ export class ProductSchema{
 
     @Field(() => [ProductFileSchema], { nullable: true })
     productFiles?: ProductFileSchema[];
+
+    @Field()
+    hasVariations: boolean;
 
     @Field(() => [ProductVariationSchema], { nullable: true })
     variations?: ProductVariationSchema[];

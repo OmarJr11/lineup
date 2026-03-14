@@ -1,12 +1,18 @@
-import { AfterLoad, Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { AfterLoad, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { StatusEnum } from '../common/enums';
-import { Business, Catalog, Currency, DiscountProduct, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductTag, Tag, ProductVariation, ProductVisit } from '.';
+import { Business, Catalog, DiscountProduct, ProductFile, ProductRating, ProductReaction, ProductSearchIndex, ProductSku, ProductTag, Tag, ProductVariation, ProductVisit } from '.';
 
 export const PRODUCT_FILE_ORDER_ASC = (a: ProductFile, b: ProductFile) => a.order - b.order;
 
+/** Sorts SKUs by price ascending. SKUs with null price are placed at the end. */
+export const PRODUCT_SKU_PRICE_ASC = (a: ProductSku, b: ProductSku) => {
+    const priceA = a.price != null ? Number(a.price) : Infinity;
+    const priceB = b.price != null ? Number(b.price) : Infinity;
+    return priceA - priceB;
+};
+
 @Entity({ name: 'products' })
-@Check(`(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`)
 export class Product extends BaseEntity {
     @PrimaryGeneratedColumn({ type: 'int8' })
     id: number;
@@ -19,16 +25,6 @@ export class Product extends BaseEntity {
 
     @Column({ type: 'text' })
     description: string;
-
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-    price?: number;
-
-    @Column('int8', { name: 'id_currency', nullable: true })
-    idCurrency?: number;
-
-    @ManyToOne(() => Currency, (currency) => currency.products)
-    @JoinColumn([{ name: 'id_currency', referencedColumnName: 'id' }])
-    currency?: Currency;
 
     @Column('int8', { default: 0 })
     likes: number;
@@ -73,13 +69,17 @@ export class Product extends BaseEntity {
     productFiles?: ProductFile[];
 
     /**
-     * Sorts productFiles by order field in ascending order after entity is loaded.
+     * Sorts productFiles by order and skus by price after entity is loaded.
      */
     @AfterLoad()
-    sortProductFilesByOrder(): void {
-        if (!this.productFiles?.length) return;
-        else this.productFiles.sort(PRODUCT_FILE_ORDER_ASC);
+    sortRelationsAfterLoad(): void {
+        if (this.productFiles?.length) this.productFiles.sort(PRODUCT_FILE_ORDER_ASC);
+        if (this.skus?.length) this.skus.sort(PRODUCT_SKU_PRICE_ASC);
     }
+
+    /** Whether this product has variations (e.g. Color, Size). */
+    @Column({ type: 'boolean', name: 'has_variations', default: false })
+    hasVariations: boolean;
 
     @OneToMany(() => ProductVariation, (variation) => variation.product)
     variations?: ProductVariation[];

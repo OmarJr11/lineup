@@ -107,7 +107,8 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
                     { statusProductFile: StatusEnum.DELETED }
                 )
                 .leftJoinAndSelect('productFiles.file', 'file')
-                .leftJoinAndSelect('product.currency', 'currency')
+                .leftJoinAndSelect('product.skus', 'skus', 'skus.status <> :statusSkus', { statusSkus: StatusEnum.DELETED })
+                .leftJoinAndSelect('skus.currency', 'currency')
                 .leftJoinAndSelect(
                     'product.reactions',
                     'reactions',

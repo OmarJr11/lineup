@@ -35,6 +35,12 @@ export class UpdateProductSkuInput {
 
     @Field({ nullable: true })
     @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    idCurrency?: number;
+
+    @Field({ nullable: true })
+    @IsOptional()
     @IsString()
     @MaxLength(100)
     skuCode?: string;

@@ -52,7 +52,7 @@ export class SearchIndexService {
 
     /**
      * Builds plain text from a Product for search_vector.
-     * Includes: title, subtitle, description, status, idCurrency, variations, skus.
+     * Includes: title, subtitle, description, status, variations, skus.
      * @param {Product} product - Product entity with relations.
      * @returns {string} Plain text from the product.
      */
@@ -63,7 +63,10 @@ export class SearchIndexService {
             product.description ?? '',
             product.status ?? '',
         ];
-        if (product.idCurrency != null) parts.push(String(product.idCurrency));
+        if (product.skus?.some(s => s.idCurrency != null)) {
+            const ids = [...new Set(product.skus.map(s => s.idCurrency).filter((id): id is number => id != null))];
+            ids.forEach(id => parts.push(String(id)));
+        }
         if (product.catalog?.title) parts.push(product.catalog.title);
         if (product.business?.name) parts.push(product.business.name);
         if (product.variations?.length) {
@@ -134,7 +137,8 @@ export class SearchIndexService {
         const likes = product.likes ?? 0;
         const visits = product.visits ?? 0;
         const ratingAverage = product.ratingAverage ?? 0;
-        const price = product.price ?? null;
+        const skuPrices = product.skus?.map(s => s.price).filter((p): p is number => p != null) ?? [];
+        const price = skuPrices.length > 0 ? Math.min(...skuPrices.map(Number)) : null;
         const locationsText =
             product.business?.locations
                 ?.map((l) => l.formattedAddress)

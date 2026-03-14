@@ -1,27 +1,23 @@
 import { Field, InputType } from '@nestjs/graphql';
 import {
     IsArray,
-    IsEmpty,
     IsNotEmpty,
-    IsNumber,
     IsOptional,
     IsString,
     MaxLength,
     MinLength,
-    ValidateNested
+    ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProductVariationOptionInput } from './product-variation-option.input';
 import { VariationOptionPriceInput } from './variation-option-price.input';
 
+/**
+ * Input for creating a product variation (used in CreateProductInput).
+ * Only includes fields needed for creation; id and idProduct are set internally.
+ */
 @InputType()
-export class ProductVariationInput {
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsNumber()
-    @Type(() => Number)
-    id?: number;
-
+export class CreateProductVariationInput {
     @Field()
     @IsNotEmpty()
     @MinLength(3)
@@ -43,7 +39,4 @@ export class ProductVariationInput {
     @ValidateNested({ each: true })
     @Type(() => VariationOptionPriceInput)
     optionPrices?: VariationOptionPriceInput[];
-
-    @IsEmpty()
-    idProduct: number;
 }
