@@ -2,11 +2,11 @@ import { Field, InputType } from '@nestjs/graphql';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 /**
- * Single option within a variation for update (e.g. "Rojo").
- * Price and quantity are not updated via product update.
+ * Single option within a variation for creation (e.g. "Rojo").
+ * Stock is not applied on create; use update to set initial stock per option.
  */
 @InputType()
-export class ProductVariationOptionInput {
+export class CreateProductVariationOptionInput {
     @Field()
     @IsNotEmpty()
     @IsString()

@@ -15,7 +15,7 @@ import { ProductSku } from '../../entities';
 export class ProductSkusGettersService extends BasicService<ProductSku> {
     private readonly logger = new Logger(ProductSkusGettersService.name);
     private readonly rList = productSkusResponses.list;
-    private readonly relations = ['product', 'business', 'modificationBusiness'];
+    private readonly relations = ['product', 'business', 'currency'];
 
     constructor(
         @InjectRepository(ProductSku)
@@ -83,6 +83,7 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
     ): Promise<ProductSku[]> {
         return await this.createQueryBuilder('ps')
             .leftJoinAndSelect('ps.product', 'product')
+            .leftJoinAndSelect('ps.currency', 'currency')
             .where('ps.idProduct = :idProduct', { idProduct })
             .andWhere('ps.idCreationBusiness = :idBusiness', { idBusiness })
             .andWhere('ps.status <> :status', { status: StatusEnum.DELETED })

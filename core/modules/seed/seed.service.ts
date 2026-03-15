@@ -13,11 +13,8 @@ import { UpdateBusinessInput } from '../businesses/dto/update-business.input';
 import { CreateCatalogInput } from '../catalogs/dto/create-catalog.input';
 import { ProductsService } from '../products/products.service';
 import { CreateProductInput } from '../products/dto/create-product.input';
+import { CreateProductVariationInput } from '../products/dto/create-product-variation.input';
 import { ProductImageInput } from '../products/dto/product-image.input';
-import { ProductVariationInput } from '../products/dto/product-variation.input';
-
-/** Default currency ID for USD in seed data. */
-const USD_CURRENCY_ID = 1;
 
 /**
  * Service for seeding development data.
@@ -113,29 +110,17 @@ export class SeedService {
             imageCode: img.imageCode,
             order: img.order
         })) as ProductImageInput[];
-        const hasVariations = (item.variations?.length ?? 0) > 0;
-        const priceCurrency = item.price != null
-            ? { price: item.price, idCurrency: USD_CURRENCY_ID }
-            : undefined;
-        const variations = item.variations?.map((v) => {
-            const options = v.options.map((opt) => ({ value: opt }));
-            const base = { title: v.title, options };
-            if (!hasVariations || item.price == null) return base;
-            const optionPrices = v.options.map((opt) => ({
-                option: opt,
-                price: item.price!,
-                idCurrency: USD_CURRENCY_ID
-            }));
-            return { ...base, optionPrices };
-        }) as ProductVariationInput[] | undefined;
+        const variations = item.variations?.map((v) => ({
+            title: v.title,
+            options: v.options.map((opt) => ({ value: opt }))
+        })) as CreateProductVariationInput[] | undefined;
         const productData: CreateProductInput = {
             title: item.title,
             subtitle: item.subtitle,
             description: item.description,
             idCatalog: catalog.id,
             images,
-            variations,
-            priceCurrency: !hasVariations ? priceCurrency : undefined
+            variations
         };
         await this.productsService.create(productData, businessReq);
     }

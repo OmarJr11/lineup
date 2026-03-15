@@ -12,7 +12,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProductVariationOptionInput } from './product-variation-option.input';
-import { VariationOptionPriceInput } from './variation-option-price.input';
 
 @InputType()
 export class ProductVariationInput {
@@ -35,14 +34,6 @@ export class ProductVariationInput {
     @ValidateNested({ each: true })
     @Type(() => ProductVariationOptionInput)
     options: ProductVariationOptionInput[];
-
-    /** Price per option. Assigns the corresponding price to each SKU. */
-    @Field(() => [VariationOptionPriceInput], { nullable: true })
-    @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => VariationOptionPriceInput)
-    optionPrices?: VariationOptionPriceInput[];
 
     @IsEmpty()
     idProduct: number;

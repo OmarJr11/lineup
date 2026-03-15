@@ -1,10 +1,18 @@
-import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsArray, IsEmpty, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
+import { Field, InputType } from '@nestjs/graphql';
+import {
+  IsArray,
+  IsEmpty,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { PriceCurrencyOnlyForSimpleProductsValidator } from '../../../common/validators/price-currency-only-for-simple-products.validator';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
-import { PriceCurrencyInput } from './price-currency.input';
 
 @InputType()
 export class UpdateProductInput {
@@ -36,14 +44,6 @@ export class UpdateProductInput {
   @IsString()
   description?: string;
 
-  /** Price for products without variations. Must be omitted when variations are provided. */
-  @Field(() => PriceCurrencyInput, { nullable: true })
-  @IsOptional()
-  @Validate(PriceCurrencyOnlyForSimpleProductsValidator)
-  @ValidateNested()
-  @Type(() => PriceCurrencyInput)
-  priceCurrency?: PriceCurrencyInput;
-
   @Field()
   @IsOptional()
   @IsNotEmpty()
@@ -64,13 +64,6 @@ export class UpdateProductInput {
   @ValidateNested({ each: true })
   @Type(() => ProductVariationInput)
   variations?: ProductVariationInput[];
-
-  /** For simple products only. Stock for variations is defined in each option via initialStock. */
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  initialQuantity?: number;
 
   @IsEmpty()
   hasVariations?: boolean;

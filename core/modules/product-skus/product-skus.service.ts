@@ -15,6 +15,7 @@ import { ProductSkusGettersService } from './product-skus-getters.service';
 import { ProductSkusSettersService } from './product-skus-setters.service';
 import { StockMovementsSettersService } from '../stock-movements/stock-movements-setters.service';
 import { UpdateProductSkuInput } from './dto/update-product-sku.input';
+import { UpdateProductSkusInput } from './dto/update-product-skus.input';
 import { AdjustStockInput } from './dto/adjust-stock.input';
 import { RegisterPurchaseInput } from './dto/register-purchase.input';
 import { IBusinessReq } from '../../common/interfaces';
@@ -97,7 +98,8 @@ export class ProductSkusService extends BasicService<ProductSku> {
     }
 
     /**
-     * Update a product SKU (e.g. quantity or price).
+     * Update a product SKU (price, currency, quantity).
+     * Validates that the SKU belongs to the business.
      * @param {UpdateProductSkuInput} input - The update data.
      * @param {IBusinessReq} businessReq - The business request.
      * @returns {Promise<ProductSku>} The updated product SKU.
@@ -106,8 +108,46 @@ export class ProductSkusService extends BasicService<ProductSku> {
         input: UpdateProductSkuInput,
         businessReq: IBusinessReq,
     ): Promise<ProductSku> {
-        const sku = await this.productSkusGettersService.findOne(input.id);
-        return await this.productSkusSettersService.update(sku, input, businessReq);
+        const sku = await this.productSkusGettersService.findOneByBusinessId(input.id, businessReq.businessId);
+        await this.productSkusSettersService.update(sku, input, businessReq);
+        return await this.productSkusGettersService.findOneWithRelations(input.id);
+    }
+
+    /**
+     * Update multiple SKUs. Each item specifies the SKU id and the fields to update.
+     * Validates that each SKU belongs to the business.
+     * @param {UpdateProductSkusInput} input - The update data (array of SKU updates).
+     * @param {IBusinessReq} businessReq - The business request.
+     * @returns {Promise<ProductSku[]>} The updated product SKUs.
+     */
+    @Transactional()
+    async updateAllSkusByProduct(
+        input: UpdateProductSkusInput,
+        businessReq: IBusinessReq,
+    ): Promise<ProductSku[]> {
+        const updatedIds: number[] = [];
+        for (const item of input.skus) {
+            const sku = await this.productSkusGettersService.findOneByBusinessId(item.id, businessReq.businessId);
+            if (item.price !== undefined && item.idCurrency !== undefined) {
+                await this.productSkusSettersService.update(sku, {
+                    price: item.price,
+                    idCurrency: item.idCurrency,
+                }, businessReq);
+            }
+            if (item.quantity !== undefined) {
+                const quantityDelta = item.quantity - sku.quantity;
+                if (quantityDelta !== 0) {
+                    await this.adjustStock(
+                        { idProductSku: item.id, quantityDelta, notes: 'Update from product SKUs edit' },
+                        businessReq,
+                    );
+                }
+            }
+            updatedIds.push(item.id);
+        }
+        return Promise.all(
+            updatedIds.map((id) => this.productSkusGettersService.findOneWithRelations(id)),
+        );
     }
 
     /**

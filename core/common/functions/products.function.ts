@@ -5,7 +5,7 @@ import { ProductRatingSchema, ProductSchema, ProductReactionSchema, ProductSkuSc
  * Maps ProductSku entity to ProductSkuSchema.
  * variationOptions (VariationOptions) is compatible with the JSON scalar in the schema.
  */
-function toProductSkuSchema(sku: ProductSku): ProductSkuSchema {
+export function toProductSkuSchema(sku: ProductSku): ProductSkuSchema {
     return {
         ...sku,
         variationOptions: sku.variationOptions ?? {},

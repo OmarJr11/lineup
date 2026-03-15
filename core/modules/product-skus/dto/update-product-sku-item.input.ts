@@ -1,23 +1,21 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    IsString,
-    MaxLength,
     Min,
     Validate,
 } from 'class-validator';
 import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
 
 /**
- * Input for updating a product SKU (price, currency, quantity).
+ * Input for updating a single SKU (price, currency, quantity).
  * price and idCurrency must both be provided or both omitted.
  */
 @InputType()
-export class UpdateProductSkuInput {
-    @Field()
+export class UpdateProductSkuItemInput {
+    @Field(() => Int)
     @IsNotEmpty()
     @Type(() => Number)
     @IsNumber()
@@ -43,10 +41,4 @@ export class UpdateProductSkuInput {
     @IsNumber()
     @Validate(PriceCurrencyPairValidator)
     idCurrency?: number;
-
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsString()
-    @MaxLength(100)
-    skuCode?: string;
 }

@@ -13,7 +13,6 @@ import { InfinityScrollInput } from '../../../../core/common/dtos';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => BusinessFollowerSchema)
-@UseGuards(JwtAuthGuard, TokenGuard)
 export class BusinessesResolver {
     constructor(
         private readonly businessesService: BusinessesService,
@@ -27,6 +26,7 @@ export class BusinessesResolver {
      * @param {IUserReq} user - The authenticated user.
      * @returns {Promise<BusinessFollowerSchema>} The created or existing business follower.
      */
+    @UseGuards(JwtAuthGuard, TokenGuard)
     @Mutation(() => BusinessFollowerSchema, { name: 'followBusiness' })
     async followBusiness(
         @Args('idBusiness', { type: () => Int }) idBusiness: number,
@@ -42,6 +42,7 @@ export class BusinessesResolver {
      * @param {IUserReq} user - The authenticated user.
      * @returns {Promise<boolean>} True if the unfollow was successful.
      */
+    @UseGuards(JwtAuthGuard, TokenGuard)
     @Mutation(() => Boolean, { name: 'unfollowBusiness' })
     async unfollowBusiness(
         @Args('idBusiness', { type: () => Int }) idBusiness: number,

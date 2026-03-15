@@ -13,7 +13,6 @@ import { ProductsService } from '../../../../core/modules/products/products.serv
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => ProductReactionSchema)
-@UseGuards(JwtAuthGuard, TokenGuard)
 export class ProductsResolver {
     constructor(
         private readonly productReactionsService: ProductReactionsService,
@@ -123,6 +122,7 @@ export class ProductsResolver {
      * @param {IUserReq} user - The authenticated user.
      * @returns {Promise<ProductReactionSchema>} The created or updated product reaction.
      */
+    @UseGuards(JwtAuthGuard, TokenGuard)
     @Mutation(() => ProductReactionSchema, { name: 'likeProduct' })
     async likeProduct(
         @Args('idProduct', { type: () => Int }) idProduct: number,
@@ -138,6 +138,7 @@ export class ProductsResolver {
      * @param {IUserReq} user - The authenticated user.
      * @returns {Promise<boolean>} True if the like was removed successfully.
      */
+    @UseGuards(JwtAuthGuard, TokenGuard)
     @Mutation(() => Boolean, { name: 'unlikeProduct' })
     async unlikeProduct(
         @Args('idProduct', { type: () => Int }) idProduct: number,
