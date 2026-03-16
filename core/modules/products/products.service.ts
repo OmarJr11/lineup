@@ -428,7 +428,7 @@ export class ProductsService extends BasicService<Product> {
     ) {
       const toVariationOptionsArray = (record: VariationOptions) =>
         Object.entries(record).map(([variationTitle, option]) => ({ variationTitle, option }));
-      const skuPayload = (variationOptions: Record<string, string>, quantity = 0) => {
+      const skuPayload = (variationOptions: Record<string, string>, quantity: number | null = null) => {
         const priceInfo = variations.length === 0
           ? (priceData.price != null && priceData.idCurrency != null
             ? { price: priceData.price, idCurrency: priceData.idCurrency }
@@ -443,7 +443,7 @@ export class ProductsService extends BasicService<Product> {
         };
       };
       if (variations.length === 0) {
-        await this.productSkusSettersService.create(skuPayload({}, 0), businessReq);
+        await this.productSkusSettersService.create(skuPayload({}), businessReq);
         return;
       }
       const variationDefs = variations.map((v) => ({
@@ -456,7 +456,7 @@ export class ProductsService extends BasicService<Product> {
       for (const combo of combinations) {
         const variationOptions: VariationOptions = {};
         titles.forEach((title, i) => { variationOptions[title] = combo[i]; });
-        await this.productSkusSettersService.create(skuPayload(variationOptions, 0), businessReq);
+        await this.productSkusSettersService.create(skuPayload(variationOptions), businessReq);
       }
     }
 
@@ -481,7 +481,7 @@ export class ProductsService extends BasicService<Product> {
         idProduct: productId,
         skuCode: generateSkuCode(productId, variationOptions),
         variationOptions: toVariationOptionsArray(variationOptions),
-        quantity: 0,
+        quantity: null,
       });
       if (variations.length === 0) {
         await this.productSkusSettersService.create(skuPayload({}), businessReq);
@@ -508,7 +508,7 @@ export class ProductsService extends BasicService<Product> {
     ): Promise<void> {
       const skus = await this.productSkusGettersService.findAllByProduct(productId);
       for (const sku of skus) {
-        await this.productSkusSettersService.update(sku, { quantity: 0, price: null, idCurrency: null }, businessReq);
+        await this.productSkusSettersService.update(sku, { quantity: null, price: null, idCurrency: null }, businessReq);
       }
     }
 

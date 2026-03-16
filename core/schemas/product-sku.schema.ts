@@ -28,8 +28,8 @@ export class ProductSkuSchema {
     @Field(() => GraphQLJSON, { description: 'Variation options as key-value object' })
     variationOptions: VariationOptions;
 
-    @Field(() => Int)
-    quantity: number;
+    @Field(() => Int, { nullable: true })
+    quantity?: number | null;
 
     @Field(() => Float, { nullable: true })
     price?: number;

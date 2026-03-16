@@ -45,7 +45,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
             const payload = {
                 ...data,
                 variationOptions: variationOptionsRecord,
-                quantity: data.quantity ?? 0,
+                quantity: data.quantity ?? null,
             };
             return await this.save(payload, businessReq);
         } catch (error) {

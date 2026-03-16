@@ -34,9 +34,9 @@ export class ProductSku extends BaseEntity {
     @Column({ type: 'jsonb', name: 'variation_options', default: {} })
     variationOptions: VariationOptions;
 
-    /** Stock quantity for this SKU. */
-    @Column({ type: 'int', default: 0 })
-    quantity: number;
+    /** Stock quantity for this SKU. Null when not yet set (e.g. on product creation). */
+    @Column({ type: 'int', nullable: true })
+    quantity?: number | null;
 
     /** Price for this SKU. Must be paired with idCurrency when set. */
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })

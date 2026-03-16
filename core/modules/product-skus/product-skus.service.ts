@@ -135,7 +135,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
                 }, businessReq);
             }
             if (item.quantity !== undefined) {
-                const quantityDelta = item.quantity - sku.quantity;
+                const quantityDelta = item.quantity - (sku.quantity ?? 0);
                 if (quantityDelta !== 0) {
                     await this.adjustStock(
                         { idProductSku: item.id, quantityDelta, notes: 'Update from product SKUs edit' },
@@ -163,7 +163,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
     ): Promise<ProductSku> {
         const sku = await this.productSkusGettersService
             .findOneByBusinessId(input.idProductSku, businessReq.businessId);
-        const previousQuantity = sku.quantity;
+        const previousQuantity = sku.quantity ?? 0;
         const newQuantity = previousQuantity + input.quantityDelta;
         if (newQuantity < 0) {
             LogWarn(this.logger, this.rRegisterPurchase.insufficientStock.message, this.adjustStock.name, businessReq);
@@ -202,7 +202,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
     ): Promise<ProductSku> {
         const sku = await this.productSkusGettersService
             .findOneByBusinessId(input.idProductSku, businessReq.businessId);
-        const previousQuantity = sku.quantity;
+        const previousQuantity = sku.quantity ?? 0;
         const newQuantity = previousQuantity - input.quantity;
         if (newQuantity < 0) {
             LogWarn(this.logger, this.rRegisterPurchase.insufficientStock.message, this.registerPurchase.name, businessReq);
@@ -232,12 +232,13 @@ export class ProductSkusService extends BasicService<ProductSku> {
     async removeProductSku(idProductSku: number, businessReq: IBusinessReq) {
         const sku = await this.productSkusGettersService
             .findOneByBusinessId(idProductSku, businessReq.businessId);
+        const currentQuantity = sku.quantity ?? 0;
         await this.stockMovementsSettersService.create(
             {
                 idProductSku: sku.id,
                 type: StockMovementTypeEnum.REMOVAL,
-                quantityDelta: -sku.quantity,
-                previousQuantity: sku.quantity,
+                quantityDelta: -currentQuantity,
+                previousQuantity: currentQuantity,
                 newQuantity: 0,
                 notes: 'SKU/variation removed',
             },
