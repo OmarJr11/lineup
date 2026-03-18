@@ -7,6 +7,7 @@ import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 import { AuthModule } from '../../../../core/modules/auth/auth.module';
 import { ProductsModule as ProductsModuleCore } from '../../../../core/modules/products/products.module';
+import { TagsModule } from '../../../../core/modules/tags/tags.module';
 
 @Module({
     providers: [ProductsResolver, ProductRatingsResolver],
@@ -17,7 +18,8 @@ import { ProductsModule as ProductsModuleCore } from '../../../../core/modules/p
         RolesModule,
         TokensModule,
         AuthModule,
-        ProductsModuleCore
+        ProductsModuleCore,
+        TagsModule,
     ],
 })
 export class ProductsModule {}
