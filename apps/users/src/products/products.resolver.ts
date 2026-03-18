@@ -1,15 +1,16 @@
 import { Resolver, Mutation, Query, Args, Int } from '@nestjs/graphql';
 import { ProductReactionsService } from '../../../../core/modules/product-reactions/product-reactions.service';
 import { ProductReactionsGettersService } from '../../../../core/modules/product-reactions/product-reactions-getters.service';
-import { PaginatedProducts, ProductReactionSchema, ProductSchema } from '../../../../core/schemas';
+import { PaginatedProducts, ProductReactionSchema, ProductSchema, TagSchema } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { ReactionTypeEnum, StatusEnum } from '../../../../core/common/enums';
-import { toProductReactionSchema, toProductSchema } from '../../../../core/common/functions';
+import { toProductReactionSchema, toProductSchema, toTagSchema } from '../../../../core/common/functions';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 import { ProductsService } from '../../../../core/modules/products/products.service';
+import { TagsService } from '../../../../core/modules/tags/tags.service';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => ProductReactionSchema)
@@ -17,7 +18,8 @@ export class ProductsResolver {
     constructor(
         private readonly productReactionsService: ProductReactionsService,
         private readonly productReactionsGettersService: ProductReactionsGettersService,
-        private readonly productsService: ProductsService
+        private readonly productsService: ProductsService,
+        private readonly tagsService: TagsService,
     ) {}
 
     
@@ -114,6 +116,20 @@ export class ProductsResolver {
     @Query(() => ProductSchema, { name: 'findOneProduct' })
     async findOne(@Args('id', { type: () => Int }) id: number) {
       return toProductSchema(await this.productsService.findOne(id));
+    }
+
+    /**
+     * Get main tags (tags with the most products).
+     * Only counts active, non-deleted products.
+     * @param {number} limit - Maximum number of tags to return. Default 20.
+     * @returns {Promise<TagSchema[]>} Tags ordered by product count descending.
+     */
+    @Query(() => [TagSchema], { name: 'getMainTags' })
+    async getMainTags(
+      @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    ): Promise<TagSchema[]> {
+      const tags = await this.tagsService.findMainTags(limit ?? 20);
+      return tags.map((tag) => toTagSchema(tag));
     }
 
     /**
