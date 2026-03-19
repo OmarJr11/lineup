@@ -9,6 +9,9 @@ import { IBusinessReq } from '../../common/interfaces';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { locationsResponses } from '../../common/responses';
 import { LogError } from '../../common/helpers/logger.helper';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class LocationsSettersService extends BasicService<Location> {
@@ -20,6 +23,7 @@ export class LocationsSettersService extends BasicService<Location> {
     constructor(
         @InjectRepository(Location)
         private readonly locationRepository: Repository<Location>,
+        private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
         super(locationRepository);
     }
@@ -35,11 +39,19 @@ export class LocationsSettersService extends BasicService<Location> {
         data: CreateLocationInput,
         businessReq: IBusinessReq
     ): Promise<Location> {
-        return await this.save(data, businessReq)
+        const location = await this.save(data, businessReq)
             .catch((error) => {
                 LogError(this.logger, error, this.create.name, businessReq);
                 throw new InternalServerErrorException(this.rCreate.error);
             });
+        await this.entityAuditsQueueService.addRecordJob({
+            entityName: AuditableEntityNameEnum.Location,
+            entityId: location.id,
+            operation: AuditOperationEnum.INSERT,
+            newValues: toEntityAuditValues(location),
+            userOrBusinessReq: businessReq,
+        });
+        return location;
     }
 
     /**
@@ -55,11 +67,21 @@ export class LocationsSettersService extends BasicService<Location> {
         data: UpdateLocationInput,
         businessReq: IBusinessReq
     ): Promise<Location> {
-        return await this.updateEntity(data, location, businessReq)
+        const oldValues = toEntityAuditValues(location);
+        const updated = await this.updateEntity(data, location, businessReq)
             .catch((error) => {
                 LogError(this.logger, error, this.update.name, businessReq);
                 throw new InternalServerErrorException(this.rUpdate.error);
             });
+        await this.entityAuditsQueueService.addRecordJob({
+            entityName: AuditableEntityNameEnum.Location,
+            entityId: location.id,
+            operation: AuditOperationEnum.UPDATE,
+            oldValues,
+            newValues: toEntityAuditValues(updated),
+            userOrBusinessReq: businessReq,
+        });
+        return updated;
     }
 
     /**
@@ -70,6 +92,13 @@ export class LocationsSettersService extends BasicService<Location> {
      */
     @Transactional()
     async remove(location: Location, businessReq: IBusinessReq): Promise<boolean> {
+        await this.entityAuditsQueueService.addRecordJob({
+            entityName: AuditableEntityNameEnum.Location,
+            entityId: location.id,
+            operation: AuditOperationEnum.DELETE,
+            oldValues: toEntityAuditValues(location),
+            userOrBusinessReq: businessReq,
+        });
         return await this.deleteEntityByStatus(location, businessReq).catch((error) => {
             LogError(this.logger, error, this.remove.name, businessReq);
             throw new InternalServerErrorException(this.rDelete.error);

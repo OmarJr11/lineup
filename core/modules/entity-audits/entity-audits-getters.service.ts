@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { entityAuditsResponses } from '../../common/responses';
 import { EntityAudit } from '../../entities';
+import { AuditableEntityNameEnum } from '../../common/enums';
 
 /**
  * Read-only service for querying entity audit records.
@@ -50,7 +51,7 @@ export class EntityAuditsGettersService extends BasicService<EntityAudit> {
         idProduct: number,
         limit: number = 50,
     ): Promise<EntityAudit[]> {
-        return await this.findByEntity('DiscountProduct', idProduct, limit);
+        return await this.findByEntity(AuditableEntityNameEnum.DiscountProduct, idProduct, limit);
     }
 
     /**
@@ -64,7 +65,7 @@ export class EntityAuditsGettersService extends BasicService<EntityAudit> {
         limit: number = 50,
     ): Promise<EntityAudit[]> {
         return await this.createQueryBuilder('a')
-            .where("a.entity_name = 'DiscountProduct'")
+            .where('a.entity_name = :entityName', { entityName: AuditableEntityNameEnum.DiscountProduct })
             .andWhere(
                 "(a.old_values->>'idDiscount' = :idDiscount OR a.new_values->>'idDiscount' = :idDiscount)",
                 { idDiscount: String(idDiscount) },

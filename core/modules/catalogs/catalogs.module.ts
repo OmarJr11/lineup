@@ -6,10 +6,12 @@ import { CatalogsSettersService } from './catalogs-setters.service';
 import { CatalogsGettersService } from './catalogs-getters.service';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Catalog]),
+    EntityAuditsModule,
     BullModule.registerQueue({
       name: QueueNamesEnum.searchData,
       defaultJobOptions: {

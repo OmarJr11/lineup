@@ -1,16 +1,12 @@
 import { Type } from 'class-transformer';
 import {
-    IsDefined,
     IsEnum,
     IsInt,
     IsNotEmpty,
     IsObject,
     IsOptional,
-    IsString,
-    MaxLength,
 } from 'class-validator';
-import { AuditOperationEnum } from '../../../common/enums';
-import { IUserOrBusinessReq } from '../../../common/interfaces';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../../common/enums';
 import { EntityAuditValues } from '../../../common/types';
 import { Field, Int } from '@nestjs/graphql';
 
@@ -18,11 +14,10 @@ import { Field, Int } from '@nestjs/graphql';
  * DTO for recording a generic entity audit.
  */
 export class RecordEntityAuditDto {
-    @Field(() => String)
+    @Field(() => AuditableEntityNameEnum)
     @IsNotEmpty()
-    @IsString()
-    @MaxLength(100)
-    entityName: string;
+    @IsEnum(AuditableEntityNameEnum)
+    entityName: AuditableEntityNameEnum;
 
     @Field(() => Int)
     @IsNotEmpty()

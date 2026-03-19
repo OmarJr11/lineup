@@ -56,7 +56,7 @@ export class DiscountsService extends BasicService<Discount> {
     @Transactional()
     async create(data: CreateDiscountInput, businessReq: IBusinessReq): Promise<Discount> {
         const idBusiness = businessReq.businessId;
-        this.validateScopeOwnership(data, idBusiness);
+        await this.validateScopeOwnership(data, idBusiness);
         const discount = await this.discountsSettersService.createDiscount(data, businessReq);
         const productIds = await this.resolveProductIds(data, idBusiness);
         const auditMetadata = {

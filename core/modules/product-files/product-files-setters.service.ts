@@ -9,6 +9,9 @@ import { IBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productFilesResponses } from '../../common/responses';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class ProductFilesSettersService extends BasicService<ProductFile> {
@@ -20,6 +23,7 @@ export class ProductFilesSettersService extends BasicService<ProductFile> {
     constructor(
       @InjectRepository(ProductFile)
       private readonly productFileRepository: Repository<ProductFile>,
+      private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
       super(productFileRepository);
     }
@@ -36,7 +40,15 @@ export class ProductFilesSettersService extends BasicService<ProductFile> {
         businessReq: IBusinessReq
     ): Promise<ProductFile> {
       try {
-        return await this.save(data, businessReq);
+        const productFile = await this.save(data, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.ProductFile,
+          entityId: productFile.id,
+          operation: AuditOperationEnum.INSERT,
+          newValues: toEntityAuditValues(productFile),
+          userOrBusinessReq: businessReq,
+        });
+        return productFile;
       } catch (error) {
         LogError(this.logger, error, this.create.name, businessReq);
         throw new InternalServerErrorException(this.rCreate.error);
@@ -56,7 +68,17 @@ export class ProductFilesSettersService extends BasicService<ProductFile> {
         businessReq: IBusinessReq
     ) {
       try {
-        return await this.updateEntity(data, productFile, businessReq);
+        const oldValues = toEntityAuditValues(productFile);
+        const updated = await this.updateEntity(data, productFile, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.ProductFile,
+          entityId: productFile.id,
+          operation: AuditOperationEnum.UPDATE,
+          oldValues,
+          newValues: toEntityAuditValues(updated),
+          userOrBusinessReq: businessReq,
+        });
+        return updated;
       } catch (error) {
         LogError(this.logger, error, this.update.name, businessReq);
         throw new InternalServerErrorException(this.rUpdate.error);
@@ -71,6 +93,16 @@ export class ProductFilesSettersService extends BasicService<ProductFile> {
     @Transactional()
     async remove(productFile: ProductFile | ProductFile[], businessReq: IBusinessReq) {
       try {
+        const files = Array.isArray(productFile) ? productFile : [productFile];
+        for (const file of files) {
+          await this.entityAuditsQueueService.addRecordJob({
+            entityName: AuditableEntityNameEnum.ProductFile,
+            entityId: file.id,
+            operation: AuditOperationEnum.DELETE,
+            oldValues: toEntityAuditValues(file),
+            userOrBusinessReq: businessReq,
+          });
+        }
         return await this.deleteEntityByStatus(productFile, businessReq);
       } catch (error) {
         LogError(this.logger, error, this.remove.name, businessReq);

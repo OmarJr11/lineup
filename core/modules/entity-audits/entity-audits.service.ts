@@ -3,7 +3,7 @@ import { EntityAudit } from '../../entities';
 import { EntityAuditsGettersService } from './entity-audits-getters.service';
 import { EntityAuditsSettersService } from './entity-audits-setters.service';
 import { RecordEntityAuditDto } from './dto';
-import { AuditOperationEnum } from '../../common/enums';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
 import { IBusinessReq } from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -84,7 +84,7 @@ export class EntityAuditsService extends BasicService<EntityAudit> {
         businessReq: IBusinessReq,
     ): Promise<EntityAudit> {
         const input: RecordEntityAuditDto = {
-            entityName: 'DiscountProduct',
+            entityName: AuditableEntityNameEnum.DiscountProduct,
             entityId: idProduct,
             operation,
             oldValues: { idProduct, idDiscount: idDiscountOld },

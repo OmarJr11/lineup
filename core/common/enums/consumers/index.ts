@@ -1,5 +1,6 @@
 export * from './catalogs.consumer.enum';
 export * from './discounts.consumer.enum';
+export * from './entity-audits.consumer.enum';
 export * from './files.consumer.enum';
 export * from './mails.consumer.enum';
 export * from './queue-names.enum';

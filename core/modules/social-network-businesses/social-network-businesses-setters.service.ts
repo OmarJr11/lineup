@@ -9,6 +9,9 @@ import { IBusinessReq } from '../../common/interfaces';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { LogError } from '../../common/helpers/logger.helper';
 import { socialNetworkBusinessesResponses } from '../../common/responses';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class SocialNetworkBusinessesSettersService extends BasicService<SocialNetworkBusiness> {
@@ -20,6 +23,7 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
     constructor(
         @InjectRepository(SocialNetworkBusiness)
         private readonly repo: Repository<SocialNetworkBusiness>,
+        private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
         super(repo);
     }
@@ -39,7 +43,15 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
             const { url, phone } = data.contact;
             data.url = url;
             data.phone = phone;
-            return await this.save(data, businessReq);
+            const snb = await this.save(data, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+                entityId: snb.id,
+                operation: AuditOperationEnum.INSERT,
+                newValues: toEntityAuditValues(snb),
+                userOrBusinessReq: businessReq,
+            });
+            return snb;
         } catch (error) {
             LogError(this.logger, error, this.create.name, businessReq);
             throw new InternalServerErrorException(this.rCreate.error);
@@ -63,7 +75,17 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
             const { url, phone } = data.contact;
             data.url = url;
             data.phone = phone;
-            return await this.updateEntity(data, socialNetworkBusiness, businessReq);
+            const oldValues = toEntityAuditValues(socialNetworkBusiness);
+            const updated = await this.updateEntity(data, socialNetworkBusiness, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+                entityId: socialNetworkBusiness.id,
+                operation: AuditOperationEnum.UPDATE,
+                oldValues,
+                newValues: toEntityAuditValues(updated),
+                userOrBusinessReq: businessReq,
+            });
+            return updated;
         } catch (error) {
             LogError(this.logger, error, this.update.name, businessReq);
             throw new InternalServerErrorException(this.rUpdate.error);
@@ -82,6 +104,13 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
         businessReq: IBusinessReq
     ): Promise<boolean> {
         try {
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+                entityId: socialNetworkBusiness.id,
+                operation: AuditOperationEnum.DELETE,
+                oldValues: toEntityAuditValues(socialNetworkBusiness),
+                userOrBusinessReq: businessReq,
+            });
             await this.deleteEntityByStatus(socialNetworkBusiness, businessReq);
             return true;
         } catch (error) {

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
   DiscountsConsumer,
+  EntityAuditsConsumer,
   MailsConsumer,
   QueuesManager,
   ReviewsConsumer,
@@ -51,6 +52,7 @@ export class ConsumersModule {
       providers: [
         CatalogsConsumer,
         DiscountsConsumer,
+        EntityAuditsConsumer,
         MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,

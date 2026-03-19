@@ -1,5 +1,5 @@
 import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { AuditOperationEnum } from '../common/enums';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../common/enums';
 import { EntityAuditValues } from '../common/types';
 import { Business } from './business.entity';
 import { User } from './user.entity';
@@ -18,7 +18,7 @@ export class EntityAudit {
     id: number;
 
     @Column('character varying', { name: 'entity_name', length: 100 })
-    entityName: string;
+    entityName: AuditableEntityNameEnum;
 
     @Column('int8', { name: 'entity_id' })
     entityId: number;
