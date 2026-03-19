@@ -1,8 +1,8 @@
-import { 
+import {
     CanActivate,
     ExecutionContext,
     Injectable,
-    UnauthorizedException
+    UnauthorizedException,
 } from '@nestjs/common';
 import { TokenGettersService } from '../../modules/token/token-getters.service';
 import { IResponse } from '../interfaces';

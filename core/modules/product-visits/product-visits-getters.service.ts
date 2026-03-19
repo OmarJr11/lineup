@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { ProductVisit } from '../../entities';
 import { StatusEnum } from '../../common/enums';
+import { IProductVisitsData } from '../business-statistics/interfaces';
+import { ITimePeriodFilter } from '../../common/interfaces';
+import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 
 /** Default limit for tag IDs returned from visited products. */
 const DEFAULT_TAG_IDS_LIMIT = 10;
@@ -47,5 +50,58 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
             .filter((id): id is number => !Number.isNaN(id));
         const uniqueIds = [...new Set(allIds)];
         return uniqueIds.slice(0, limit);
+    }
+
+    /**
+     * Get top products by visits for a business (for statistics).
+     * @param {number} idBusiness - The ID of the business.
+     * @param {ITimePeriodFilter} timePeriod - The time period filter.
+     * @param {number} limit - The limit of the top products.
+     * @returns {Promise<{ idProduct: number; visits: number }[]>} The top products by visits.
+     */
+    async getTopProductsByVisits(
+        idBusiness: number,
+        timePeriod: ITimePeriodFilter | undefined,
+        limit: number,
+    ): Promise<IProductVisitsData[]> {
+        const subQb = this.createQueryBuilder('pv')
+            .innerJoin('pv.product', 'p')
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .select('pv.id_product', 'idProduct')
+            .addSelect('COUNT(*)', 'visits')
+            .groupBy('pv.id_product');
+        StatisticsQueryHelper.applyTimeFilter(subQb, 'pv', timePeriod);
+        const subQuery = subQb.getQuery();
+        const params = subQb.getParameters();
+        const rows = await this.productVisitRepository.manager
+            .createQueryBuilder()
+            .select('sub."idProduct"', 'idProduct')
+            .addSelect('sub.visits', 'visits')
+            .from(`(${subQuery})`, 'sub')
+            .setParameters(params)
+            .orderBy('visits', 'DESC')
+            .limit(limit)
+            .getRawMany<{ idProduct: number; visits: string }>();
+        return rows.map((r) => ({
+            idProduct: r.idProduct,
+            visits: parseInt(r.visits ?? '0', 10),
+        }));
+    }
+
+    /**
+     * Get visit count for products (for statistics).
+     */
+    async getVisitCountByProductIds(
+        productIds: number[],
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<number> {
+        if (productIds.length === 0) return 0;
+        const qb = this.createQueryBuilder('pv')
+            .where('pv.id_product IN (:...productIds)', { productIds })
+            .select('COUNT(*)', 'count');
+        StatisticsQueryHelper.applyTimeFilter(qb, 'pv', timePeriod);
+        const result = await qb.getRawOne<{ count: string }>();
+        return parseInt(result?.count ?? '0', 10);
     }
 }

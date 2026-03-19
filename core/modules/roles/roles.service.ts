@@ -14,7 +14,7 @@ import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
 import { roleResponses } from '../../common/responses';
 import { RolesCodesEnum } from '../../common/enums';
-import { RolePermissionsService } from '../role-permissions/role-permissions.service';
+import { RolesPermissionsCheckerService } from './roles-permissions-checker.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class RolesService extends BasicService<Role> {
@@ -26,7 +26,7 @@ export class RolesService extends BasicService<Role> {
     private readonly userRequest: Request,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
-    private readonly rolePermissionsService: RolePermissionsService
+    private readonly rolesPermissionsChecker: RolesPermissionsCheckerService,
   ) {
     super(roleRepository, userRequest);
   }
@@ -52,16 +52,7 @@ export class RolesService extends BasicService<Role> {
    * @returns {Promise<boolean>}
    */
   async userHasPermission(idUser: number, codes: string[]): Promise<boolean> {
-    const roles = (
-      await this.createQueryBuilder('R')
-        .select(['R.id'])
-        .innerJoin('R.userRoles', 'UR')
-        .where('UR.user = :idUser', { idUser })
-        .getMany()
-    ).map((r) => r.id);
-
-    return roles.length > 0
-      ? await this.hasAnyPermission(roles, codes) : false;
+    return this.rolesPermissionsChecker.userHasPermission(idUser, codes);
   }
 
   /**
@@ -72,27 +63,6 @@ export class RolesService extends BasicService<Role> {
    * @returns {Promise<boolean>}
    */
   async businessHasPermission(idBusiness: number, codes: string[]): Promise<boolean> {
-    const roles = (
-      await this.createQueryBuilder('R')
-        .select(['R.id'])
-        .innerJoin('R.businessRoles', 'BR')
-        .where('BR.business = :idBusiness', { idBusiness })
-        .getMany()
-    ).map((r) => r.id);
-
-    return roles.length > 0
-      ? await this.hasAnyPermission(roles, codes) : false;
-  }
-
-  /**
-   * Checks if any of the requested codes are present in the user's permissions
-   * @param {number[]} roles - Array of role IDs to check permissions for
-   * @param {string[]} codes - Permission codes to check
-   * @returns {Promise<boolean>}
-   */
-  private async hasAnyPermission(roles: number[], codes: string[]): Promise<boolean> {
-    const allPermissionCodes = await this
-      .rolePermissionsService.getRolesPermissionsCodes(roles);
-    return codes.some((code) => allPermissionCodes.includes(code));
+    return this.rolesPermissionsChecker.businessHasPermission(idBusiness, codes);
   }
 }

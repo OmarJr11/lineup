@@ -20,6 +20,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { DiscountsModule } from './discounts/discounts.module';
+import { StatisticsModule } from './statistics/statistics.module';
 import { BullModule } from '@nestjs/bullmq';
 
 @Module({
@@ -100,6 +101,7 @@ import { BullModule } from '@nestjs/bullmq';
     VerificationCodesModule,
     InventoryModule,
     DiscountsModule,
+    StatisticsModule,
   ]
 })
 export class BusinessesModule implements NestModule {

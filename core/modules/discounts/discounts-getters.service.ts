@@ -5,6 +5,7 @@ import { BasicService } from '../../common/services';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
 import { DiscountScopeEnum, StatusEnum } from '../../common/enums';
+import { DiscountTypeEnum } from '../../common/enums/discount-type.enum';
 import { InfinityScrollInput } from '../../common/dtos';
 import { IPaginatedResult } from '../../common/interfaces';
 import { Discount, EntityAudit } from '../../entities';
@@ -302,6 +303,82 @@ export class DiscountsGettersService extends BasicService<Discount> {
     async findAuditByProduct(idProduct: number, limit: number = 50): Promise<EntityAudit[]> {
         return await this.entityAuditsGettersService
             .findByDiscountProductByProductId(idProduct, limit);
+    }
+
+    /**
+     * Get discounts by status (active, pending, expired) for statistics.
+     */
+    async getByStatusForStatistics(
+        idBusiness: number,
+    ): Promise<{ label: string; count: number }[]> {
+        const now = new Date();
+        const discounts = await this.find({
+            where: { idCreationBusiness: idBusiness, status: Not(StatusEnum.DELETED) },
+            select: ['id', 'status', 'startDate', 'endDate'],
+        });
+        const buckets: Record<string, number> = { active: 0, pending: 0, expired: 0 };
+        for (const d of discounts) {
+            if (d.endDate < now) {
+                buckets.expired++;
+            } else if (d.startDate > now) {
+                buckets.pending++;
+            } else {
+                buckets.active++;
+            }
+        }
+        return [
+            { label: 'active', count: buckets.active },
+            { label: 'pending', count: buckets.pending },
+            { label: 'expired', count: buckets.expired },
+        ];
+    }
+
+    /**
+     * Get discounts by type for statistics.
+     * 
+     * @param {number} idBusiness - The business ID.
+     * @returns {Promise<{ label: string; count: number }[]>} The discounts by type.
+     */
+    async getByTypeForStatistics(
+        idBusiness: number,
+    ): Promise<{ label: string; count: number }[]> {
+        const rows = await this.createQueryBuilder('d')
+            .select('d.discount_type', 'type')
+            .addSelect('COUNT(*)', 'count')
+            .where('d.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('d.status <> :status', { status: StatusEnum.DELETED })
+            .groupBy('d.discount_type')
+            .getRawMany<{ type: string; count: string }>();
+        const map: Record<string, number> = { [DiscountTypeEnum.PERCENTAGE]: 0, [DiscountTypeEnum.FIXED]: 0 };
+        for (const r of rows) {
+            map[r.type] = parseInt(r.count ?? '0', 10);
+        }
+        return [
+            { label: DiscountTypeEnum.PERCENTAGE, count: map[DiscountTypeEnum.PERCENTAGE] ?? 0 },
+            { label: DiscountTypeEnum.FIXED, count: map[DiscountTypeEnum.FIXED] ?? 0 },
+        ];
+    }
+
+    /**
+     * Count discounts expiring soon for statistics.
+     * 
+     * @param {number} idBusiness - The business ID.
+     * @param {number} days - The number of days to check for expiring discounts.
+     * @returns {Promise<number>} The count of expiring discounts.
+     */
+    async getExpiringSoonCountForStatistics(
+        idBusiness: number,
+        days: number = 7,
+    ): Promise<number> {
+        const now = new Date();
+        const future = new Date(now);
+        future.setDate(future.getDate() + days);
+        return await this.createQueryBuilder('d')
+            .where('d.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('d.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('d.end_date >= :now', { now })
+            .andWhere('d.end_date <= :future', { future })
+            .getCount();
     }
 
     /**

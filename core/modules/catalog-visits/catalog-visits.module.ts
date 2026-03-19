@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CatalogVisit } from '../../entities';
+import { Catalog, CatalogVisit } from '../../entities';
+import { CatalogVisitsGettersService } from './catalog-visits-getters.service';
 import { CatalogVisitsSettersService } from './catalog-visits-setters.service';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([CatalogVisit]),
-        CatalogsModule
+        TypeOrmModule.forFeature([CatalogVisit, Catalog]),
+        CatalogsModule,
     ],
-    providers: [CatalogVisitsSettersService],
-    exports: [CatalogVisitsSettersService]
+    providers: [CatalogVisitsGettersService, CatalogVisitsSettersService],
+    exports: [CatalogVisitsGettersService, CatalogVisitsSettersService],
 })
 export class CatalogVisitsModule {}

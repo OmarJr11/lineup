@@ -6,7 +6,13 @@ import { InfinityScrollInput } from '../../common/dtos';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
-import { Product } from '../../entities';
+import { Product, ProductRating } from '../../entities';
+import {
+    IGetTopByVisitsForStatisticsInput,
+    IStatItemWithLikes,
+    IStatItemWithRating,
+    IStatItemWithVisits,
+} from '../business-statistics/interfaces';
 
 @Injectable()
 export class ProductsGettersService extends BasicService<Product> {
@@ -16,6 +22,8 @@ export class ProductsGettersService extends BasicService<Product> {
     constructor(
       @InjectRepository(Product)
       private readonly productRepository: Repository<Product>,
+      @InjectRepository(ProductRating)
+      private readonly productRatingRepository: Repository<ProductRating>,
     ) {
       super(productRepository);
     }
@@ -234,7 +242,10 @@ export class ProductsGettersService extends BasicService<Product> {
      * @param {InfinityScrollInput} query - Query parameters for pagination.
      * @returns {Promise<Product[]>} Array of products matching any of the given tags.
      */
-    async findAllByTags(tagNamesOrSlugs: string[], query: InfinityScrollInput): Promise<Product[]> {
+    async findAllByTags(
+        tagNamesOrSlugs: string[],
+        query: InfinityScrollInput
+    ): Promise<Product[]> {
         if (!tagNamesOrSlugs?.length) return [];
         const page = query.page || 1;
         const limit = query.limit || 10;
@@ -299,6 +310,187 @@ export class ProductsGettersService extends BasicService<Product> {
             .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
             .getMany();
         return products.map((p) => p.id);
+    }
+
+    /**
+     * Get top products by rating for statistics.
+     * @param {number} idBusiness - The ID of the business.
+     * @param {number} limit - The limit of the top products.
+     * @returns {Promise<{ id: number; title: string; ratingAverage: number }[]>} The top products by rating.
+     */
+    async getTopByRatingForStatistics(
+        idBusiness: number,
+        limit: number,
+    ): Promise<IStatItemWithRating[]> {
+        return await this.createQueryBuilder('p')
+            .select(['p.id', 'p.title', 'p.ratingAverage'])
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('p.rating_average > 0')
+            .orderBy('p.rating_average', 'DESC')
+            .limit(limit)
+            .getMany()
+            .then((list) =>
+                list.map((p) => ({
+                    id: p.id,
+                    title: p.title,
+                    ratingAverage: Number(p.ratingAverage),
+                })),
+            );
+    }
+
+    /**
+     * Get top products by likes for statistics.
+     * 
+     * @param {number} idBusiness - The ID of the business.
+     * @param {number} limit - The limit of the top products.
+     * @returns {Promise<{ id: number; title: string; likes: number }[]>} The top products by likes.
+     */
+    async getTopByLikesForStatistics(
+        idBusiness: number,
+        limit: number,
+    ): Promise<IStatItemWithLikes[]> {
+        return await this.createQueryBuilder('p')
+            .select(['p.id', 'p.title', 'p.likes'])
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('p.likes > 0')
+            .orderBy('p.likes', 'DESC')
+            .limit(limit)
+            .getMany()
+            .then((list) =>
+                list.map((p) => ({ id: p.id, title: p.title, likes: Number(p.likes) })),
+            );
+    }
+
+    /**
+     * Count products without visits for statistics.
+     * 
+     * @param {number} idBusiness - The ID of the business.
+     * @returns {Promise<number>} The count of products without visits.
+     */
+    async getWithoutVisitsCountForStatistics(idBusiness: number): Promise<number> {
+        return await this.createQueryBuilder('p')
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('p.visits = 0')
+            .getCount();
+    }
+
+    /**
+     * Count products without ratings for statistics.
+     * 
+     * @param {number} idBusiness - The ID of the business.
+     * @returns {Promise<number>} The count of products without ratings.
+     */
+    async getWithoutRatingsCountForStatistics(idBusiness: number): Promise<number> {
+        const subQb = this.productRatingRepository
+            .createQueryBuilder('pr')
+            .innerJoin('pr.product', 'p2')
+            .where('p2.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('pr.status <> :ratingStatus', {
+                ratingStatus: StatusEnum.DELETED,
+            })
+            .select('pr.id_product');
+        return await this.createQueryBuilder('p')
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .andWhere(`p.id NOT IN (${subQb.getQuery()})`)
+            .setParameters({
+                ...subQb.getParameters(),
+                productStatus: StatusEnum.DELETED,
+            })
+            .getCount();
+    }
+
+    /**
+     * Get product IDs and total likes for statistics.
+     * 
+     * @param {number} idBusiness - The ID of the business.
+     * @returns {Promise<{ id: number }[]>} The product IDs and total likes.
+     */
+    async getProductIdsAndLikesForStatistics(
+        idBusiness: number,
+    ): Promise<{ id: number }[]> {
+        return await this.find({
+            where: { idCreationBusiness: idBusiness, status: Not(StatusEnum.DELETED) },
+            select: ['id'],
+        });
+    }
+
+    /**
+     * Get total likes sum for product IDs.
+     * 
+     * @param {number[]} productIds - The product IDs.
+     * @returns {Promise<number>} The total likes.
+     */
+    async getTotalLikesByProductIds(productIds: number[]): Promise<number> {
+        if (productIds.length === 0) return 0;
+        const result = await this.createQueryBuilder('p')
+            .where('p.id IN (:...productIds)', { productIds })
+            .select('COALESCE(SUM(p.likes), 0)', 'total')
+            .getRawOne<{ total: string }>();
+        return parseInt(result?.total ?? '0', 10);
+    }
+
+    /**
+     * Get top products by visits (merges product visit data with product info).
+     * @param {IGetTopByVisitsForStatisticsInput} input - The visit data and business ID.
+     * @returns {Promise<IStatItemWithVisits[]>} The top products by visits.
+     */
+    async getTopByVisitsForStatistics(
+        input: IGetTopByVisitsForStatisticsInput,
+    ): Promise<IStatItemWithVisits[]> {
+        const { visitData, idBusiness } = input;
+        if (visitData.length === 0) return [];
+        const productIds = visitData.map((v) => v.idProduct);
+        const products = await this.productRepository.find({
+            where: {
+                id: In(productIds),
+                idCreationBusiness: idBusiness,
+                status: Not(StatusEnum.DELETED),
+            },
+            select: ['id', 'title'],
+        });
+        const visitMap = new Map(visitData.map((v) => [v.idProduct, v.visits]));
+        return products.map((p) => ({
+            id: p.id,
+            title: p.title,
+            visits: visitMap.get(p.id) ?? 0,
+        })).sort((a, b) => b.visits - a.visits);
+    }
+
+    /**
+     * Count products without stock for statistics.
+     * 
+     * @param {number} idBusiness - The ID of the business.
+     * @returns {Promise<number>} The count of products without stock.
+     */
+    async getWithoutStockCountForStatistics(idBusiness: number): Promise<number> {
+        const products = await this.createQueryBuilder('p')
+            .leftJoin('p.skus', 'skus', 'skus.status <> :skuStatus', {
+                skuStatus: StatusEnum.DELETED,
+            })
+            .where('p.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .select('p.id')
+            .addSelect('SUM(CASE WHEN skus.quantity IS NULL THEN 1 ELSE 0 END)', 'nullCount')
+            .addSelect('COUNT(skus.id)', 'skuCount')
+            .groupBy('p.id')
+            .getRawMany<{ id: number; nullCount: string; skuCount: string }>();
+        let count = 0;
+        for (const row of products) {
+            const skuCount = parseInt(row.skuCount ?? '0', 10);
+            const nullCount = parseInt(row.nullCount ?? '0', 10);
+            if (skuCount === 0 || (skuCount > 0 && nullCount === skuCount)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
