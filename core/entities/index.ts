@@ -31,7 +31,7 @@ export * from './catalog-search-index.entity';
 export * from './product-search-index.entity';
 export * from './discount.entity';
 export * from './discount-product.entity';
-export * from './discount-product-audit.entity';
+export * from './entity-audit.entity';
 export * from './validation-mail.entity';
 export * from './verification-code.entity';
 export * from './user-search.entity';

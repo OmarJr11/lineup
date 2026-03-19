@@ -6,7 +6,7 @@ import {
     CatalogVisit,
     Discount,
     DiscountProduct,
-    DiscountProductAudit,
+    EntityAudit,
     File,
     Permission,
     Product,
@@ -74,6 +74,6 @@ export const entities = [
     StockMovement,
     Discount,
     DiscountProduct,
-    DiscountProductAudit,
+    EntityAudit,
     UserSearch
 ]

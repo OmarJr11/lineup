@@ -6,7 +6,7 @@ import { DiscountsService } from './discounts.service';
 import { DiscountsGettersService } from './discounts-getters.service';
 import { DiscountsSettersService } from './discounts-setters.service';
 import { DiscountProductsModule } from '../discount-products/discount-products.module';
-import { DiscountProductAuditsModule } from '../discount-product-audits/discount-product-audits.module';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 import { ProductsModule } from '../products/products.module';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 import { BusinessesModule } from '../businesses/businesses.module';
@@ -21,7 +21,7 @@ import { QueueNamesEnum } from '../../common/enums';
         TypeOrmModule.forFeature([Discount]),
         BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
         DiscountProductsModule,
-        DiscountProductAuditsModule,
+        EntityAuditsModule,
         ProductsModule,
         CatalogsModule,
         BusinessesModule,

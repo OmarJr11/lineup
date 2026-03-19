@@ -7,9 +7,9 @@ import { discountsResponses } from '../../common/responses';
 import { DiscountScopeEnum, StatusEnum } from '../../common/enums';
 import { InfinityScrollInput } from '../../common/dtos';
 import { IPaginatedResult } from '../../common/interfaces';
-import { Discount, DiscountProductAudit } from '../../entities';
+import { Discount, EntityAudit } from '../../entities';
 import { DiscountProductsGettersService } from '../discount-products/discount-products-getters.service';
-import { DiscountProductAuditsGettersService } from '../discount-product-audits/discount-product-audits-getters.service';
+import { EntityAuditsGettersService } from '../entity-audits/entity-audits-getters.service';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 import { ProductsGettersService } from '../products/products-getters.service';
 
@@ -26,7 +26,7 @@ export class DiscountsGettersService extends BasicService<Discount> {
         @InjectRepository(Discount)
         private readonly discountRepository: Repository<Discount>,
         private readonly discountProductsGettersService: DiscountProductsGettersService,
-        private readonly discountProductAuditsGettersService: DiscountProductAuditsGettersService,
+        private readonly entityAuditsGettersService: EntityAuditsGettersService,
         private readonly catalogsGettersService: CatalogsGettersService,
         private readonly productsGettersService: ProductsGettersService,
     ) {
@@ -297,19 +297,21 @@ export class DiscountsGettersService extends BasicService<Discount> {
      * Find audit history for a product.
      * @param {number} idProduct - The product ID.
      * @param {number} [limit=50] - Max records.
-     * @returns {Promise<DiscountProductAudit[]>} Array of audit records.
+     * @returns {Promise<EntityAudit[]>} Array of audit records.
      */
-    async findAuditByProduct(idProduct: number, limit: number = 50): Promise<DiscountProductAudit[]> {
-        return await this.discountProductAuditsGettersService.findByProductId(idProduct, limit);
+    async findAuditByProduct(idProduct: number, limit: number = 50): Promise<EntityAudit[]> {
+        return await this.entityAuditsGettersService
+            .findByDiscountProductByProductId(idProduct, limit);
     }
 
     /**
      * Find audit history for a discount.
      * @param {number} idDiscount - The discount ID.
      * @param {number} [limit=50] - Max records.
-     * @returns {Promise<DiscountProductAudit[]>} Array of audit records.
+     * @returns {Promise<EntityAudit[]>} Array of audit records.
      */
-    async findAuditByDiscount(idDiscount: number, limit: number = 50): Promise<DiscountProductAudit[]> {
-        return await this.discountProductAuditsGettersService.findByDiscountId(idDiscount, limit);
+    async findAuditByDiscount(idDiscount: number, limit: number = 50): Promise<EntityAudit[]> {
+        return await this.entityAuditsGettersService
+            .findByDiscountProductByDiscountId(idDiscount, limit);
     }
 }

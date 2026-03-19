@@ -1,5 +1,5 @@
 import { ForbiddenException, Inject, Injectable, Logger, Scope } from '@nestjs/common';
-import { Discount, DiscountProductAudit } from '../../entities';
+import { Discount, EntityAudit } from '../../entities';
 import { DiscountsGettersService } from './discounts-getters.service';
 import { DiscountsSettersService } from './discounts-setters.service';
 import { CreateDiscountInput } from './dto/create-discount.input';
@@ -59,11 +59,18 @@ export class DiscountsService extends BasicService<Discount> {
         this.validateScopeOwnership(data, idBusiness);
         const discount = await this.discountsSettersService.createDiscount(data, businessReq);
         const productIds = await this.resolveProductIds(data, idBusiness);
+        const auditMetadata = {
+            scope: data.scope,
+            discountType: data.discountType,
+            value: data.value,
+            idCurrency: data.idCurrency,
+        };
         for (const idProduct of productIds) {
             await this.discountsSettersService.upsertDiscountProduct(
                 idProduct,
                 discount.id,
                 businessReq,
+                auditMetadata,
             );
         }
         return await this.discountsGettersService.findOne(discount.id);
@@ -179,13 +186,13 @@ export class DiscountsService extends BasicService<Discount> {
      * @param {number} idProduct - The product ID.
      * @param {IBusinessReq} businessReq - The business request.
      * @param {number} [limit=50] - Max records.
-     * @returns {Promise<DiscountProductAudit[]>} Array of audit records.
+     * @returns {Promise<EntityAudit[]>} Array of audit records.
      */
     async findAuditByProduct(
         idProduct: number,
         businessReq: IBusinessReq,
         limit: number = 50,
-    ): Promise<DiscountProductAudit[]> {
+    ): Promise<EntityAudit[]> {
         await this.productsGettersService.findOneByBusinessId(idProduct, businessReq.businessId);
         return await this.discountsGettersService.findAuditByProduct(idProduct, limit);
     }
@@ -195,17 +202,15 @@ export class DiscountsService extends BasicService<Discount> {
      * @param {number} idDiscount - The discount ID.
      * @param {IBusinessReq} businessReq - The business request.
      * @param {number} [limit=50] - Max records.
-     * @returns {Promise<DiscountProductAudit[]>} Array of audit records.
+     * @returns {Promise<EntityAudit[]>} Array of audit records.
      */
     async findAuditByDiscount(
         idDiscount: number,
         businessReq: IBusinessReq,
         limit: number = 50,
-    ): Promise<DiscountProductAudit[]> {
-        await this.discountsGettersService.findOneAndVerifyOwnership(
-            idDiscount,
-            businessReq.businessId,
-        );
+    ): Promise<EntityAudit[]> {
+        await this.discountsGettersService
+            .findOneAndVerifyOwnership(idDiscount, businessReq.businessId);
         return await this.discountsGettersService.findAuditByDiscount(idDiscount, limit);
     }
 

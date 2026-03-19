@@ -1,16 +1,15 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Job } from 'bullmq';
-import { Repository } from 'typeorm';
 import { DiscountsConsumerEnum, QueueNamesEnum } from '../common/enums/consumers';
-import { AuditOperationEnum, StatusEnum } from '../common/enums';
+import { AuditOperationEnum, DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../common/enums';
 import { IBusinessReq, IUserReq } from '../common/interfaces';
 import { LogWarn } from '../common/helpers';
-import { Discount } from '../entities';
-import { DiscountProductAuditsSettersService } from '../modules/discount-product-audits/discount-product-audits-setters.service';
+import { EntityAuditsSettersService } from '../modules/entity-audits/entity-audits-setters.service';
 import { DiscountsGettersService } from '../modules/discounts/discounts-getters.service';
 import { DiscountsSettersService } from '../modules/discounts/discounts-setters.service';
+import { RecordEntityAuditDto } from '../modules/entity-audits/dto';
+import { EntityAuditValues } from '../common/types';
 
 /** Payload for ActivateDiscount job. */
 interface ActivateDiscountJobData {
@@ -29,6 +28,11 @@ interface RecordAuditJobData {
     idDiscountNew?: number;
     operation: AuditOperationEnum;
     businessReq: IBusinessReq;
+    /** Metadata for new discount (INSERT) or current discount (DELETE). For UPDATE, fetches old from DB. */
+    scope?: DiscountScopeEnum;
+    discountType?: DiscountTypeEnum;
+    value?: number;
+    idCurrency?: number;
 }
 
 /**
@@ -40,7 +44,7 @@ export class DiscountsConsumer extends WorkerHost {
     private readonly log = new Logger(DiscountsConsumer.name);
 
     constructor(
-        private readonly discountProductAuditsSettersService: DiscountProductAuditsSettersService,
+        private readonly entityAuditsSettersService: EntityAuditsSettersService,
         private readonly discountsGettersService: DiscountsGettersService,
         private readonly discountsSettersService: DiscountsSettersService,
     ) {
@@ -86,7 +90,7 @@ export class DiscountsConsumer extends WorkerHost {
      * Removes (soft delete) expired ACTIVE discounts by setting status to DELETED.
      * @param {Job<RemoveExpiredDiscountJobData>} job - BullMQ job with discount IDs.
      */
-    private async processRemoveExpiredDiscount(job: Job<RemoveExpiredDiscountJobData>): Promise<void> {
+    private async processRemoveExpiredDiscount(job: Job<RemoveExpiredDiscountJobData>)  {
         const { ids } = job.data;
         if (!ids || ids.length === 0) {
             LogWarn(this.log, `Missing ids in job ${job.id}`, this.processRemoveExpiredDiscount.name);
@@ -103,17 +107,95 @@ export class DiscountsConsumer extends WorkerHost {
      * @param {Job<RecordAuditJobData>} job - BullMQ job with audit data.
      */
     private async processRecordAudit(job: Job<RecordAuditJobData>): Promise<void> {
-        const { idProduct, idDiscountOld, idDiscountNew, operation, businessReq } = job.data;
-        if (!idProduct || !businessReq?.businessId) {
-            LogWarn(this.log, `Missing required data in job ${job.id}`, this.processRecordAudit.name);
-            return;
-        }
-        await this.discountProductAuditsSettersService.record(
+        const {
             idProduct,
             idDiscountOld,
             idDiscountNew,
             operation,
             businessReq,
+            scope,
+            discountType,
+            value,
+            idCurrency,
+        } = job.data;
+        if (!idProduct || !businessReq?.businessId) {
+            LogWarn(this.log, `Missing required data in job ${job.id}`, this.processRecordAudit.name);
+            return;
+        }
+        const newDiscountValues = this.buildDiscountAuditValues(
+            idProduct,
+            idDiscountNew,
+            scope,
+            discountType,
+            value,
+            idCurrency,
         );
+        let oldDiscountValues: EntityAuditValues = null;
+        if (operation !== AuditOperationEnum.INSERT) {
+            if (operation === AuditOperationEnum.DELETE && scope != null && discountType != null && value != null) {
+                oldDiscountValues = this.buildDiscountAuditValues(
+                    idProduct,
+                    idDiscountOld,
+                    scope,
+                    discountType,
+                    value,
+                    idCurrency,
+                );
+            } else if (idDiscountOld != null) {
+                const oldDiscount = await this.discountsGettersService.findOne(idDiscountOld);
+                oldDiscountValues = this.buildDiscountAuditValues(
+                    idProduct,
+                    idDiscountOld,
+                    oldDiscount.scope,
+                    oldDiscount.discountType,
+                    Number(oldDiscount.value),
+                    oldDiscount.idCurrency ?? undefined,
+                );
+            } else {
+                oldDiscountValues = {
+                    idProduct,
+                    idDiscount: idDiscountOld,
+                } as EntityAuditValues;
+            }
+        }
+        const input: RecordEntityAuditDto = {
+            entityName: 'DiscountProduct',
+            entityId: idProduct,
+            operation,
+            oldValues: oldDiscountValues,
+            newValues: operation !== AuditOperationEnum.DELETE ? newDiscountValues : null,
+        };
+        await this.entityAuditsSettersService.record(input, businessReq);
+    }
+
+    /**
+     * Builds audit values object with discount metadata.
+     * @param idProduct - Product ID.
+     * @param idDiscount - Discount ID.
+     * @param scope - Discount scope.
+     * @param discountType - Discount type.
+     * @param value - Discount value.
+     * @param idCurrency - Optional currency ID.
+     * @returns Audit values object.
+     */
+    private buildDiscountAuditValues(
+        idProduct: number,
+        idDiscount: number | undefined,
+        scope?: DiscountScopeEnum,
+        discountType?: DiscountTypeEnum,
+        value?: number,
+        idCurrency?: number,
+    ): EntityAuditValues {
+        const base: EntityAuditValues = { idProduct, idDiscount };
+        if (scope != null && discountType != null && value != null) {
+            return {
+                ...base,
+                scope,
+                discountType,
+                value,
+                ...(idCurrency != null && { idCurrency }),
+            };
+        }
+        return base;
     }
 }

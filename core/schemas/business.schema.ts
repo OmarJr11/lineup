@@ -14,7 +14,7 @@ import {
   ProductVariationSchema,
   DiscountSchema,
   DiscountProductSchema,
-  DiscountProductAuditSchema
+  EntityAuditSchema
 } from '.';
 
 @ObjectType()
@@ -109,6 +109,6 @@ export class BusinessSchema {
   @Field(() => [DiscountProductSchema], { nullable: true })
   creationDiscountProducts?: DiscountProductSchema[];
 
-  @Field(() => [DiscountProductAuditSchema], { nullable: true })
-  creationDiscountProductAudits?: DiscountProductAuditSchema[];
+  @Field(() => [EntityAuditSchema], { nullable: true })
+  creationEntityAudits?: EntityAuditSchema[];
 }

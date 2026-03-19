@@ -8,13 +8,21 @@ import { BasicService } from '../../common/services';
 import { IBusinessReq, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
-import { AuditOperationEnum, StatusEnum } from '../../common/enums';
+import { AuditOperationEnum, DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../../common/enums';
 import { DiscountsConsumerEnum, QueueNamesEnum } from '../../common/enums/consumers';
 import { Discount, DiscountProduct } from '../../entities';
 import { CreateDiscountInput } from './dto/create-discount.input';
 import { UpdateDiscountInput } from './dto/update-discount.input';
 import { DiscountProductsGettersService } from '../discount-products/discount-products-getters.service';
 import { DiscountProductsSettersService } from '../discount-products/discount-products-setters.service';
+
+/** Metadata for discount audit records (scope, type, value). */
+export interface DiscountAuditMetadata {
+    scope: DiscountScopeEnum;
+    discountType: DiscountTypeEnum;
+    value: number;
+    idCurrency?: number;
+}
 
 /**
  * Write service responsible for persisting discount records.
@@ -129,14 +137,22 @@ export class DiscountsSettersService extends BasicService<Discount> {
      * @param {number} idProduct - The product ID.
      * @param {number} idDiscount - The discount ID.
      * @param {IBusinessReq} businessReq - The business request.
+     * @param {DiscountAuditMetadata} [auditMetadata] - Optional metadata for audit (scope, discountType, value).
      */
     @Transactional()
     async upsertDiscountProduct(
         idProduct: number,
         idDiscount: number,
         businessReq: IBusinessReq,
+        auditMetadata?: DiscountAuditMetadata,
     ): Promise<DiscountProduct> {
         const existing = await this.discountProductsGettersService.findByProductId(idProduct);
+        const auditPayload = {
+            scope: auditMetadata?.scope,
+            discountType: auditMetadata?.discountType,
+            value: auditMetadata?.value,
+            idCurrency: auditMetadata?.idCurrency,
+        };
         if (existing) {
             await this.discountsQueue.add(
                 DiscountsConsumerEnum.RecordAudit,
@@ -146,6 +162,7 @@ export class DiscountsSettersService extends BasicService<Discount> {
                     idDiscountNew: idDiscount,
                     operation: AuditOperationEnum.UPDATE,
                     businessReq,
+                    ...auditPayload,
                 },
             );
             await this.discountProductsSettersService.updateDiscount(
@@ -163,6 +180,7 @@ export class DiscountsSettersService extends BasicService<Discount> {
                 idDiscountNew: idDiscount,
                 operation: AuditOperationEnum.INSERT,
                 businessReq,
+                ...auditPayload,
             },
         );
         return await this.discountProductsSettersService.create(idProduct, idDiscount, businessReq);
@@ -188,6 +206,10 @@ export class DiscountsSettersService extends BasicService<Discount> {
                         idDiscountNew: undefined,
                         operation: AuditOperationEnum.DELETE,
                         businessReq,
+                        scope: discount.scope,
+                        discountType: discount.discountType,
+                        value: Number(discount.value),
+                        idCurrency: discount.idCurrency ?? undefined,
                     },
                 );
             }
