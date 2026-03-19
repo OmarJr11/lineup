@@ -5,7 +5,7 @@ import { FindDiscountsByScopeInput } from '../../../../core/modules/discounts/dt
 import { UpdateDiscountInput } from '../../../../core/modules/discounts/dto/update-discount.input';
 import { DiscountsService } from '../../../../core/modules/discounts/discounts.service';
 import {
-    DiscountProductAuditSchema,
+    EntityAuditSchema,
     DiscountSchema,
     PaginatedDiscounts,
 } from '../../../../core/schemas';
@@ -15,7 +15,7 @@ import { BusinessDec, Permissions, Response } from '../../../../core/common/deco
 import { discountsResponses } from '../../../../core/common/responses';
 import { DiscountsPermissionsEnum } from '../../../../core/common/enums';
 import { IBusinessReq } from '../../../../core/common/interfaces';
-import { toDiscountProductAuditSchema, toDiscountSchema } from '../../../../core/common/functions';
+import { toEntityAuditSchema, toDiscountSchema } from '../../../../core/common/functions';
 
 /**
  * GraphQL resolver for discount operations.
@@ -99,7 +99,7 @@ export class DiscountsResolver {
         return discount ? toDiscountSchema(discount) : null;
     }
 
-    @Query(() => [DiscountProductAuditSchema], { name: 'findDiscountAuditByProduct' })
+    @Query(() => [EntityAuditSchema], { name: 'findDiscountAuditByProduct' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(DiscountsPermissionsEnum.DISCREAD)
     async findAuditByProduct(
@@ -110,10 +110,10 @@ export class DiscountsResolver {
         return (
             await this.discountsService
                 .findAuditByProduct(idProduct, businessReq, limit ?? 50)
-        ).map(toDiscountProductAuditSchema);
+        ).map(toEntityAuditSchema);
     }
 
-    @Query(() => [DiscountProductAuditSchema], { name: 'findDiscountAuditByDiscount' })
+    @Query(() => [EntityAuditSchema], { name: 'findDiscountAuditByDiscount' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
     @Permissions(DiscountsPermissionsEnum.DISCREAD)
     async findAuditByDiscount(
@@ -124,6 +124,6 @@ export class DiscountsResolver {
         return (
             await this.discountsService
                 .findAuditByDiscount(idDiscount, businessReq, limit ?? 50)
-        ).map(toDiscountProductAuditSchema);
+        ).map(toEntityAuditSchema);
     }
 }

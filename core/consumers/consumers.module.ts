@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
   DiscountsConsumer,
+  EntityAuditsConsumer,
   MailsConsumer,
   QueuesManager,
   ReviewsConsumer,
@@ -19,7 +20,7 @@ import { CatalogsModule } from '../modules/catalogs/catalogs.module';
 import { SearchModule } from '../modules/search/search.module';
 import { MailModule } from '../modules/mail/mail.module';
 import { ProductRatingsModule } from '../modules/product-ratings/product-ratings.module';
-import { DiscountProductAuditsModule } from '../modules/discount-product-audits/discount-product-audits.module';
+import { EntityAuditsModule } from '../modules/entity-audits/entity-audits.module';
 import { DiscountsModule } from '../modules/discounts/discounts.module';
 import { GeminiModule } from '../modules/gemini/gemini.module';
 import { TagsModule } from '../modules/tags/tags.module';
@@ -43,7 +44,7 @@ export class ConsumersModule {
         SearchModule,
         MailModule,
         ProductRatingsModule,
-        DiscountProductAuditsModule,
+        EntityAuditsModule,
         DiscountsModule,
         GeminiModule,
         ...QueuesManager.queuesForImport(),
@@ -51,6 +52,7 @@ export class ConsumersModule {
       providers: [
         CatalogsConsumer,
         DiscountsConsumer,
+        EntityAuditsConsumer,
         MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,

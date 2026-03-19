@@ -5,6 +5,7 @@ export enum QueueNamesEnum {
   mails = 'mails-queue',
   reviews = 'reviews-queue',
   discounts = 'discounts-queue',
+  entityAudits = 'entity-audits-queue',
   files = 'files-queue',
   products = 'products-queue',
 }

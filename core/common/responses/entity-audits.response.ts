@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-export const discountProductAuditsResponses = {
+export const entityAuditsResponses = {
     create: {
         noPermission: {
             code: 3112100,

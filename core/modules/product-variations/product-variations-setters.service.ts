@@ -8,6 +8,9 @@ import { LogError } from '../../common/helpers/logger.helper';
 import { productVariationsResponses } from '../../common/responses';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { ProductVariationInput } from '../products/dto/product-variation.input';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class ProductVariationsSettersService extends BasicService<ProductVariation> {
@@ -19,6 +22,7 @@ export class ProductVariationsSettersService extends BasicService<ProductVariati
     constructor(
       @InjectRepository(ProductVariation)
       private readonly productVariationRepository: Repository<ProductVariation>,
+      private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
       super(productVariationRepository);
     }
@@ -35,7 +39,15 @@ export class ProductVariationsSettersService extends BasicService<ProductVariati
         businessReq: IBusinessReq
     ): Promise<ProductVariation> {
       try {
-        return await this.save(data, businessReq);
+        const variation = await this.save(data, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.ProductVariation,
+          entityId: variation.id,
+          operation: AuditOperationEnum.INSERT,
+          newValues: toEntityAuditValues(variation),
+          userOrBusinessReq: businessReq,
+        });
+        return variation;
       } catch (error) {
         LogError(this.logger, error, this.create.name, businessReq);
         throw new InternalServerErrorException(this.rCreate.error);
@@ -55,7 +67,17 @@ export class ProductVariationsSettersService extends BasicService<ProductVariati
         businessReq: IBusinessReq
     ) {
       try {
-        return await this.updateEntity(data, productVariation, businessReq);
+        const oldValues = toEntityAuditValues(productVariation);
+        const updated = await this.updateEntity(data, productVariation, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.ProductVariation,
+          entityId: productVariation.id,
+          operation: AuditOperationEnum.UPDATE,
+          oldValues,
+          newValues: toEntityAuditValues(updated),
+          userOrBusinessReq: businessReq,
+        });
+        return updated;
       } catch (error) {
         LogError(this.logger, error, this.update.name, businessReq);
         throw new InternalServerErrorException(this.rUpdate.error);
@@ -70,6 +92,13 @@ export class ProductVariationsSettersService extends BasicService<ProductVariati
     @Transactional()
     async remove(productVariation: ProductVariation, businessReq: IBusinessReq) {
       try {
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.ProductVariation,
+          entityId: productVariation.id,
+          operation: AuditOperationEnum.DELETE,
+          oldValues: toEntityAuditValues(productVariation),
+          userOrBusinessReq: businessReq,
+        });
         return await this.deleteEntityByStatus(productVariation, businessReq);
       } catch (error) {
         LogError(this.logger, error, this.remove.name, businessReq);

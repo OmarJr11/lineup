@@ -9,7 +9,9 @@ import { IBusinessReq } from '../../common/interfaces';
 import { UpdateCatalogInput } from './dto/update-catalog.input';
 import { catalogsResponses } from '../../common/responses';
 import { LogError } from '../../common/helpers/logger.helper';
-import { ActionsEnum } from '../../common/enums';
+import { ActionsEnum, AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class CatalogsSettersService extends BasicService<Catalog> {
@@ -21,6 +23,7 @@ export class CatalogsSettersService extends BasicService<Catalog> {
     constructor(
       @InjectRepository(Catalog)
       private readonly catalogRepository: Repository<Catalog>,
+      private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
       super(catalogRepository);
     }
@@ -37,7 +40,15 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       businessReq: IBusinessReq
     ): Promise<Catalog> {
       try {
-        return await this.save(data, businessReq);
+        const catalog = await this.save(data, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Catalog,
+          entityId: catalog.id,
+          operation: AuditOperationEnum.INSERT,
+          newValues: toEntityAuditValues(catalog),
+          userOrBusinessReq: businessReq,
+        });
+        return catalog;
       } catch (error) {
         LogError(this.logger, error, this.create.name, businessReq);
         throw new InternalServerErrorException(this.rCreate.error);
@@ -57,7 +68,17 @@ export class CatalogsSettersService extends BasicService<Catalog> {
         businessReq: IBusinessReq
     ) {
       try {
-        return await this.updateEntity(data, catalog, businessReq);
+        const oldValues = toEntityAuditValues(catalog);
+        const updated = await this.updateEntity(data, catalog, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Catalog,
+          entityId: catalog.id,
+          operation: AuditOperationEnum.UPDATE,
+          oldValues,
+          newValues: toEntityAuditValues(updated),
+          userOrBusinessReq: businessReq,
+        });
+        return updated;
       } catch (error) {
         LogError(this.logger, error, this.update.name, businessReq);
         throw new InternalServerErrorException(this.rUpdate.error);
@@ -72,6 +93,13 @@ export class CatalogsSettersService extends BasicService<Catalog> {
     @Transactional()
     async remove(catalog: Catalog, businessReq: IBusinessReq) {
       try {
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Catalog,
+          entityId: catalog.id,
+          operation: AuditOperationEnum.DELETE,
+          oldValues: toEntityAuditValues(catalog),
+          userOrBusinessReq: businessReq,
+        });
         return await this.deleteEntityByStatus(catalog, businessReq);
       } catch (error) {
         LogError(this.logger, error, this.remove.name, businessReq);

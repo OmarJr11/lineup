@@ -9,6 +9,9 @@ import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class ProductsSettersService extends BasicService<Product> {
@@ -20,6 +23,7 @@ export class ProductsSettersService extends BasicService<Product> {
     constructor(
       @InjectRepository(Product)
       private readonly productRepository: Repository<Product>,
+      private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
       super(productRepository);
     }
@@ -36,7 +40,15 @@ export class ProductsSettersService extends BasicService<Product> {
         businessReq: IBusinessReq
     ): Promise<Product> {
       try {
-        return await this.save(data, businessReq);
+        const product = await this.save(data, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Product,
+          entityId: product.id,
+          operation: AuditOperationEnum.INSERT,
+          newValues: toEntityAuditValues(product),
+          userOrBusinessReq: businessReq,
+        });
+        return product;
       } catch (error) {
         LogError(this.logger, error, this.create.name, businessReq);
         throw new InternalServerErrorException(this.rCreate.error);
@@ -56,7 +68,17 @@ export class ProductsSettersService extends BasicService<Product> {
         businessReq: IBusinessReq
     ) {
       try {
-        return await this.updateEntity(data, product, businessReq);
+        const oldValues = toEntityAuditValues(product);
+        const updated = await this.updateEntity(data, product, businessReq);
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Product,
+          entityId: product.id,
+          operation: AuditOperationEnum.UPDATE,
+          oldValues,
+          newValues: toEntityAuditValues(updated),
+          userOrBusinessReq: businessReq,
+        });
+        return updated;
       } catch (error) {
         LogError(this.logger, error, this.update.name, businessReq);
         throw new InternalServerErrorException(this.rUpdate.error);
@@ -71,6 +93,13 @@ export class ProductsSettersService extends BasicService<Product> {
     @Transactional()
     async remove(product: Product, businessReq: IBusinessReq) {
       try {
+        await this.entityAuditsQueueService.addRecordJob({
+          entityName: AuditableEntityNameEnum.Product,
+          entityId: product.id,
+          operation: AuditOperationEnum.DELETE,
+          oldValues: toEntityAuditValues(product),
+          userOrBusinessReq: businessReq,
+        });
         return await this.deleteEntityByStatus(product, businessReq);
       } catch (error) {
         LogError(this.logger, error, this.remove.name, businessReq);

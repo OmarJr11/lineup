@@ -15,6 +15,7 @@ export class QueuesManager {
       mails: QueueNamesEnum.mails,
       reviews: QueueNamesEnum.reviews,
       discounts: QueueNamesEnum.discounts,
+      entityAudits: QueueNamesEnum.entityAudits,
       files: QueueNamesEnum.files,
       products: QueueNamesEnum.products,
     };
@@ -31,6 +32,7 @@ export class QueuesManager {
     @InjectQueue(QueuesManager.queueNames.mails) mailsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.reviews) reviewsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.discounts) discountsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.entityAudits) entityAuditsQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.files) filesQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.products) productsQueue: Queue,
   ) {
@@ -40,6 +42,7 @@ export class QueuesManager {
     this.queues[QueuesManager.queueNames.mails] = mailsQueue;
     this.queues[QueuesManager.queueNames.reviews] = reviewsQueue;
     this.queues[QueuesManager.queueNames.discounts] = discountsQueue;
+    this.queues[QueuesManager.queueNames.entityAudits] = entityAuditsQueue;
     this.queues[QueuesManager.queueNames.files] = filesQueue;
     this.queues[QueuesManager.queueNames.products] = productsQueue;
 

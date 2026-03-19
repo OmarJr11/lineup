@@ -9,10 +9,12 @@ import { businessesResponses } from '../../common/responses';
 import { CreateBusinessInput } from './dto/create-business.input';
 import { UpdateBusinessInput } from './dto/update-business.input';
 import { ISeedBusinessData } from '../seed/dto/seed-business.input';
-import { EnvironmentsEnum, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
+import { AuditOperationEnum, AuditableEntityNameEnum, EnvironmentsEnum, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BusinessRolesService } from '../business-roles/business-roles.service';
 import { RolesService } from '../roles/roles.service';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 const SEED_DEFAULT_PASSWORD =
     '$argon2id$v=19$m=65536,t=5,p=1$Hdv+xUgajnLsO0ElTUiRyw$rS8kZ1eSmcUu5nlNreEmIR9UUWOKjRIxYodRCA640oo';
@@ -29,6 +31,7 @@ export class BusinessesSettersService extends BasicService<Business> {
         private readonly businessRepository: Repository<Business>,
         private readonly businessRolesService: BusinessRolesService,
         private readonly rolesService: RolesService,
+        private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
         super(businessRepository);
     }
@@ -126,7 +129,17 @@ export class BusinessesSettersService extends BasicService<Business> {
         businessReq: IBusinessReq
     ): Promise<Business> {
         try {
-            return await this.updateEntity(data, business, businessReq);
+            const oldValues = toEntityAuditValues(business);
+            const updated = await this.updateEntity(data, business, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.Business,
+                entityId: business.id,
+                operation: AuditOperationEnum.UPDATE,
+                oldValues,
+                newValues: toEntityAuditValues(updated),
+                userOrBusinessReq: businessReq,
+            });
+            return updated;
         } catch (error) {
             LogError(this.logger, error, this.update.name, businessReq);
             throw new InternalServerErrorException(this._ucUpdate.error);
@@ -180,6 +193,13 @@ export class BusinessesSettersService extends BasicService<Business> {
      */
     async remove(business: Business, businessReq: IBusinessReq) {
         try {
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.Business,
+                entityId: business.id,
+                operation: AuditOperationEnum.DELETE,
+                oldValues: toEntityAuditValues(business),
+                userOrBusinessReq: businessReq,
+            });
             return await this.deleteEntityByStatus(business, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.remove.name, businessReq);

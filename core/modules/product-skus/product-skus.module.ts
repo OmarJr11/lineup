@@ -5,6 +5,7 @@ import { ProductSkusService } from './product-skus.service';
 import { ProductSkusGettersService } from './product-skus-getters.service';
 import { ProductSkusSettersService } from './product-skus-setters.service';
 import { StockMovementsModule } from '../stock-movements/stock-movements.module';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 /**
  * Module that encapsulates all product SKU (stock) functionality.
@@ -12,6 +13,7 @@ import { StockMovementsModule } from '../stock-movements/stock-movements.module'
 @Module({
     imports: [
         TypeOrmModule.forFeature([ProductSku]),
+        EntityAuditsModule,
         StockMovementsModule,
     ],
     providers: [

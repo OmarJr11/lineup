@@ -1,20 +1,27 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Queue } from 'bullmq';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BasicService } from '../../common/services';
 import { IBusinessReq, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
-import { AuditOperationEnum, StatusEnum } from '../../common/enums';
-import { DiscountsConsumerEnum, QueueNamesEnum } from '../../common/enums/consumers';
+import { AuditOperationEnum, AuditableEntityNameEnum, DiscountScopeEnum, DiscountTypeEnum, StatusEnum } from '../../common/enums';
 import { Discount, DiscountProduct } from '../../entities';
 import { CreateDiscountInput } from './dto/create-discount.input';
 import { UpdateDiscountInput } from './dto/update-discount.input';
 import { DiscountProductsGettersService } from '../discount-products/discount-products-getters.service';
 import { DiscountProductsSettersService } from '../discount-products/discount-products-setters.service';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
+
+/** Metadata for discount audit records (scope, type, value). */
+export interface DiscountAuditMetadata {
+    scope: DiscountScopeEnum;
+    discountType: DiscountTypeEnum;
+    value: number;
+    idCurrency?: number;
+}
 
 /**
  * Write service responsible for persisting discount records.
@@ -31,8 +38,7 @@ export class DiscountsSettersService extends BasicService<Discount> {
         private readonly discountRepository: Repository<Discount>,
         private readonly discountProductsGettersService: DiscountProductsGettersService,
         private readonly discountProductsSettersService: DiscountProductsSettersService,
-        @InjectQueue(QueueNamesEnum.discounts)
-        private readonly discountsQueue: Queue,
+        private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
         super(discountRepository);
     }
@@ -54,7 +60,15 @@ export class DiscountsSettersService extends BasicService<Discount> {
                 data.endDate,
             );
             const status = this.resolveStatusFromStartDate(startDate);
-            return await this.save({ ...data, startDate, endDate, status }, businessReq);
+            const discount = await this.save({ ...data, startDate, endDate, status }, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.Discount,
+                entityId: discount.id,
+                operation: AuditOperationEnum.INSERT,
+                newValues: toEntityAuditValues(discount),
+                userOrBusinessReq: businessReq,
+            });
+            return discount;
         } catch (error) {
             LogError(this.logger, error, this.createDiscount.name, businessReq);
             throw new InternalServerErrorException(this.rCreate.error);
@@ -83,7 +97,17 @@ export class DiscountsSettersService extends BasicService<Discount> {
                 if (data.startDate) updateData.startDate = formatted.startDate;
                 if (data.endDate) updateData.endDate = formatted.endDate;
             }
-            return await this.updateEntity(updateData, discount, businessReq);
+            const oldValues = toEntityAuditValues(discount);
+            const updated = await this.updateEntity(updateData, discount, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.Discount,
+                entityId: discount.id,
+                operation: AuditOperationEnum.UPDATE,
+                oldValues,
+                newValues: toEntityAuditValues(updated),
+                userOrBusinessReq: businessReq,
+            });
+            return updated;
         } catch (error) {
             LogError(this.logger, error, this.updateDiscount.name, businessReq);
             throw new InternalServerErrorException(this.rUpdate.error);
@@ -106,16 +130,16 @@ export class DiscountsSettersService extends BasicService<Discount> {
             await this.updateEntity({ status }, discounts, userReq);
             for (const discount of discounts) {
                 const discountProducts = await this.discountProductsGettersService.findAllByDiscountId(discount.id);
-                for (const discountProduct of discountProducts) {
-                    await this.discountsQueue.add(
-                        DiscountsConsumerEnum.RecordAudit,
-                        { 
-                            idProduct: discountProduct.idProduct,
-                            operation: AuditOperationEnum.UPDATE,
-                            businessReq: { businessId: discount.idCreationBusiness, path: 'business' }
-                        },
-                    );
-                }
+            for (const discountProduct of discountProducts) {
+                await this.entityAuditsQueueService.addRecordJob({
+                    entityName: AuditableEntityNameEnum.DiscountProduct,
+                    entityId: discountProduct.idProduct,
+                    operation: AuditOperationEnum.UPDATE,
+                    oldValues: { idProduct: discountProduct.idProduct, idDiscount: discountProduct.idDiscount },
+                    newValues: { idProduct: discountProduct.idProduct, idDiscount: discountProduct.idDiscount },
+                    userOrBusinessReq: { businessId: discount.idCreationBusiness, path: 'business' },
+                });
+            }
             }
         } catch (error) {
             LogError(this.logger, error, this.updateMany.name);
@@ -129,25 +153,31 @@ export class DiscountsSettersService extends BasicService<Discount> {
      * @param {number} idProduct - The product ID.
      * @param {number} idDiscount - The discount ID.
      * @param {IBusinessReq} businessReq - The business request.
+     * @param {DiscountAuditMetadata} [auditMetadata] - Optional metadata for audit (scope, discountType, value).
      */
     @Transactional()
     async upsertDiscountProduct(
         idProduct: number,
         idDiscount: number,
         businessReq: IBusinessReq,
+        auditMetadata?: DiscountAuditMetadata,
     ): Promise<DiscountProduct> {
         const existing = await this.discountProductsGettersService.findByProductId(idProduct);
+        const auditPayload = {
+            scope: auditMetadata?.scope,
+            discountType: auditMetadata?.discountType,
+            value: auditMetadata?.value,
+            idCurrency: auditMetadata?.idCurrency,
+        };
         if (existing) {
-            await this.discountsQueue.add(
-                DiscountsConsumerEnum.RecordAudit,
-                {
-                    idProduct,
-                    idDiscountOld: existing.idDiscount,
-                    idDiscountNew: idDiscount,
-                    operation: AuditOperationEnum.UPDATE,
-                    businessReq,
-                },
-            );
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.DiscountProduct,
+                entityId: idProduct,
+                operation: AuditOperationEnum.UPDATE,
+                oldValues: { idProduct, idDiscount: existing.idDiscount },
+                newValues: { idProduct, idDiscount },
+                userOrBusinessReq: businessReq,
+            });
             await this.discountProductsSettersService.updateDiscount(
                 existing,
                 idDiscount,
@@ -155,16 +185,13 @@ export class DiscountsSettersService extends BasicService<Discount> {
             );
             return await this.discountProductsGettersService.findByProductId(idProduct)
         }
-        await this.discountsQueue.add(
-            DiscountsConsumerEnum.RecordAudit,
-            {
-                idProduct,
-                idDiscountOld: undefined,
-                idDiscountNew: idDiscount,
-                operation: AuditOperationEnum.INSERT,
-                businessReq,
-            },
-        );
+        await this.entityAuditsQueueService.addRecordJob({
+            entityName: AuditableEntityNameEnum.DiscountProduct,
+            entityId: idProduct,
+            operation: AuditOperationEnum.INSERT,
+            newValues: { idProduct, idDiscount },
+            userOrBusinessReq: businessReq,
+        });
         return await this.discountProductsSettersService.create(idProduct, idDiscount, businessReq);
     }
 
@@ -179,17 +206,21 @@ export class DiscountsSettersService extends BasicService<Discount> {
         try {
             const discountProducts = await this.discountProductsGettersService
                 .findAllByDiscountId(discount.id);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.Discount,
+                entityId: discount.id,
+                operation: AuditOperationEnum.DELETE,
+                oldValues: toEntityAuditValues(discount),
+                userOrBusinessReq: businessReq,
+            });
             for (const dp of discountProducts) {
-                await this.discountsQueue.add(
-                    DiscountsConsumerEnum.RecordAudit,
-                    {
-                        idProduct: dp.idProduct,
-                        idDiscountOld: dp.idDiscount,
-                        idDiscountNew: undefined,
-                        operation: AuditOperationEnum.DELETE,
-                        businessReq,
-                    },
-                );
+                await this.entityAuditsQueueService.addRecordJob({
+                    entityName: AuditableEntityNameEnum.DiscountProduct,
+                    entityId: dp.idProduct,
+                    operation: AuditOperationEnum.DELETE,
+                    oldValues: { idProduct: dp.idProduct, idDiscount: dp.idDiscount },
+                    userOrBusinessReq: businessReq,
+                });
             }
             await this.discountProductsSettersService.removeMany(discountProducts, businessReq);
             await this.deleteEntityByStatus(discount, businessReq);

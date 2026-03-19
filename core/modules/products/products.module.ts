@@ -13,6 +13,7 @@ import { QueueNamesEnum } from '../../common/enums';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 import { FilesModule } from '../files/files.module';
 import { ProductTagsModule } from '../product-tags/product-tags.module';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ProductTagsModule } from '../product-tags/product-tags.module';
       }
     ),
     CatalogsModule,
+    EntityAuditsModule,
     FilesModule,
   ],
   providers: [

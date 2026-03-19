@@ -11,6 +11,9 @@ import { VariationOptions } from '../../common/types';
 import { CreateProductSkuInput } from './dto/create-product-sku.input';
 import { UpdateProductSkuInput } from './dto/update-product-sku.input';
 import { VariationOptionItemInput } from './dto/variation-option-item.input';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 /**
  * Write service responsible for persisting product SKU records.
@@ -25,6 +28,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
     constructor(
         @InjectRepository(ProductSku)
         private readonly productSkuRepository: Repository<ProductSku>,
+        private readonly entityAuditsQueueService: EntityAuditsQueueService,
     ) {
         super(productSkuRepository);
     }
@@ -47,7 +51,15 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
                 variationOptions: variationOptionsRecord,
                 quantity: data.quantity ?? null,
             };
-            return await this.save(payload, businessReq);
+            const sku = await this.save(payload, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.ProductSku,
+                entityId: sku.id,
+                operation: AuditOperationEnum.INSERT,
+                newValues: toEntityAuditValues(sku),
+                userOrBusinessReq: businessReq,
+            });
+            return sku;
         } catch (error) {
             LogError(this.logger, error, this.create.name, businessReq);
             throw new InternalServerErrorException(this.rCreate.error);
@@ -68,7 +80,17 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
         businessReq: IBusinessReq,
     ): Promise<ProductSku> {
         try {
-            return await this.updateEntity(data, productSku, businessReq);
+            const oldValues = toEntityAuditValues(productSku);
+            const updated = await this.updateEntity(data, productSku, businessReq);
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.ProductSku,
+                entityId: productSku.id,
+                operation: AuditOperationEnum.UPDATE,
+                oldValues,
+                newValues: toEntityAuditValues(updated),
+                userOrBusinessReq: businessReq,
+            });
+            return updated;
         } catch (error) {
             LogError(this.logger, error, this.update.name, businessReq);
             throw new InternalServerErrorException(this.rUpdate.error);
@@ -83,6 +105,13 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
     @Transactional()
     async remove(productSku: ProductSku, businessReq: IBusinessReq): Promise<void> {
         try {
+            await this.entityAuditsQueueService.addRecordJob({
+                entityName: AuditableEntityNameEnum.ProductSku,
+                entityId: productSku.id,
+                operation: AuditOperationEnum.DELETE,
+                oldValues: toEntityAuditValues(productSku),
+                userOrBusinessReq: businessReq,
+            });
             await this.deleteEntityByStatus(productSku, businessReq);
         } catch (error) {
             LogError(this.logger, error, this.remove.name, businessReq);
