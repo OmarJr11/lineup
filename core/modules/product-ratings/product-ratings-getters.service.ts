@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
@@ -15,7 +15,12 @@ import { InfinityScrollInput } from '../../common/dtos';
 export class ProductRatingsGettersService extends BasicService<ProductRating> {
     private readonly logger = new Logger(ProductRatingsGettersService.name);
     private readonly rList = productRatingsResponses.list;
-    private readonly relations = ['creationUser', 'creationUser.profileImage', 'product'];
+    private readonly relations = [
+        'creationUser', 'creationUser.profileImage', 
+        'product', 'product.productFiles', 'product.productFiles.file',
+        'product.catalog', 'product.catalog.image',
+        'product.business', 'product.business.image'
+    ];
 
     constructor(
         @InjectRepository(ProductRating)
@@ -31,10 +36,11 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
      */
     async findOne(id: number): Promise<ProductRating> {
         try {
-            return await this.findOneWithOptionsOrFail({
+            const productRating = await this.findOneWithOptionsOrFail({
                 where: { id, status: Not(StatusEnum.DELETED) },
                 relations: this.relations,
             });
+            return this.formatProductRating(productRating);
         } catch (error) {
             LogError(this.logger, error, this.findOne.name);
             throw new NotFoundException(this.rList.notFound);
@@ -52,9 +58,11 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
         idCreationUser: number,
     ): Promise<ProductRating | null> {
         try {
-            return await this.findOneWithOptions({
+            const productRating = await this.findOneWithOptions({
                 where: { idProduct, idCreationUser, status: Not(StatusEnum.DELETED) },
+                relations: this.relations,
             });
+            return this.formatProductRating(productRating);
         } catch (error) {
             LogError(this.logger, error, this.findOneByProductAndUser.name);
             return null;
@@ -68,10 +76,11 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
      */
     async findAllByProduct(idProduct: number): Promise<ProductRating[]> {
         try {
-            return await this.find({
+            const productRatings = await this.find({
                 where: { idProduct, status: Not(StatusEnum.DELETED) },
                 relations: this.relations,
             });
+            return this.formatProductRatings(productRatings);
         } catch (error) {
             LogError(this.logger, error, this.findAllByProduct.name);
             throw new NotFoundException(this.rList.notFound);
@@ -101,15 +110,12 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
                 .orderBy(`sub.${orderBy}`, order)
                 .limit(limit)
                 .offset(skip);
-            return await this.createQueryBuilder('pr')
-                .leftJoinAndSelect('pr.product', 'product')
-                .leftJoinAndSelect(
-                    'product.productFiles',
-                    'productFiles',
-                    'productFiles.status <> :statusProductFiles',
-                    { statusProductFiles: StatusEnum.DELETED },
-                )
-                .leftJoinAndSelect('productFiles.file', 'file')
+            let queryBuilder: SelectQueryBuilder<ProductRating> = this
+                .createQueryBuilder('pr')
+                .leftJoinAndSelect('pr.creationUser', 'creationUser')
+                .leftJoinAndSelect('creationUser.profileImage', 'profileImage');
+            queryBuilder = this.addProductDisplayRelations(queryBuilder);
+            return await queryBuilder.where(`pr.id IN (${subQuery.getQuery()})`)
                 .where(`pr.id IN (${subQuery.getQuery()})`)
                 .andWhere('product.status <> :statusProduct', { statusProduct: StatusEnum.DELETED })
                 .setParameters(subQuery.getParameters())
@@ -137,10 +143,12 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
             const skip = (page - 1) * limit;
             const order = pagination.order || 'DESC';
             const orderBy = pagination.orderBy || 'creation_date';
-            return await this.createQueryBuilder('pr')
+            let queryBuilder: SelectQueryBuilder<ProductRating> = this
+                .createQueryBuilder('pr')
                 .leftJoinAndSelect('pr.creationUser', 'creationUser')
-                .leftJoinAndSelect('creationUser.profileImage', 'profileImage')
-                .where('pr.idProduct = :idProduct', { idProduct })
+                .leftJoinAndSelect('creationUser.profileImage', 'profileImage');
+            queryBuilder = this.addProductDisplayRelations(queryBuilder);
+            return await queryBuilder.where('pr.idProduct = :idProduct', { idProduct })
                 .andWhere('pr.status <> :status', { status: StatusEnum.DELETED })
                 .orderBy(`pr.${orderBy}`, order)
                 .limit(limit)
@@ -150,5 +158,51 @@ export class ProductRatingsGettersService extends BasicService<ProductRating> {
             LogError(this.logger, error, this.findAllByProductPaginated.name);
             throw new NotFoundException(this.rList.notFound);
         }
+    }
+
+    /**
+     * Format the product ratings.
+     * @param {ProductRating[]} productRatings - The product ratings.
+     * @returns {ProductRating[]} The formatted product ratings.
+     */
+    private formatProductRatings(productRatings: ProductRating[]): ProductRating[] {
+        return productRatings.map(productRating => this.formatProductRating(productRating));
+    }
+
+    /**
+     * Format the product of a product rating.
+     * @param {ProductRating} productRating - The product rating.
+     * @returns {ProductRating} The formatted product rating.
+     */
+    private formatProductRating(productRating: ProductRating): ProductRating {
+        if (productRating.product && productRating.product?.productFiles.length > 0) {
+            const productFiles = productRating.product.productFiles
+                .filter(productFile => productFile.status !== StatusEnum.DELETED);
+            productRating.product.productFiles = productFiles;
+        }
+        return productRating;
+    }
+
+    /**
+     * Add the product display relations to the query builder.
+     * @param {SelectQueryBuilder<ProductRating>} queryBuilder - The query builder.
+     * @returns {SelectQueryBuilder<ProductRating>} The query builder with the product display relations.
+     */
+    private addProductDisplayRelations(
+        queryBuilder: SelectQueryBuilder<ProductRating>
+    ): SelectQueryBuilder<ProductRating> {
+        return queryBuilder
+            .leftJoinAndSelect('pr.product', 'product')
+            .leftJoinAndSelect(
+                'product.productFiles',
+                'productFiles',
+                'productFiles.status <> :statusProductFiles',
+                { statusProductFiles: StatusEnum.DELETED },
+            )
+            .leftJoinAndSelect('productFiles.file', 'file')
+            .leftJoinAndSelect('product.catalog', 'catalog')
+            .leftJoinAndSelect('catalog.image', 'catalogImage')
+            .leftJoinAndSelect('product.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage');
     }
 }
