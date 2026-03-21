@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
-    ValidateNested,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateNested,
 } from 'class-validator';
 import { VariationOptionItemInput } from './variation-option-item.input';
 
@@ -16,35 +16,35 @@ import { VariationOptionItemInput } from './variation-option-item.input';
  * Used when creating SKUs during product creation/update.
  */
 export class CreateProductSkuInput {
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    idProduct: number;
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  idProduct: number;
 
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(100)
-    skuCode: string;
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(100)
+  skuCode: string;
 
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => VariationOptionItemInput)
-    variationOptions: VariationOptionItemInput[];
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VariationOptionItemInput)
+  variationOptions: VariationOptionItemInput[];
 
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Min(0)
-    quantity?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  quantity?: number;
 
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    price?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  price?: number;
 
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    idCurrency?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  idCurrency?: number;
 }

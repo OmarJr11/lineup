@@ -3,8 +3,16 @@ import { ProductSkusService } from '../../../../core/modules/product-skus/produc
 import { UpdateProductSkusInput } from '../../../../core/modules/product-skus/dto/update-product-skus.input';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ProductSkuSchema } from '../../../../core/schemas';
-import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
-import { Permissions, BusinessDec, Response } from '../../../../core/common/decorators';
+import {
+  JwtAuthGuard,
+  PermissionsGuard,
+  TokenGuard,
+} from '../../../../core/common/guards';
+import {
+  Permissions,
+  BusinessDec,
+  Response,
+} from '../../../../core/common/decorators';
 import { productSkusResponses } from '../../../../core/common/responses';
 import { ProductsPermissionsEnum } from '../../../../core/common/enums';
 import { IBusinessReq } from '../../../../core/common/interfaces';
@@ -25,9 +33,12 @@ export class ProductSkusResolver {
   @Permissions(ProductsPermissionsEnum.PRODUPD)
   async getSkusByProduct(
     @Args('idProduct', { type: () => Int }) idProduct: number,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
-    const skus = await this.productSkusService.findAllByProductAndBusiness(idProduct, businessReq.businessId);
+    const skus = await this.productSkusService.findAllByProductAndBusiness(
+      idProduct,
+      businessReq.businessId,
+    );
     return skus.map((sku) => toProductSkuSchema(sku));
   }
 
@@ -43,9 +54,12 @@ export class ProductSkusResolver {
   @Response(productSkusResponses.update)
   async updateProductSkus(
     @Args('data') data: UpdateProductSkusInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
-    const skus = await this.productSkusService.updateAllSkusByProduct(data, businessReq);
+    const skus = await this.productSkusService.updateAllSkusByProduct(
+      data,
+      businessReq,
+    );
     return skus.map((sku) => toProductSkuSchema(sku));
   }
 }

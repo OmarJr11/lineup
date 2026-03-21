@@ -11,18 +11,18 @@ import { ProductSkusModule } from '../product-skus/product-skus.module';
 import { StockMovementsModule } from '../stock-movements/stock-movements.module';
 
 @Module({
-    imports: [
-        BusinessVisitsModule,
-        BusinessFollowersModule,
-        ProductVisitsModule,
-        CatalogVisitsModule,
-        ProductsModule,
-        CatalogsModule,
-        DiscountsModule,
-        ProductSkusModule,
-        StockMovementsModule,
-    ],
-    providers: [BusinessStatisticsGettersService],
-    exports: [BusinessStatisticsGettersService],
+  imports: [
+    BusinessVisitsModule,
+    BusinessFollowersModule,
+    ProductVisitsModule,
+    CatalogVisitsModule,
+    ProductsModule,
+    CatalogsModule,
+    DiscountsModule,
+    ProductSkusModule,
+    StockMovementsModule,
+  ],
+  providers: [BusinessStatisticsGettersService],
+  exports: [BusinessStatisticsGettersService],
 })
 export class BusinessStatisticsModule {}

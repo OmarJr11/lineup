@@ -8,27 +8,27 @@ import { BaseSchema } from './base.schema';
  */
 @ObjectType()
 export class StateSchema extends BaseSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    name: string;
+  @Field()
+  name: string;
 
-    @Field({ nullable: true })
-    code?: string;
+  @Field({ nullable: true })
+  code?: string;
 
-    @Field({ nullable: true })
-    capital?: string;
+  @Field({ nullable: true })
+  capital?: string;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => Int)
-    idCreationUser: number;
+  @Field(() => Int)
+  idCreationUser: number;
 
-    @Field(() => UserSchema, { nullable: true })
-    creationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  creationUser?: UserSchema;
 
-    @Field(() => UserSchema, { nullable: true })
-    modificationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  modificationUser?: UserSchema;
 }

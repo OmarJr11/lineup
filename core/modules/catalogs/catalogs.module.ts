@@ -16,18 +16,10 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
       name: QueueNamesEnum.searchData,
       defaultJobOptions: {
         removeOnComplete: true,
-      }
+      },
     }),
   ],
-  providers: [
-    CatalogsService,
-    CatalogsSettersService,
-    CatalogsGettersService
-  ],
-  exports: [
-    CatalogsService,
-    CatalogsSettersService,
-    CatalogsGettersService
-  ],
+  providers: [CatalogsService, CatalogsSettersService, CatalogsGettersService],
+  exports: [CatalogsService, CatalogsSettersService, CatalogsGettersService],
 })
 export class CatalogsModule {}

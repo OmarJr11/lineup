@@ -5,11 +5,7 @@ import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 
 @Module({
-  imports: [
-    SocialNetworkBusinessesModuleCore,
-    RolesModule,
-    TokensModule,
-  ],
+  imports: [SocialNetworkBusinessesModuleCore, RolesModule, TokensModule],
   providers: [SocialNetworkBusinessesResolver],
 })
 export class SocialNetworkBusinessesModule {}

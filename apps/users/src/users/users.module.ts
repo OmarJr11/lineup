@@ -3,7 +3,7 @@ import { UsersResolver } from './users.resolver';
 import { UsersModule as UsersModuleCore } from '../../../../core/modules/users/users.module';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 import { RolesModule } from '../../../../core/modules/roles/roles.module';
-import { AuthModule } from  '../../../../core/modules/auth/auth.module';
+import { AuthModule } from '../../../../core/modules/auth/auth.module';
 
 @Module({
   providers: [UsersResolver],

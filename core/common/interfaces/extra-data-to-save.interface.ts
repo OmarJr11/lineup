@@ -1,4 +1,4 @@
 export interface IExtraDataToSave {
-    status?: string;
-    data?: any;
+  status?: string;
+  data?: any;
 }

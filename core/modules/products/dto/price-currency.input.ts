@@ -9,17 +9,17 @@ import { PriceCurrencyPairValidator } from '../../../common/validators/price-cur
  */
 @InputType()
 export class PriceCurrencyInput {
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    price?: number;
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
+  price?: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    idCurrency?: number;
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
+  idCurrency?: number;
 }

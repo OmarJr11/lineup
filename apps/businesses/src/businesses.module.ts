@@ -67,13 +67,17 @@ import { BullModule } from '@nestjs/bullmq';
         } else if (extCode) {
           switch (String(extCode)) {
             case 'BAD_REQUEST':
-              code = 400; break;
+              code = 400;
+              break;
             case 'UNAUTHORIZED':
-              code = 401; break;
+              code = 401;
+              break;
             case 'FORBIDDEN':
-              code = 403; break;
+              code = 403;
+              break;
             case 'NOT_FOUND':
-              code = 404; break;
+              code = 404;
+              break;
             default:
               code = 500;
           }
@@ -102,7 +106,7 @@ import { BullModule } from '@nestjs/bullmq';
     InventoryModule,
     DiscountsModule,
     StatisticsModule,
-  ]
+  ],
 })
 export class BusinessesModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

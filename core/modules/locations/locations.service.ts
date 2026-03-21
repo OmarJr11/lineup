@@ -16,7 +16,7 @@ import { LocationsSettersService } from './locations-setters.service';
 @Injectable()
 export class LocationsService extends BasicService<Location> {
   private logger = new Logger(LocationsService.name);
-      
+
   constructor(
     @Inject(REQUEST)
     private readonly businessRequest: Request,
@@ -37,9 +37,12 @@ export class LocationsService extends BasicService<Location> {
   @Transactional()
   async create(
     data: CreateLocationInput,
-    businessReq: IBusinessReq
+    businessReq: IBusinessReq,
   ): Promise<Location> {
-    const location = await this.locationsSettersService.create(data, businessReq);
+    const location = await this.locationsSettersService.create(
+      data,
+      businessReq,
+    );
     return await this.locationsGettersService.findOne(location.id);
   }
 
@@ -70,7 +73,7 @@ export class LocationsService extends BasicService<Location> {
   @Transactional()
   async update(
     data: UpdateLocationInput,
-    businessReq: IBusinessReq
+    businessReq: IBusinessReq,
   ): Promise<Location> {
     const location = await this.locationsGettersService.findOne(data.id);
     await this.locationsSettersService.update(location, data, businessReq);

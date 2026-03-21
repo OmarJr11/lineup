@@ -11,15 +11,15 @@ import { ProductReactionsModule } from '../product-reactions/product-reactions.m
  * Module for dynamic product collections (personalized recommendations).
  */
 @Module({
-    imports: [
-        SearchModule,
-        UserSearchesModule,
-        UsersModule,
-        ProductsModule,
-        ProductVisitsModule,
-        ProductReactionsModule,
-    ],
-    providers: [ProductCollectionsService],
-    exports: [ProductCollectionsService],
+  imports: [
+    SearchModule,
+    UserSearchesModule,
+    UsersModule,
+    ProductsModule,
+    ProductVisitsModule,
+    ProductReactionsModule,
+  ],
+  providers: [ProductCollectionsService],
+  exports: [ProductCollectionsService],
 })
 export class ProductCollectionsModule {}

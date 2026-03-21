@@ -13,7 +13,10 @@ export class ChangePasswordInput {
   @IsString()
   currentPassword: string;
 
-  @Field({ description: 'New password (min 8 characters, recommended: mixed case, numbers, symbols)' })
+  @Field({
+    description:
+      'New password (min 8 characters, recommended: mixed case, numbers, symbols)',
+  })
   @IsNotEmpty()
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })

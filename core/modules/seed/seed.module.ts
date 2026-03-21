@@ -5,8 +5,8 @@ import { ProductsModule } from '../products/products.module';
 import { SeedService } from './seed.service';
 
 @Module({
-    imports: [BusinessesModule, CatalogsModule, ProductsModule],
-    providers: [SeedService],
-    exports: [SeedService],
+  imports: [BusinessesModule, CatalogsModule, ProductsModule],
+  providers: [SeedService],
+  exports: [SeedService],
 })
 export class SeedModule {}

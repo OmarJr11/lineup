@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger, NotAcceptableException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotAcceptableException,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -16,7 +21,11 @@ import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import * as argon2 from 'argon2';
-import { ProvidersEnum, QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums';
+import {
+  ProvidersEnum,
+  QueueNamesEnum,
+  SearchDataConsumerEnum,
+} from '../../common/enums';
 import { RolesService } from '../roles/roles.service';
 import { BusinessRolesService } from '../business-roles/business-roles.service';
 import { LogError } from '../../common/helpers/logger.helper';
@@ -58,25 +67,28 @@ export class BusinessesService extends BasicService<Business> {
     provider: ProvidersEnum,
   ): Promise<Business> {
     data.path = await this.checkBusinessPathExists(
-      this.generatePathFromName(data.name)
+      this.generatePathFromName(data.name),
     );
     data.email = data.email.toLowerCase();
 
     if (!data.password) data.password = generateRandomCodeByLength(20);
     data.password = await this.hashPassword(data.password);
-    data.emailValidated = provider === ProvidersEnum.GOOGLE
-      || provider === ProvidersEnum.META
-      || provider === ProvidersEnum.APPLE;
+    data.emailValidated =
+      provider === ProvidersEnum.GOOGLE ||
+      provider === ProvidersEnum.META ||
+      provider === ProvidersEnum.APPLE;
     data.provider = provider;
     const business = await this.businessSettersService.create(data);
     delete business.password;
     const role = await this.rolesService.findByCode(data.role);
-    const userReq: IBusinessReq = { businessId: business.id, path: business.path };
+    const userReq: IBusinessReq = {
+      businessId: business.id,
+      path: business.path,
+    };
     await this.businessRolesService.create(business.id, role.id, userReq);
-    await this.searchDataQueue.add(
-      SearchDataConsumerEnum.SearchDataBusiness,
-      { idBusiness: business.id }
-    );
+    await this.searchDataQueue.add(SearchDataConsumerEnum.SearchDataBusiness, {
+      idBusiness: business.id,
+    });
     return business;
   }
 
@@ -95,8 +107,12 @@ export class BusinessesService extends BasicService<Business> {
    * @returns {Promise<Business>}
    */
   async findOne(id: number): Promise<Business> {
-    if(!id) {
-      LogError(this.logger, this._uList.isNotABusiness.message, this.findOne.name);
+    if (!id) {
+      LogError(
+        this.logger,
+        this._uList.isNotABusiness.message,
+        this.findOne.name,
+      );
       throw new NotAcceptableException(this._uList.isNotABusiness);
     }
     return await this.businessesGettersService.findOne(id);
@@ -120,21 +136,20 @@ export class BusinessesService extends BasicService<Business> {
   @Transactional()
   async update(
     data: UpdateBusinessInput,
-    businessReq: IBusinessReq
+    businessReq: IBusinessReq,
   ): Promise<Business> {
     const business = await this.businessesGettersService.findOne(data.id);
-    if(data.path && data.path !== business.path) {
+    if (data.path && data.path !== business.path) {
       const exist = await this.businessesGettersService.getOneByPath(data.path);
-      if(exist) {
+      if (exist) {
         LogError(this.logger, this._uUp.pathExists.message, this.update.name);
         throw new NotAcceptableException(this._uUp.pathExists);
       }
     }
     await this.businessSettersService.update(data, business, businessReq);
-    await this.searchDataQueue.add(
-      SearchDataConsumerEnum.SearchDataBusiness,
-      { idBusiness: business.id }
-    );
+    await this.searchDataQueue.add(SearchDataConsumerEnum.SearchDataBusiness, {
+      idBusiness: business.id,
+    });
     return await this.businessesGettersService.findOne(data.id);
   }
 
@@ -144,10 +159,22 @@ export class BusinessesService extends BasicService<Business> {
    * @param {IBusinessReq} businessReq - The business making the request
    * @returns {Promise<Business>}
    */
-  async updateEmail(data: UpdateBusinessEmailInput, businessReq: IBusinessReq): Promise<Business> {
-    const business = await this.businessesGettersService.findOne(businessReq.businessId);
-    await this.businessesGettersService.validateBusinessEmailUnique(data.email, businessReq.businessId);
-    await this.businessSettersService.updateEmail(business, data.email, businessReq);
+  async updateEmail(
+    data: UpdateBusinessEmailInput,
+    businessReq: IBusinessReq,
+  ): Promise<Business> {
+    const business = await this.businessesGettersService.findOne(
+      businessReq.businessId,
+    );
+    await this.businessesGettersService.validateBusinessEmailUnique(
+      data.email,
+      businessReq.businessId,
+    );
+    await this.businessSettersService.updateEmail(
+      business,
+      data.email,
+      businessReq,
+    );
     return await this.businessesGettersService.findOne(businessReq.businessId);
   }
 
@@ -157,20 +184,41 @@ export class BusinessesService extends BasicService<Business> {
    * @param {IBusinessReq} businessReq - The business making the request
    * @returns {Promise<boolean>}
    */
-  async changePassword(data: ChangePasswordInput, businessReq: IBusinessReq): Promise<boolean> {
-    const business = await this.businessesGettersService.findOneByIdWithPassword(businessReq.businessId);
-    const isCurrentValid = await argon2.verify(business.password, data.currentPassword);
+  async changePassword(
+    data: ChangePasswordInput,
+    businessReq: IBusinessReq,
+  ): Promise<boolean> {
+    const business =
+      await this.businessesGettersService.findOneByIdWithPassword(
+        businessReq.businessId,
+      );
+    const isCurrentValid = await argon2.verify(
+      business.password,
+      data.currentPassword,
+    );
     if (!isCurrentValid) {
-      LogError(this.logger, this._uChangePassword.previousInvalid.message, this.changePassword.name);
+      LogError(
+        this.logger,
+        this._uChangePassword.previousInvalid.message,
+        this.changePassword.name,
+      );
       throw new NotAcceptableException(this._uChangePassword.previousInvalid);
     }
     const isSame = await argon2.verify(business.password, data.newPassword);
     if (isSame) {
-      LogError(this.logger, this._uChangePassword.equalToPrevious.message, this.changePassword.name);
+      LogError(
+        this.logger,
+        this._uChangePassword.equalToPrevious.message,
+        this.changePassword.name,
+      );
       throw new NotAcceptableException(this._uChangePassword.equalToPrevious);
     }
     const hashedPassword = await this.hashPassword(data.newPassword);
-    await this.businessSettersService.updatePassword(business, hashedPassword, businessReq);
+    await this.businessSettersService.updatePassword(
+      business,
+      hashedPassword,
+      businessReq,
+    );
     return true;
   }
 
@@ -193,7 +241,7 @@ export class BusinessesService extends BasicService<Business> {
    */
   async checkBusinessPathExists(path: string): Promise<string> {
     let business = await this.businessesGettersService.getOneByPath(path);
-    if(business) {
+    if (business) {
       let index = '01';
       while (business) {
         path = `${path}-${index}`;
@@ -203,7 +251,7 @@ export class BusinessesService extends BasicService<Business> {
     }
     return path;
   }
-  
+
   /**
    * Generate a URL-friendly path from a business name.
    * - lowercases

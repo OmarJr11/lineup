@@ -7,19 +7,12 @@ import { LocationsSettersService } from './locations-setters.service';
 import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Location]),
-    EntityAuditsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Location]), EntityAuditsModule],
   providers: [
     LocationsService,
     LocationsGettersService,
     LocationsSettersService,
   ],
-  exports: [
-    LocationsService,
-    LocationsGettersService,
-    LocationsSettersService,
-  ],
+  exports: [LocationsService, LocationsGettersService, LocationsSettersService],
 })
 export class LocationsModule {}

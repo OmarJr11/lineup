@@ -7,15 +7,15 @@ import { ProductSchema, TagSchema } from '.';
  */
 @ObjectType()
 export class ProductTagSchema {
-    @Field(() => Int)
-    idProduct: number;
+  @Field(() => Int)
+  idProduct: number;
 
-    @Field(() => Int)
-    idTag: number;
+  @Field(() => Int)
+  idTag: number;
 
-    @Field(() => ProductSchema, { nullable: true })
-    product?: ProductSchema;
+  @Field(() => ProductSchema, { nullable: true })
+  product?: ProductSchema;
 
-    @Field(() => TagSchema, { nullable: true })
-    tag?: TagSchema;
+  @Field(() => TagSchema, { nullable: true })
+  tag?: TagSchema;
 }

@@ -1,11 +1,11 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Inserts seed file records for development/testing.
  */
 export class InsertSeedFiles1771550000001 implements MigrationInterface {
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             INSERT INTO "system"."files" ("name", "extension", "directory", "url", "id_creation_user")
             VALUES
                 ('ljWl5sqiYYNb3bNw4BLXe46go81Gg4ctrM8PjGjBOlVqEf6AYr', 'jpeg', 'public', 'https://test-mangloo.s3.us-east-1.amazonaws.com/public/ljWl5sqiYYNb3bNw4BLXe46go81Gg4ctrM8PjGjBOlVqEf6AYr', 1),
@@ -34,10 +34,10 @@ export class InsertSeedFiles1771550000001 implements MigrationInterface {
                 ('5SheafwQ5pSJDpyrWmfBYRgPZlPCCbrQyOWN4OicpeWrYlokLe', 'jpeg', 'public', 'https://test-mangloo.s3.us-east-1.amazonaws.com/public/5SheafwQ5pSJDpyrWmfBYRgPZlPCCbrQyOWN4OicpeWrYlokLe', 1),
                 ('ENvzvGbcw1QNqIAZX26YzWc9dQ2REZT2JpAGxopXaqCqilamnR', 'jpeg', 'public', 'https://test-mangloo.s3.us-east-1.amazonaws.com/public/ENvzvGbcw1QNqIAZX26YzWc9dQ2REZT2JpAGxopXaqCqilamnR', 1)
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             DELETE FROM "system"."files"
             WHERE "name" IN (
                 'ljWl5sqiYYNb3bNw4BLXe46go81Gg4ctrM8PjGjBOlVqEf6AYr',
@@ -67,5 +67,5 @@ export class InsertSeedFiles1771550000001 implements MigrationInterface {
                 'ENvzvGbcw1QNqIAZX26YzWc9dQ2REZT2JpAGxopXaqCqilamnR'
             )
         `);
-    }
+  }
 }

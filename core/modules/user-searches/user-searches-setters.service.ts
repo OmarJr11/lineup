@@ -13,35 +13,37 @@ import { Transactional } from 'typeorm-transactional-cls-hooked';
  */
 @Injectable()
 export class UserSearchesSettersService extends BasicService<UserSearch> {
-    private readonly logger = new Logger(UserSearchesSettersService.name);
+  private readonly logger = new Logger(UserSearchesSettersService.name);
 
-    constructor(
-        @InjectRepository(UserSearch)
-        private readonly userSearchRepository: Repository<UserSearch>,
-    ) {
-        super(userSearchRepository);
-    }
+  constructor(
+    @InjectRepository(UserSearch)
+    private readonly userSearchRepository: Repository<UserSearch>,
+  ) {
+    super(userSearchRepository);
+  }
 
-    /**
-     * Records a search performed by a logged-in user.
-     * @param {string} searchTerm - The search query text.
-     * @param {IUserReq} user - The authenticated user.
-     */
-    @Transactional()
-    async create(searchTerm: string, user: IUserReq) {
-        try {
-            const normalizedTerm = (searchTerm || '').trim();
-            if (!normalizedTerm) { return null as unknown as UserSearch; }
-            await this.save(
-                {
-                    idCreationUser: user.userId,
-                    searchTerm: normalizedTerm.slice(0, 255),
-                },
-                user,
-            );
-        } catch (error) {
-            LogError(this.logger, error, this.create.name, user);
-            return null as unknown as UserSearch;
-        }
+  /**
+   * Records a search performed by a logged-in user.
+   * @param {string} searchTerm - The search query text.
+   * @param {IUserReq} user - The authenticated user.
+   */
+  @Transactional()
+  async create(searchTerm: string, user: IUserReq) {
+    try {
+      const normalizedTerm = (searchTerm || '').trim();
+      if (!normalizedTerm) {
+        return null as unknown as UserSearch;
+      }
+      await this.save(
+        {
+          idCreationUser: user.userId,
+          searchTerm: normalizedTerm.slice(0, 255),
+        },
+        user,
+      );
+    } catch (error) {
+      LogError(this.logger, error, this.create.name, user);
+      return null as unknown as UserSearch;
     }
+  }
 }

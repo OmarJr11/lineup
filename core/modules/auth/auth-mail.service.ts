@@ -21,7 +21,7 @@ const CODE_EXPIRES_IN = '10 minutes' as const;
 @Injectable()
 export class AuthMailService {
   private readonly logger = new Logger(AuthMailService.name);
-  
+
   constructor(
     @InjectQueue(QueueNamesEnum.mails)
     private readonly mailsQueue: Queue,
@@ -36,9 +36,11 @@ export class AuthMailService {
    * @param {string} email - Recipient email address
    */
   async sendVerificationCodeEmail(email: string) {
-    const activeRecord = await this.validationMailsGettersService.findLatestByEmail(email);
+    const activeRecord =
+      await this.validationMailsGettersService.findLatestByEmail(email);
     if (activeRecord && !this.isExpired(activeRecord)) return;
-    const record = await this.validationMailsSettersService.createValidationCode(email);
+    const record =
+      await this.validationMailsSettersService.createValidationCode(email);
     const payload: ISendTemplateMailInput = {
       to: { email },
       subject: 'Verify your email address – Lineup',
@@ -60,7 +62,11 @@ export class AuthMailService {
    * @returns {Promise<BaseResponse>}
    */
   async verifyCode(email: string, code: string): Promise<BaseResponse> {
-    const record = await this.validationMailsGettersService.findActiveByEmailAndCode(email, code);
+    const record =
+      await this.validationMailsGettersService.findActiveByEmailAndCode(
+        email,
+        code,
+      );
     await this.validationMailsSettersService.verifyCode(record);
     return businessesResponses.verifyCode.success;
   }

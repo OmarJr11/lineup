@@ -12,21 +12,21 @@ import { EntityAuditsQueueService } from './entity-audits-queue.service';
  * Module for entity audits (generic audit history).
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([EntityAudit]),
-        BullModule.registerQueue({ name: QueueNamesEnum.entityAudits }),
-    ],
-    providers: [
-        EntityAuditsService,
-        EntityAuditsGettersService,
-        EntityAuditsSettersService,
-        EntityAuditsQueueService,
-    ],
-    exports: [
-        EntityAuditsService,
-        EntityAuditsGettersService,
-        EntityAuditsSettersService,
-        EntityAuditsQueueService,
-    ],
+  imports: [
+    TypeOrmModule.forFeature([EntityAudit]),
+    BullModule.registerQueue({ name: QueueNamesEnum.entityAudits }),
+  ],
+  providers: [
+    EntityAuditsService,
+    EntityAuditsGettersService,
+    EntityAuditsSettersService,
+    EntityAuditsQueueService,
+  ],
+  exports: [
+    EntityAuditsService,
+    EntityAuditsGettersService,
+    EntityAuditsSettersService,
+    EntityAuditsQueueService,
+  ],
 })
 export class EntityAuditsModule {}

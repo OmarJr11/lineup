@@ -1,24 +1,24 @@
-import { IStatItemWithLikes } from './stat-item-with-likes.interface';
-import { IStatItemWithRating } from './stat-item-with-rating.interface';
-import { IStatItemWithVisits } from './stat-item-with-visits.interface';
+import type { IStatItemWithLikes } from './stat-item-with-likes.interface';
+import type { IStatItemWithRating } from './stat-item-with-rating.interface';
+import type { IStatItemWithVisits } from './stat-item-with-visits.interface';
 
 /**
  * Visit-to-like ratio for products.
  */
 export interface IVisitToLikeRatio {
-    totalVisits: number;
-    totalLikes: number;
-    ratio: number;
+  totalVisits: number;
+  totalLikes: number;
+  ratio: number;
 }
 
 /**
  * Combined product statistics.
  */
 export interface IProductStats {
-    topByVisits: IStatItemWithVisits[];
-    topByRating: IStatItemWithRating[];
-    topByLikes: IStatItemWithLikes[];
-    withoutVisitsCount: number;
-    withoutRatingsCount: number;
-    visitToLikeRatio: IVisitToLikeRatio;
+  topByVisits: IStatItemWithVisits[];
+  topByRating: IStatItemWithRating[];
+  topByLikes: IStatItemWithLikes[];
+  withoutVisitsCount: number;
+  withoutRatingsCount: number;
+  visitToLikeRatio: IVisitToLikeRatio;
 }

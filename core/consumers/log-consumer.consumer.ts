@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { QueueEvents } from 'bullmq';
+import type { QueueEvents } from 'bullmq';
 
 export class LogConsumer {
   private logger = new Logger('Queue');

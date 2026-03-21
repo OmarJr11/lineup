@@ -4,6 +4,6 @@
  * count: number of items in that category.
  */
 export interface IFrequencyDataPoint {
-    label: string;
-    count: number;
+  label: string;
+  count: number;
 }

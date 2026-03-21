@@ -1,7 +1,7 @@
-import { User } from '../../entities';
+import type { User } from '../../entities';
 
 export interface ILoginReturn {
-    user: User;
-    token?: string;
-    refreshToken?: string;
+  user: User;
+  token?: string;
+  refreshToken?: string;
 }

@@ -3,18 +3,18 @@ import { BusinessSchema } from '.';
 
 @ObjectType()
 export class TagSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    name: string;
+  @Field()
+  name: string;
 
-    @Field()
-    slug: string;
+  @Field()
+  slug: string;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    creationBusiness?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  creationBusiness?: BusinessSchema;
 }

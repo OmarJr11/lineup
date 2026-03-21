@@ -13,20 +13,20 @@ import { RecordVisitInput } from './dto/record-visit.input';
 @UsePipes(new ValidationPipe())
 @Resolver()
 export class VisitsResolver {
-    constructor(private readonly visitsService: VisitsService) {}
+  constructor(private readonly visitsService: VisitsService) {}
 
-    /**
-     * Records a visit to a business, product, or catalog.
-     * @param {RecordVisitInput} input - The visit input (type, id).
-     * @param {IUserReq | null} user - The authenticated user, or null for anonymous.
-     */
-    @UseGuards(OptionalJwtAuthGuard)
-    @Mutation(() => Boolean, { name: 'recordVisit' })
-    async recordVisit(
-        @Args('input') input: RecordVisitInput,
-        @UserDec() user: IUserReq | null
-    ): Promise<boolean> {
-        await this.visitsService.recordVisit(input, user);
-        return true;
-    }
+  /**
+   * Records a visit to a business, product, or catalog.
+   * @param {RecordVisitInput} input - The visit input (type, id).
+   * @param {IUserReq | null} user - The authenticated user, or null for anonymous.
+   */
+  @UseGuards(OptionalJwtAuthGuard)
+  @Mutation(() => Boolean, { name: 'recordVisit' })
+  async recordVisit(
+    @Args('input') input: RecordVisitInput,
+    @UserDec() user: IUserReq | null,
+  ): Promise<boolean> {
+    await this.visitsService.recordVisit(input, user);
+    return true;
+  }
 }

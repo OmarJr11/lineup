@@ -3,7 +3,7 @@ import { CurrenciesModule as CurrenciesModuleCore } from '../../../../core/modul
 import { CurrenciesResolver } from './currencies.resolver';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 import { RolesModule } from '../../../../core/modules/roles/roles.module';
-    
+
 @Module({
   providers: [CurrenciesResolver],
   imports: [CurrenciesModuleCore, RolesModule, TokensModule],

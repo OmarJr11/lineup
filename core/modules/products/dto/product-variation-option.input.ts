@@ -7,9 +7,9 @@ import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
  */
 @InputType()
 export class ProductVariationOptionInput {
-    @Field()
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(255)
-    value: string;
+  @Field()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  value: string;
 }

@@ -1,4 +1,4 @@
-import { VariationOptions } from '../types';
+import type { VariationOptions } from '../types';
 
 /**
  * Computes the cartesian product of arrays.
@@ -7,12 +7,10 @@ import { VariationOptions } from '../types';
  * @returns {string[][]} All combinations.
  */
 export function cartesianProduct(arrays: string[][]): string[][] {
-    if (arrays.length === 0) return [[]];
-    const [first, ...rest] = arrays;
-    const restProduct = cartesianProduct(rest);
-    return first.flatMap((item) =>
-        restProduct.map((combo) => [item, ...combo])
-    );
+  if (arrays.length === 0) return [[]];
+  const [first, ...rest] = arrays;
+  const restProduct = cartesianProduct(rest);
+  return first.flatMap((item) => restProduct.map((combo) => [item, ...combo]));
 }
 
 /**
@@ -22,22 +20,17 @@ export function cartesianProduct(arrays: string[][]): string[][] {
  * @returns {string} The generated SKU code.
  */
 export function generateSkuCode(
-    productId: number,
-    variationOptions: VariationOptions,
+  productId: number,
+  variationOptions: VariationOptions,
 ): string {
-    if (Object.keys(variationOptions).length === 0) {
-        return `P${productId}`;
-    }
-    const sortedEntries = Object.entries(variationOptions).sort(([a], [b]) =>
-        a.localeCompare(b),
-    );
-    const suffix = sortedEntries
-        .map(([, value]) =>
-            value
-                .substring(0, 4)
-                .toUpperCase()
-                .replace(/\s/g, ''),
-        )
-        .join('-');
-    return `P${productId}-${suffix}`;
+  if (Object.keys(variationOptions).length === 0) {
+    return `P${productId}`;
+  }
+  const sortedEntries = Object.entries(variationOptions).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  const suffix = sortedEntries
+    .map(([, value]) => value.substring(0, 4).toUpperCase().replace(/\s/g, ''))
+    .join('-');
+  return `P${productId}-${suffix}`;
 }

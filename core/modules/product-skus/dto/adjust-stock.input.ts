@@ -1,13 +1,13 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
-    IsInt,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 /**
@@ -16,21 +16,21 @@ import {
  */
 @InputType()
 export class AdjustStockInput {
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idProductSku: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idProductSku: number;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    quantityDelta: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  quantityDelta: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsString()
-    @MaxLength(500)
-    notes?: string;
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  notes?: string;
 }

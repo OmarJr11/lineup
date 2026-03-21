@@ -7,12 +7,7 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
 import { ProductSkusResolver } from './product-skus.resolver';
 
 @Module({
-  imports: [
-    ProductsModuleCore,
-    ProductSkusModule,
-    RolesModule,
-    TokensModule
-  ],
+  imports: [ProductsModuleCore, ProductSkusModule, RolesModule, TokensModule],
   providers: [ProductsResolver, ProductSkusResolver],
 })
 export class ProductsModule {}

@@ -17,24 +17,20 @@ import { QueueNamesEnum } from '../../common/enums';
  * Supports business, catalog, and product-scoped discounts with audit.
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Discount]),
-        BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
-        DiscountProductsModule,
-        EntityAuditsModule,
-        ProductsModule,
-        CatalogsModule,
-        BusinessesModule,
-    ],
-    providers: [
-        DiscountsService,
-        DiscountsGettersService,
-        DiscountsSettersService,
-    ],
-    exports: [
-        DiscountsService,
-        DiscountsGettersService,
-        DiscountsSettersService,
-    ],
+  imports: [
+    TypeOrmModule.forFeature([Discount]),
+    BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
+    DiscountProductsModule,
+    EntityAuditsModule,
+    ProductsModule,
+    CatalogsModule,
+    BusinessesModule,
+  ],
+  providers: [
+    DiscountsService,
+    DiscountsGettersService,
+    DiscountsSettersService,
+  ],
+  exports: [DiscountsService, DiscountsGettersService, DiscountsSettersService],
 })
 export class DiscountsModule {}

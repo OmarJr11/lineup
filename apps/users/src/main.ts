@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { UsersModule } from './users.module';
-import { initializeTransactionalContext, patchTypeORMRepositoryWithBaseRepository } from 'typeorm-transactional-cls-hooked';
+import {
+  initializeTransactionalContext,
+  patchTypeORMRepositoryWithBaseRepository,
+} from 'typeorm-transactional-cls-hooked';
 import { join } from 'path';
 import { createConnection } from 'typeorm';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
@@ -11,7 +14,11 @@ dotenv.config();
 async function bootstrap() {
   initializeTransactionalContext();
   patchTypeORMRepositoryWithBaseRepository();
-  const entities = join(__dirname, '../../../', process.env.DB_ENTITIES_TYPEORM);
+  const entities = join(
+    __dirname,
+    '../../../',
+    process.env.DB_ENTITIES_TYPEORM,
+  );
 
   await createConnection({
     type: process.env.DB_TYPE as 'postgres' | 'mysql' | 'sqlite',
@@ -46,7 +53,6 @@ async function bootstrap() {
   app.enableCors(cors);
   app.use(cookieParser());
 
-
   await app.listen(process.env.PORT_USER ?? 3000);
 }
 
@@ -64,4 +70,4 @@ const getCors = (): string[] => {
   return corsArray;
 };
 
-bootstrap();
+void bootstrap();

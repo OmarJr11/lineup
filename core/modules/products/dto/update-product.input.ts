@@ -8,7 +8,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  ValidateNested
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProductImageInput } from './product-image.input';

@@ -1,11 +1,11 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    Min,
-    Validate,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Min,
+  Validate,
 } from 'class-validator';
 import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
 
@@ -15,30 +15,30 @@ import { PriceCurrencyPairValidator } from '../../../common/validators/price-cur
  */
 @InputType()
 export class UpdateProductSkuItemInput {
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    id: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  id: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Min(0)
-    quantity?: number;
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  quantity?: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    price?: number;
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
+  price?: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    idCurrency?: number;
+  @Field({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Validate(PriceCurrencyPairValidator)
+  idCurrency?: number;
 }

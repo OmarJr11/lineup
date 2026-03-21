@@ -5,9 +5,9 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
  */
 @ObjectType()
 export class FrequencyDataPointSchema {
-    @Field({ description: 'Category label' })
-    label: string;
+  @Field({ description: 'Category label' })
+  label: string;
 
-    @Field(() => Int, { description: 'Count for the category' })
-    count: number;
+  @Field(() => Int, { description: 'Count for the category' })
+  count: number;
 }

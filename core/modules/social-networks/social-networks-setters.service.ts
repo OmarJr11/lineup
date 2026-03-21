@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BasicService } from '../../common/services';
 import { SocialNetwork } from '../../entities/social-network.entity';
@@ -19,7 +23,7 @@ export class SocialNetworksSettersService extends BasicService<SocialNetwork> {
 
   constructor(
     @InjectRepository(SocialNetwork)
-    private readonly repo: Repository<SocialNetwork>
+    private readonly repo: Repository<SocialNetwork>,
   ) {
     super(repo);
   }
@@ -33,11 +37,11 @@ export class SocialNetworksSettersService extends BasicService<SocialNetwork> {
   @Transactional()
   async create(
     data: CreateSocialNetworkInput,
-    user: IUserReq
+    user: IUserReq,
   ): Promise<SocialNetwork> {
     try {
       return await this.save(data, user);
-    } catch(error) {
+    } catch (error) {
       LogError(this.logger, error, this.create.name, user);
       throw new InternalServerErrorException(this.rCreate.error);
     }
@@ -53,7 +57,7 @@ export class SocialNetworksSettersService extends BasicService<SocialNetwork> {
   async update(
     data: UpdateSocialNetworkInput,
     socialNetwork: SocialNetwork,
-    user: IUserReq
+    user: IUserReq,
   ) {
     try {
       return await this.updateEntity(data, socialNetwork, user);

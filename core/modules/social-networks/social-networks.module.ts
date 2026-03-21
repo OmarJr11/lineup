@@ -6,18 +6,16 @@ import { SocialNetworksSettersService } from './social-networks-setters.service'
 import { SocialNetworksGettersService } from './social-networks-getters.service';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([SocialNetwork])
-    ],
-    providers: [
-        SocialNetworksService,
-        SocialNetworksSettersService,
-        SocialNetworksGettersService,
-    ],
-    exports: [
-        SocialNetworksService,
-        SocialNetworksSettersService,
-        SocialNetworksGettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([SocialNetwork])],
+  providers: [
+    SocialNetworksService,
+    SocialNetworksSettersService,
+    SocialNetworksGettersService,
+  ],
+  exports: [
+    SocialNetworksService,
+    SocialNetworksSettersService,
+    SocialNetworksGettersService,
+  ],
 })
 export class SocialNetworksModule {}

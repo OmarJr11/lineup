@@ -1,8 +1,8 @@
-import { SocialNetworkBusiness } from '../../entities';
-import { SocialNetworkBusinessSchema } from '../../schemas';
+import type { SocialNetworkBusiness } from '../../entities';
+import type { SocialNetworkBusinessSchema } from '../../schemas';
 
 export function toSocialNetworkBusinessSchema(
-    socialNetworkBusiness: SocialNetworkBusiness
+  socialNetworkBusiness: SocialNetworkBusiness,
 ): SocialNetworkBusinessSchema {
-    return socialNetworkBusiness as SocialNetworkBusinessSchema;
+  return socialNetworkBusiness as SocialNetworkBusinessSchema;
 }

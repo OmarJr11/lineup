@@ -11,13 +11,13 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
  * Requires INVMGMT permission.
  */
 @Module({
-    imports: [
-        ProductSkusModule,
-        StockMovementsModule,
-        ProductsModule,
-        RolesModule,
-        TokensModule,
-    ],
-    providers: [InventoryResolver],
+  imports: [
+    ProductSkusModule,
+    StockMovementsModule,
+    ProductsModule,
+    RolesModule,
+    TokensModule,
+  ],
+  providers: [InventoryResolver],
 })
 export class InventoryModule {}

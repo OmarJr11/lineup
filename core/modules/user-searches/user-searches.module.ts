@@ -6,16 +6,16 @@ import { UserSearchesGettersService } from './user-searches-getters.service';
 import { UserSearchesService } from './user-searches.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([UserSearch])],
-    providers: [
-        UserSearchesService,
-        UserSearchesSettersService,
-        UserSearchesGettersService,
-    ],
-    exports: [
-        UserSearchesService,
-        UserSearchesSettersService,
-        UserSearchesGettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([UserSearch])],
+  providers: [
+    UserSearchesService,
+    UserSearchesSettersService,
+    UserSearchesGettersService,
+  ],
+  exports: [
+    UserSearchesService,
+    UserSearchesSettersService,
+    UserSearchesGettersService,
+  ],
 })
 export class UserSearchesModule {}

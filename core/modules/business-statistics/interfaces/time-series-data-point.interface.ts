@@ -4,6 +4,6 @@
  * value: y-axis value (count or aggregate).
  */
 export interface ITimeSeriesDataPoint {
-    period: string;
-    value: number;
+  period: string;
+  value: number;
 }

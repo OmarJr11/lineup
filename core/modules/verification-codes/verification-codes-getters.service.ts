@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services/base.service';
@@ -32,7 +28,9 @@ export class VerificationCodesGettersService extends BasicService<VerificationCo
    * @returns {Promise<VerificationCode>} The matching verification record
    * @throws {NotFoundException} When no matching active record is found
    */
-  async findActiveByDestinationAndCode(code: string): Promise<VerificationCode> {
+  async findActiveByDestinationAndCode(
+    code: string,
+  ): Promise<VerificationCode> {
     try {
       return await this.findOneWithOptionsOrFail({
         where: { code, isUsed: false },
@@ -68,9 +66,10 @@ export class VerificationCodesGettersService extends BasicService<VerificationCo
    * @param {{ idUser?: number; idBusiness?: number }} owner - The owner identifiers
    * @returns {Promise<VerificationCode | undefined>} The active record or undefined
    */
-  async findActiveByOwner(
-    data: { idUser?: number; idBusiness?: number; }
-  ): Promise<VerificationCode | undefined> {
+  async findActiveByOwner(data: {
+    idUser?: number;
+    idBusiness?: number;
+  }): Promise<VerificationCode | undefined> {
     return await this.findOneWithOptions({ where: { ...data, isUsed: false } });
   }
 }

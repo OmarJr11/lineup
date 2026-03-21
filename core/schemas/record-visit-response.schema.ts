@@ -5,9 +5,9 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
  */
 @ObjectType()
 export class RecordVisitResponseSchema {
-    @Field(() => Boolean)
-    success: boolean;
+  @Field(() => Boolean)
+  success: boolean;
 
-    @Field(() => Int, { nullable: true })
-    visits?: number;
+  @Field(() => Int, { nullable: true })
+  visits?: number;
 }

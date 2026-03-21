@@ -13,9 +13,7 @@ import { MailTemplatesService } from './mail-templates.service';
  * Templates must be placed in `core/modules/mail/templates/` with a `.hbs` extension.
  */
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })],
   providers: [MailTemplatesService, MailSettersService],
   exports: [MailSettersService],
 })

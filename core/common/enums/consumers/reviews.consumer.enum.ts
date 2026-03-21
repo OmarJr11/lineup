@@ -1,3 +1,3 @@
 export enum ReviewsConsumerEnum {
-    CalculateAverage = 'calculate-average'
+  CalculateAverage = 'calculate-average',
 }

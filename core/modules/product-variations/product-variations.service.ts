@@ -8,14 +8,14 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class ProductVariationsService extends BasicService<ProductVariation> {
-    private logger = new Logger(ProductVariationsService.name);
-    
-    constructor(
-      @Inject(REQUEST)
-      private readonly businessRequest: Request,
-      @InjectRepository(ProductVariation)
-      private readonly productVariationRepository: Repository<ProductVariation>,
-    ) {
-      super(productVariationRepository, businessRequest);
-    }
+  private logger = new Logger(ProductVariationsService.name);
+
+  constructor(
+    @Inject(REQUEST)
+    private readonly businessRequest: Request,
+    @InjectRepository(ProductVariation)
+    private readonly productVariationRepository: Repository<ProductVariation>,
+  ) {
+    super(productVariationRepository, businessRequest);
+  }
 }

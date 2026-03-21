@@ -4,7 +4,10 @@ import { Job } from 'bullmq';
 import { MailsConsumerEnum, QueueNamesEnum } from '../common/enums/consumers';
 import { LogWarn } from '../common/helpers';
 import { MailSettersService } from '../modules/mail/mail-setters.service';
-import { ISendMailInput, ISendTemplateMailInput } from '../modules/mail/interfaces';
+import {
+  ISendMailInput,
+  ISendTemplateMailInput,
+} from '../modules/mail/interfaces';
 
 /**
  * Consumer for mail-related background jobs.
@@ -50,7 +53,9 @@ export class MailsConsumer extends WorkerHost {
    *
    * @param {Job<ISendTemplateMailInput>} job - BullMQ job with ISendTemplateMailInput as data
    */
-  private async processSendTemplateMail(job: Job<ISendTemplateMailInput>): Promise<void> {
+  private async processSendTemplateMail(
+    job: Job<ISendTemplateMailInput>,
+  ): Promise<void> {
     await this.mailSettersService.sendTemplateMail(job.data);
   }
 }

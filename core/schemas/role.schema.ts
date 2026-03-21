@@ -1,6 +1,11 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { RolesCodesEnum, StatusEnum } from '../common/enums';
-import { BusinessRoleSchema, RolePermissionSchema, UserRoleSchema, UserSchema } from '.';
+import {
+  BusinessRoleSchema,
+  RolePermissionSchema,
+  UserRoleSchema,
+  UserSchema,
+} from '.';
 import { BaseSchema } from './base.schema';
 
 @ObjectType()

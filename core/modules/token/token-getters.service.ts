@@ -17,7 +17,7 @@ export class TokenGettersService extends BasicService<Token> {
 
   constructor(
     @InjectRepository(Token)
-    private readonly tokenRepository: Repository<Token>
+    private readonly tokenRepository: Repository<Token>,
   ) {
     super(tokenRepository);
   }

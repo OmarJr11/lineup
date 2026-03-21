@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
@@ -8,16 +14,16 @@ import { User } from './user.entity';
  */
 @Entity({ schema: 'system', name: 'user_searches' })
 export class UserSearch extends BaseEntity {
-    @PrimaryGeneratedColumn({ type: 'int8' })
-    id: number;
+  @PrimaryGeneratedColumn({ type: 'int8' })
+  id: number;
 
-    @Column('int8', { name: 'id_creation_user' })
-    idCreationUser: number;
+  @Column('int8', { name: 'id_creation_user' })
+  idCreationUser: number;
 
-    @ManyToOne(() => User, (user) => user.userSearches)
-    @JoinColumn([{ name: 'id_creation_user', referencedColumnName: 'id' }])
-    creationUser?: User;
+  @ManyToOne(() => User, (user) => user.userSearches)
+  @JoinColumn([{ name: 'id_creation_user', referencedColumnName: 'id' }])
+  creationUser?: User;
 
-    @Column({ type: 'varchar', name: 'search_term', length: 255 })
-    searchTerm: string;
+  @Column({ type: 'varchar', name: 'search_term', length: 255 })
+  searchTerm: string;
 }

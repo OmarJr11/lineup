@@ -6,10 +6,6 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
 
 @Module({
   controllers: [FilesController],
-  imports: [
-    FilesModuleCore,
-    RolesModule,
-    TokensModule
-  ],
+  imports: [FilesModuleCore, RolesModule, TokensModule],
 })
 export class FilesModule {}

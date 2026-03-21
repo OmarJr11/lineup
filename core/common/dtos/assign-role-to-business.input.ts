@@ -7,15 +7,15 @@ import { IsInt, IsNotEmpty } from 'class-validator';
  */
 @InputType()
 export class AssignRoleToBusinessInput {
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idBusiness: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idBusiness: number;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idRole: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idRole: number;
 }

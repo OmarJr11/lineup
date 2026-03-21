@@ -7,44 +7,42 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-    private excludedFields = ['password'];
+  private excludedFields = ['password'];
 
-    constructor(
-        private readonly configService: ConfigService
-    ) {}
+  constructor(private readonly configService: ConfigService) {}
 
-    use(request: Request, res: Response, next: NextFunction) {
-        if (this.configService.get<string>('NODE_ENV') !== EnvironmentsEnum.Test) {
-            const currentHour = new Date();
+  use(request: Request, res: Response, next: NextFunction) {
+    if (this.configService.get<string>('NODE_ENV') !== EnvironmentsEnum.Test) {
+      const currentHour = new Date();
 
-            let body = request.body;
+      let body = request.body;
 
-            if (Buffer.isBuffer(body)) {
-                body = JSON.parse(body.toString());
-            }
+      if (Buffer.isBuffer(body)) {
+        body = JSON.parse(body.toString());
+      }
 
-            console.log(
-                moment().format('YYYY-MM-DD HH:mm:ss'),
-                currentHour.getTimezoneOffset(),
-                request.headers['x-forwarded-for']
-                    ? request.headers['x-forwarded-for']
-                    : request.ip.split(':').pop(),
-                request.method,
-                request['_parsedUrl']['pathname'],
-            );
-        }
-        next();
+      console.log(
+        moment().format('YYYY-MM-DD HH:mm:ss'),
+        currentHour.getTimezoneOffset(),
+        request.headers['x-forwarded-for']
+          ? request.headers['x-forwarded-for']
+          : request.ip.split(':').pop(),
+        request.method,
+        request['_parsedUrl']['pathname'],
+      );
+    }
+    next();
+  }
+
+  cleanObject(body: Record<string, any>) {
+    for (const key in body) {
+      if (body[key] === 'object') {
+        body[key] = this.cleanObject(body[key]);
+      } else if (this.excludedFields.some((e) => e === key)) {
+        body[key] = '******';
+      }
     }
 
-    cleanObject(body: Record<string, any>) {
-        for (const key in body) {
-            if (body[key] === 'object') {
-                body[key] = this.cleanObject(body[key]);
-            } else if (this.excludedFields.some((e) => e === key)) {
-                body[key] = '******';
-            }
-        }
-
-        return body;
-    }
+    return body;
+  }
 }

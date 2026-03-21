@@ -8,11 +8,7 @@ import { DiscountsResolver } from './discounts.resolver';
  * App module for discount management.
  */
 @Module({
-    imports: [
-        DiscountsModuleCore,
-        RolesModule,
-        TokensModule,
-    ],
-    providers: [DiscountsResolver],
+  imports: [DiscountsModuleCore, RolesModule, TokensModule],
+  providers: [DiscountsResolver],
 })
 export class DiscountsModule {}

@@ -10,9 +10,7 @@ import { ValidationMailsService } from './validation-mails.service';
  * Provides getters and setters services for ValidationMail records.
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ValidationMail]),
-  ],
+  imports: [TypeOrmModule.forFeature([ValidationMail])],
   providers: [
     ValidationMailsGettersService,
     ValidationMailsSettersService,

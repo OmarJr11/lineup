@@ -31,21 +31,13 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
       {
         name: QueueNamesEnum.searchData,
         defaultJobOptions: { removeOnComplete: true },
-      }
+      },
     ),
     CatalogsModule,
     EntityAuditsModule,
     FilesModule,
   ],
-  providers: [
-    ProductsService,
-    ProductsGettersService,
-    ProductsSettersService
-  ],
-  exports: [
-    ProductsService,
-    ProductsGettersService,
-    ProductsSettersService
-  ]
+  providers: [ProductsService, ProductsGettersService, ProductsSettersService],
+  exports: [ProductsService, ProductsGettersService, ProductsSettersService],
 })
 export class ProductsModule {}

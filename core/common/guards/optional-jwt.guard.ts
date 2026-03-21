@@ -1,8 +1,8 @@
 import {
-    CanActivate,
-    ExecutionContext,
-    Injectable,
-    Logger,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
@@ -17,43 +17,43 @@ import { IUserReq } from '../interfaces';
  */
 @Injectable()
 export class OptionalJwtAuthGuard implements CanActivate {
-    private readonly logger = new Logger(OptionalJwtAuthGuard.name);
+  private readonly logger = new Logger(OptionalJwtAuthGuard.name);
 
-    constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = this.getRequest(context);
-        if (!request) return true;
-        const token = optionalTokenExtractor(request);
-        if (!token) {
-            request.user = null;
-            return true;
-        }
-        try {
-            const payload = this.jwtService.verify<{
-                isBusiness: boolean;
-                sub: string | number;
-                username?: string;
-                path?: string;
-            }>(token);
-            if (payload?.isBusiness) {
-                request.user = null;
-            } else {
-                request.user = {
-                    userId: Number(payload.sub),
-                    username: payload.username ?? '',
-                } as IUserReq;
-            }
-        } catch {
-            request.user = null;
-        }
-        return true;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = this.getRequest(context);
+    if (!request) return true;
+    const token = optionalTokenExtractor(request);
+    if (!token) {
+      request.user = null;
+      return true;
     }
-
-    private getRequest(context: ExecutionContext): Request | null {
-        const gqlCtx = GqlExecutionContext.create(context);
-        const gqlReq = gqlCtx.getContext()?.req;
-        if (gqlReq) return gqlReq;
-        return context.switchToHttp().getRequest();
+    try {
+      const payload = this.jwtService.verify<{
+        isBusiness: boolean;
+        sub: string | number;
+        username?: string;
+        path?: string;
+      }>(token);
+      if (payload?.isBusiness) {
+        request.user = null;
+      } else {
+        request.user = {
+          userId: Number(payload.sub),
+          username: payload.username ?? '',
+        } as IUserReq;
+      }
+    } catch {
+      request.user = null;
     }
+    return true;
+  }
+
+  private getRequest(context: ExecutionContext): Request | null {
+    const gqlCtx = GqlExecutionContext.create(context);
+    const gqlReq = gqlCtx.getContext()?.req;
+    if (gqlReq) return gqlReq;
+    return context.switchToHttp().getRequest();
+  }
 }

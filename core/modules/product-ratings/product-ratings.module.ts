@@ -12,25 +12,23 @@ import { QueueNamesEnum } from '../../common/enums';
  * Module that encapsulates all product rating functionality.
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([ProductRating]),
-        ProductsModule,
-        BullModule.registerQueue(
-            {
-                name: QueueNamesEnum.reviews,
-                defaultJobOptions: { removeOnComplete: true },
-            },
-        ),
-    ],
-    providers: [
-        ProductRatingsService,
-        ProductRatingsGettersService,
-        ProductRatingsSettersService,
-    ],
-    exports: [
-        ProductRatingsService,
-        ProductRatingsGettersService,
-        ProductRatingsSettersService,
-    ],
+  imports: [
+    TypeOrmModule.forFeature([ProductRating]),
+    ProductsModule,
+    BullModule.registerQueue({
+      name: QueueNamesEnum.reviews,
+      defaultJobOptions: { removeOnComplete: true },
+    }),
+  ],
+  providers: [
+    ProductRatingsService,
+    ProductRatingsGettersService,
+    ProductRatingsSettersService,
+  ],
+  exports: [
+    ProductRatingsService,
+    ProductRatingsGettersService,
+    ProductRatingsSettersService,
+  ],
 })
 export class ProductRatingsModule {}

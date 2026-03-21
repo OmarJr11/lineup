@@ -1,10 +1,21 @@
-import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
-import { BusinessesPermissionsEnum, ProvidersEnum } from '../../../../core/common/enums';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import {
+  BusinessesPermissionsEnum,
+  ProvidersEnum,
+} from '../../../../core/common/enums';
 import { BusinessSchema, LoginResponse } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
+import {
+  JwtAuthGuard,
+  PermissionsGuard,
+  TokenGuard,
+} from '../../../../core/common/guards';
 import { IBusinessReq } from '../../../../core/common/interfaces';
-import { BusinessDec, Permissions, Response} from '../../../../core/common/decorators';
+import {
+  BusinessDec,
+  Permissions,
+  Response,
+} from '../../../../core/common/decorators';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
 import { toBusinessSchema } from '../../../../core/common/functions/businesses.function';
@@ -23,24 +34,33 @@ const cookiePrefix = CookiesPrefixEnum.BUSINESSES;
 @Resolver(() => BusinessSchema)
 export class BusinessesResolver {
   private readonly _bCreate = businessesResponses.create;
-  
+
   constructor(
     private readonly businessesService: BusinessesService,
     private readonly tokensService: TokensService,
     private readonly authService: AuthService,
   ) {}
 
-  @Mutation(() => LoginResponse )
+  @Mutation(() => LoginResponse)
   async createBusiness(
     @Args('data') data: CreateBusinessInput,
     @Context() ctx: any,
   ): Promise<LoginResponse> {
     const res: ResponseExpress = ctx.res;
-    const business = await this.businessesService.create(data, ProvidersEnum.LineUp);
+    const business = await this.businessesService.create(
+      data,
+      ProvidersEnum.LineUp,
+    );
     const { token, refreshToken } =
-    await this.tokensService.generateTokens(business);
+      await this.tokensService.generateTokens(business);
     const result = { ...this._bCreate.success, business };
-    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   @Query(() => BusinessSchema, { name: 'findBusinessByPath' })
@@ -50,9 +70,7 @@ export class BusinessesResolver {
 
   @Query(() => BusinessSchema, { name: 'myBusiness' })
   @UseGuards(JwtAuthGuard, TokenGuard)
-  async myBusiness(
-    @BusinessDec() businessReq: IBusinessReq
-  ) {
+  async myBusiness(@BusinessDec() businessReq: IBusinessReq) {
     const found = await this.businessesService.findOne(businessReq.businessId);
     return toBusinessSchema(found);
   }
@@ -82,7 +100,7 @@ export class BusinessesResolver {
   @Response(businessesResponses.update)
   async updateBusiness(
     @Args('data') data: UpdateBusinessInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     const business = await this.businessesService.update(data, businessReq);
     return toBusinessSchema(business);
@@ -100,9 +118,12 @@ export class BusinessesResolver {
   @Response(businessesResponses.update)
   async updateBusinessEmail(
     @Args('data') data: UpdateBusinessEmailInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
-    const business = await this.businessesService.updateEmail(data, businessReq);
+    const business = await this.businessesService.updateEmail(
+      data,
+      businessReq,
+    );
     return toBusinessSchema(business);
   }
 
@@ -110,10 +131,10 @@ export class BusinessesResolver {
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(BusinessesPermissionsEnum.BURDELOWN)
   @Response(businessesResponses.delete)
-  async removeBusiness(
-    @BusinessDec() businessReq: IBusinessReq
-  ) {
-    return await this.businessesService
-      .remove(businessReq.businessId, businessReq);
+  async removeBusiness(@BusinessDec() businessReq: IBusinessReq) {
+    return await this.businessesService.remove(
+      businessReq.businessId,
+      businessReq,
+    );
   }
 }

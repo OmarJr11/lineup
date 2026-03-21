@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services/base.service';
@@ -33,7 +29,10 @@ export class ValidationMailsGettersService extends BasicService<ValidationMail> 
    * @returns {Promise<ValidationMail>} The matching validation record
    * @throws {NotFoundException} When no matching record is found
    */
-  async findActiveByEmailAndCode(email: string, code: string): Promise<ValidationMail> {
+  async findActiveByEmailAndCode(
+    email: string,
+    code: string,
+  ): Promise<ValidationMail> {
     try {
       return await this.findOneWithOptionsOrFail({
         where: { email, code, isUsed: false },
@@ -51,7 +50,7 @@ export class ValidationMailsGettersService extends BasicService<ValidationMail> 
    * @returns {Promise<ValidationMail | undefined>} The latest record or undefined
    */
   async findLatestByEmail(email: string): Promise<ValidationMail | undefined> {
-    return await  this.findOneWithOptions({
+    return await this.findOneWithOptions({
       where: { email, isUsed: false },
       order: { creationDate: 'DESC' },
     });

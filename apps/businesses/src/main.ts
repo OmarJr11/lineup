@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { BusinessesModule } from './businesses.module';
-import { initializeTransactionalContext, patchTypeORMRepositoryWithBaseRepository } from 'typeorm-transactional-cls-hooked';
+import {
+  initializeTransactionalContext,
+  patchTypeORMRepositoryWithBaseRepository,
+} from 'typeorm-transactional-cls-hooked';
 import { join } from 'path';
 import { createConnection } from 'typeorm';
 import * as dotenv from 'dotenv';
@@ -11,7 +14,11 @@ dotenv.config();
 async function bootstrap() {
   initializeTransactionalContext();
   patchTypeORMRepositoryWithBaseRepository();
-  const entities = join(__dirname, '../../../', process.env.DB_ENTITIES_TYPEORM);
+  const entities = join(
+    __dirname,
+    '../../../',
+    process.env.DB_ENTITIES_TYPEORM,
+  );
 
   await createConnection({
     type: process.env.DB_TYPE as 'postgres' | 'mysql' | 'sqlite',
@@ -63,4 +70,4 @@ const getCors = (): string[] => {
   return corsArray;
 };
 
-bootstrap();
+void bootstrap();

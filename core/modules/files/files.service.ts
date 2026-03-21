@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotAcceptableException,
-  Scope
+  Scope,
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
@@ -16,7 +16,11 @@ import { File } from '../../entities';
 import { BasicService } from '../../common/services';
 import { filesResponses } from '../../common/responses';
 import { ConfigService } from '@nestjs/config';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { IFileUploadInterface } from '../../common/interfaces/file.interface';
 import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -53,7 +57,9 @@ export class FilesService extends BasicService<File> {
     this.s3_region = this.configService.get<string>('AWS_BUCKET_REGION');
     this.visionApiKey = this.configService.get<string>('GOOGLE_VISION_API_KEY');
     if (!this.s3_region || !this.bucketName) {
-      throw new Error('AWS_BUCKET_REGION or AWS_BUCKET_NAME not found in environment variables');
+      throw new Error(
+        'AWS_BUCKET_REGION or AWS_BUCKET_NAME not found in environment variables',
+      );
     }
     this.client = new S3Client({
       region: this.s3_region,
@@ -63,7 +69,6 @@ export class FilesService extends BasicService<File> {
       },
     });
   }
-
 
   /**
    * Uploads a file to S3
@@ -75,7 +80,7 @@ export class FilesService extends BasicService<File> {
   async uploadFile(
     file: IFileInterface,
     data: UploadFileDto,
-    user: IUserReq
+    user: IUserReq,
   ): Promise<File> {
     const key = await this.generateFileName();
     const directory = `${data.directory}/${key}`;
@@ -95,12 +100,14 @@ export class FilesService extends BasicService<File> {
       throw new NotAcceptableException('File upload failed');
     });
 
-    const url = this.validateDirectory(data.directory) 
+    const url = this.validateDirectory(data.directory)
       ? this.getFileUrl(directory)
       : await this.getPresignedSignedUrl(directory);
 
-    const labels = data.directory === DirectoriesEnum.PRODUCTS 
-      ? await this.extractLabelsFromImage(file) : [];
+    const labels =
+      data.directory === DirectoriesEnum.PRODUCTS
+        ? await this.extractLabelsFromImage(file)
+        : [];
     const fileToSave: IFileUploadInterface = {
       url,
       name: key,
@@ -125,7 +132,7 @@ export class FilesService extends BasicService<File> {
   getFileUrl(key: string): string {
     return `https://${this.bucketName}.s3.${this.s3_region}.amazonaws.com/${key}`;
   }
- 
+
   /**
    * Gets a presigned URL for a file in S3
    * @param {string} key The key of the file in S3
@@ -133,9 +140,9 @@ export class FilesService extends BasicService<File> {
    */
   async getPresignedSignedUrl(key: string): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucketName, Key: key });
-    return await getSignedUrl(
-      this.client, command, { expiresIn: 60 * 60 * 24 }
-    ).catch((error) => {
+    return await getSignedUrl(this.client, command, {
+      expiresIn: 60 * 60 * 24,
+    }).catch((error) => {
       LogError(this.logger, error, this.getPresignedSignedUrl.name);
       throw new InternalServerErrorException(this.rUpload.error);
     });
@@ -146,7 +153,9 @@ export class FilesService extends BasicService<File> {
    * @param {IFileInterface} file The file to analyze (must be an image)
    * @returns {Promise<string[]>} Array of label descriptions, empty if not an image or on error
    */
-  private async extractLabelsFromImage(file: IFileInterface): Promise<string[]> {
+  private async extractLabelsFromImage(
+    file: IFileInterface,
+  ): Promise<string[]> {
     const isImage = file.mimetype?.startsWith('image/');
     if (!isImage || !this.visionApiKey) {
       return [];
@@ -161,16 +170,25 @@ export class FilesService extends BasicService<File> {
             requests: [
               {
                 image: { content: file.buffer.toString('base64') },
-                features: [{ type: 'LABEL_DETECTION', maxResults: VISION_LABEL_MAX_COUNT }],
+                features: [
+                  {
+                    type: 'LABEL_DETECTION',
+                    maxResults: VISION_LABEL_MAX_COUNT,
+                  },
+                ],
               },
             ],
           }),
-        }
+        },
       );
       if (!response.ok) {
         throw new Error(`Vision API responded with ${response.status}`);
       }
-      const data = (await response.json()) as { responses?: Array<{ labelAnnotations?: Array<{ description?: string; score?: number }> }> };
+      const data = (await response.json()) as {
+        responses?: Array<{
+          labelAnnotations?: Array<{ description?: string; score?: number }>;
+        }>;
+      };
       const labelAnnotations = data.responses?.[0]?.labelAnnotations ?? [];
       return labelAnnotations
         .filter((label) => (label.score ?? 0) >= VISION_LABEL_MIN_CONFIDENCE)
@@ -180,7 +198,7 @@ export class FilesService extends BasicService<File> {
         .filter((description) => description.length > 0);
     } catch (error) {
       this.logger.warn(
-        `Failed to extract labels from image via Vision API: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to extract labels from image via Vision API: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
       return [];
     }
@@ -201,21 +219,23 @@ export class FilesService extends BasicService<File> {
    * @returns {Promise<string>}
    */
   private async generateFileName(): Promise<string> {
-      // creates a filename in respective directory with random string name of 30 characters
-      let fileName = await this.generateRandomKey(50);
-      // constant to the loop
-      let i = 0;
+    // creates a filename in respective directory with random string name of 30 characters
+    let fileName = await this.generateRandomKey(50);
+    // constant to the loop
+    let i = 0;
 
-      do {
-          // Verifying the newly generated code is not in the database
-          const existThisName = await this.findOneWithOptions({ where: { name: fileName } });
-          // if exist stop the loop
-          i = existThisName ? 1 : 0;
-          // get other filename
-          if (i > 0) fileName = await this.generateRandomKey(50);
-      } while (i === 1);
+    do {
+      // Verifying the newly generated code is not in the database
+      const existThisName = await this.findOneWithOptions({
+        where: { name: fileName },
+      });
+      // if exist stop the loop
+      i = existThisName ? 1 : 0;
+      // get other filename
+      if (i > 0) fileName = await this.generateRandomKey(50);
+    } while (i === 1);
 
-      return fileName;
+    return fileName;
   }
 
   /**
@@ -224,7 +244,8 @@ export class FilesService extends BasicService<File> {
    * @returns {Promise<string>} A promise that resolves to the generated key
    */
   async generateRandomKey(length: number): Promise<string> {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -232,4 +253,3 @@ export class FilesService extends BasicService<File> {
     return result;
   }
 }
-

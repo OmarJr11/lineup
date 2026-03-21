@@ -10,25 +10,43 @@ import { SearchIndexService } from '../modules/search/search-index.service';
 import { LogError, LogWarn } from '../common/helpers';
 
 /** Payload for product search index job. */
-interface SearchDataProductJobData { idProduct: number; }
+interface SearchDataProductJobData {
+  idProduct: number;
+}
 
 /** Payload for business search index job. */
-interface SearchDataBusinessJobData { idBusiness: number; }
+interface SearchDataBusinessJobData {
+  idBusiness: number;
+}
 
 /** Payload for catalog search index job. */
-interface SearchDataCatalogJobData { idCatalog: number; }
+interface SearchDataCatalogJobData {
+  idCatalog: number;
+}
 
 /** Payload for visit record job. Updates search index counters when a visit is recorded. */
-interface SearchDataVisitRecordJobData { type: VisitTypeEnum; id: number; }
+interface SearchDataVisitRecordJobData {
+  type: VisitTypeEnum;
+  id: number;
+}
 
 /** Payload for business follow record job. Updates business_search_index.followers on follow/unfollow. */
-interface SearchDataBusinessFollowRecordJobData { idBusiness: number; action: 'follow' | 'unfollow'; }
+interface SearchDataBusinessFollowRecordJobData {
+  idBusiness: number;
+  action: 'follow' | 'unfollow';
+}
 
 /** Payload for product like record job. Updates product, catalog and business search index likes on like/unlike. */
-interface SearchDataProductLikeRecordJobData { idProduct: number; action: 'like' | 'unlike'; }
+interface SearchDataProductLikeRecordJobData {
+  idProduct: number;
+  action: 'like' | 'unlike';
+}
 
 /** Payload for product rating record job. Updates product_search_index.rating_average. */
-interface SearchDataProductRatingRecordJobData { idProduct: number; ratingAverage: number; }
+interface SearchDataProductRatingRecordJobData {
+  idProduct: number;
+  ratingAverage: number;
+}
 
 @Processor(QueueNamesEnum.searchData)
 export class SearchDataConsumer extends WorkerHost {
@@ -79,13 +97,20 @@ export class SearchDataConsumer extends WorkerHost {
    * Creates or updates the product search index for the product in job.data.
    * @param {Job<SearchDataProductJobData>} job - BullMQ job with { idProduct }.
    */
-  private async setDataInSearchIndexProduct(job: Job<SearchDataProductJobData>): Promise<void> {
+  private async setDataInSearchIndexProduct(
+    job: Job<SearchDataProductJobData>,
+  ): Promise<void> {
     const { idProduct } = job.data;
     if (!idProduct) {
-      LogWarn(this.log, `Missing idProduct in job ${job.id}`, this.setDataInSearchIndexProduct.name);
+      LogWarn(
+        this.log,
+        `Missing idProduct in job ${job.id}`,
+        this.setDataInSearchIndexProduct.name,
+      );
       return;
     }
-    const product = await this.productsGettersService.findOneWithRelations(idProduct);
+    const product =
+      await this.productsGettersService.findOneWithRelations(idProduct);
     await this.searchIndexService.upsertProductSearchIndex(product);
   }
 
@@ -93,10 +118,16 @@ export class SearchDataConsumer extends WorkerHost {
    * Creates or updates the business search index for the business in job.data.
    * @param {Job<SearchDataBusinessJobData>} job - BullMQ job with { idBusiness }.
    */
-  private async setDataInSearchIndexBusiness(job: Job<SearchDataBusinessJobData>): Promise<void> {
+  private async setDataInSearchIndexBusiness(
+    job: Job<SearchDataBusinessJobData>,
+  ): Promise<void> {
     const { idBusiness } = job.data;
     if (!idBusiness) {
-      LogWarn(this.log, `Missing idBusiness in job ${job.id}`, this.setDataInSearchIndexBusiness.name);
+      LogWarn(
+        this.log,
+        `Missing idBusiness in job ${job.id}`,
+        this.setDataInSearchIndexBusiness.name,
+      );
       return;
     }
     const business = await this.businessesGettersService.findOne(idBusiness);
@@ -107,10 +138,16 @@ export class SearchDataConsumer extends WorkerHost {
    * Creates or updates the catalog search index for the catalog in job.data.
    * @param {Job<SearchDataCatalogJobData>} job - BullMQ job with { idCatalog }.
    */
-  private async setDataInSearchIndexCatalog(job: Job<SearchDataCatalogJobData>): Promise<void> {
+  private async setDataInSearchIndexCatalog(
+    job: Job<SearchDataCatalogJobData>,
+  ): Promise<void> {
     const { idCatalog } = job.data;
     if (!idCatalog) {
-      LogWarn(this.log, `Missing idCatalog in job ${job.id}`, this.setDataInSearchIndexCatalog.name);
+      LogWarn(
+        this.log,
+        `Missing idCatalog in job ${job.id}`,
+        this.setDataInSearchIndexCatalog.name,
+      );
       return;
     }
     const catalog = await this.catalogsGettersService.findOne(idCatalog);
@@ -124,10 +161,16 @@ export class SearchDataConsumer extends WorkerHost {
    * - PRODUCT: product_search_index.visits, catalog_search_index.product_visits_total, business_search_index.product_visits_total
    * @param {Job<SearchDataVisitRecordJobData>} job - BullMQ job with { type, id }.
    */
-  private async processVisitRecord(job: Job<SearchDataVisitRecordJobData>): Promise<void> {
+  private async processVisitRecord(
+    job: Job<SearchDataVisitRecordJobData>,
+  ): Promise<void> {
     const { type, id } = job.data;
     if (!type || !id) {
-      LogWarn(this.log, `Missing type or id in visit record job ${job.id}`, this.processVisitRecord.name);
+      LogWarn(
+        this.log,
+        `Missing type or id in visit record job ${job.id}`,
+        this.processVisitRecord.name,
+      );
       return;
     }
     switch (type) {
@@ -137,18 +180,28 @@ export class SearchDataConsumer extends WorkerHost {
       case VisitTypeEnum.CATALOG: {
         const catalog = await this.catalogsGettersService.findOne(id);
         await this.searchIndexService.incrementCatalogVisits(id);
-        await this.searchIndexService.incrementBusinessCatalogVisitsTotal(catalog.idCreationBusiness);
+        await this.searchIndexService.incrementBusinessCatalogVisitsTotal(
+          catalog.idCreationBusiness,
+        );
         break;
       }
       case VisitTypeEnum.PRODUCT: {
         const product = await this.productsGettersService.findOne(id);
         await this.searchIndexService.incrementProductVisits(id);
-        await this.searchIndexService.incrementCatalogProductVisitsTotal(product.idCatalog);
-        await this.searchIndexService.incrementBusinessProductVisitsTotal(product.idCreationBusiness);
+        await this.searchIndexService.incrementCatalogProductVisitsTotal(
+          product.idCatalog,
+        );
+        await this.searchIndexService.incrementBusinessProductVisitsTotal(
+          product.idCreationBusiness,
+        );
         break;
       }
       default:
-        LogWarn(this.log, `Unknown visit type: ${type}`, this.processVisitRecord.name);
+        LogWarn(
+          this.log,
+          `Unknown visit type: ${type}`,
+          this.processVisitRecord.name,
+        );
     }
   }
 
@@ -156,10 +209,16 @@ export class SearchDataConsumer extends WorkerHost {
    * Processes a business follow record job. Increments or decrements business_search_index.followers.
    * @param {Job<SearchDataBusinessFollowRecordJobData>} job - BullMQ job with { idBusiness, action }.
    */
-  private async processBusinessFollowRecord(job: Job<SearchDataBusinessFollowRecordJobData>): Promise<void> {
+  private async processBusinessFollowRecord(
+    job: Job<SearchDataBusinessFollowRecordJobData>,
+  ): Promise<void> {
     const { idBusiness, action } = job.data;
     if (!idBusiness || !action) {
-      LogWarn(this.log, `Missing idBusiness or action in follow record job ${job.id}`, this.processBusinessFollowRecord.name);
+      LogWarn(
+        this.log,
+        `Missing idBusiness or action in follow record job ${job.id}`,
+        this.processBusinessFollowRecord.name,
+      );
       return;
     }
     if (action === 'follow') {
@@ -167,7 +226,11 @@ export class SearchDataConsumer extends WorkerHost {
     } else if (action === 'unfollow') {
       await this.searchIndexService.decrementBusinessFollowers(idBusiness);
     } else {
-      LogWarn(this.log, `Unknown follow action: ${action}`, this.processBusinessFollowRecord.name);
+      LogWarn(
+        this.log,
+        `Unknown follow action: ${action}`,
+        this.processBusinessFollowRecord.name,
+      );
     }
   }
 
@@ -178,23 +241,41 @@ export class SearchDataConsumer extends WorkerHost {
    * - business_search_index.product_likes_total
    * @param {Job<SearchDataProductLikeRecordJobData>} job - BullMQ job with { idProduct, action }.
    */
-  private async processProductLikeRecord(job: Job<SearchDataProductLikeRecordJobData>): Promise<void> {
+  private async processProductLikeRecord(
+    job: Job<SearchDataProductLikeRecordJobData>,
+  ): Promise<void> {
     const { idProduct, action } = job.data;
     if (!idProduct || !action) {
-      LogWarn(this.log, `Missing idProduct or action in product like record job ${job.id}`, this.processProductLikeRecord.name);
+      LogWarn(
+        this.log,
+        `Missing idProduct or action in product like record job ${job.id}`,
+        this.processProductLikeRecord.name,
+      );
       return;
     }
     const product = await this.productsGettersService.findOne(idProduct);
     if (action === 'like') {
       await this.searchIndexService.incrementProductLikes(idProduct);
-      await this.searchIndexService.incrementCatalogProductLikesTotal(product.idCatalog);
-      await this.searchIndexService.incrementBusinessProductLikesTotal(product.idCreationBusiness);
+      await this.searchIndexService.incrementCatalogProductLikesTotal(
+        product.idCatalog,
+      );
+      await this.searchIndexService.incrementBusinessProductLikesTotal(
+        product.idCreationBusiness,
+      );
     } else if (action === 'unlike') {
       await this.searchIndexService.decrementProductLikes(idProduct);
-      await this.searchIndexService.decrementCatalogProductLikesTotal(product.idCatalog);
-      await this.searchIndexService.decrementBusinessProductLikesTotal(product.idCreationBusiness);
+      await this.searchIndexService.decrementCatalogProductLikesTotal(
+        product.idCatalog,
+      );
+      await this.searchIndexService.decrementBusinessProductLikesTotal(
+        product.idCreationBusiness,
+      );
     } else {
-      LogWarn(this.log, `Unknown like action: ${action}`, this.processProductLikeRecord.name);
+      LogWarn(
+        this.log,
+        `Unknown like action: ${action}`,
+        this.processProductLikeRecord.name,
+      );
     }
   }
 
@@ -203,12 +284,21 @@ export class SearchDataConsumer extends WorkerHost {
    * Updates product_search_index.rating_average with the newly computed value.
    * @param {Job<SearchDataProductRatingRecordJobData>} job - BullMQ job with { idProduct, ratingAverage }.
    */
-  private async processProductRatingRecord(job: Job<SearchDataProductRatingRecordJobData>): Promise<void> {
+  private async processProductRatingRecord(
+    job: Job<SearchDataProductRatingRecordJobData>,
+  ): Promise<void> {
     const { idProduct, ratingAverage } = job.data;
     if (!idProduct || ratingAverage === undefined) {
-      LogWarn(this.log, `Missing idProduct or ratingAverage in product rating record job ${job.id}`, this.processProductRatingRecord.name);
+      LogWarn(
+        this.log,
+        `Missing idProduct or ratingAverage in product rating record job ${job.id}`,
+        this.processProductRatingRecord.name,
+      );
       return;
     }
-    await this.searchIndexService.updateProductRatingAverage(idProduct, ratingAverage);
+    await this.searchIndexService.updateProductRatingAverage(
+      idProduct,
+      ratingAverage,
+    );
   }
 }

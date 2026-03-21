@@ -7,7 +7,7 @@ import {
   SocialNetworkSchema,
   UserSchema,
 } from '.';
-  
+
 @ObjectType()
 export class FileSchema extends BaseSchema {
   @Field()

@@ -7,13 +7,13 @@ import { ProductsModule } from '../products/products.module';
 import { GeminiModule } from '../gemini/gemini.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([ProductTag]),
-        TagsModule,
-        forwardRef(() => ProductsModule),
-        GeminiModule,
-    ],
-    providers: [ProductTagsService],
-    exports: [ProductTagsService],
+  imports: [
+    TypeOrmModule.forFeature([ProductTag]),
+    TagsModule,
+    forwardRef(() => ProductsModule),
+    GeminiModule,
+  ],
+  providers: [ProductTagsService],
+  exports: [ProductTagsService],
 })
 export class ProductTagsModule {}

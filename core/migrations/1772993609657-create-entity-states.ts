@@ -1,13 +1,12 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateEntityStates1772993609657 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(
-            `CREATE TYPE "system"."states_status_enum" AS ENUM('active', 'inactive', 'pending', 'suspended', 'deleted', 'completed', 'rejected', 'approved', 'failed', 'denied')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "system"."states" (
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `CREATE TYPE "system"."states_status_enum" AS ENUM('active', 'inactive', 'pending', 'suspended', 'deleted', 'completed', 'rejected', 'approved', 'failed', 'denied')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "system"."states" (
                 "creation_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 "modification_date" TIMESTAMP WITH TIME ZONE DEFAULT now(),
                 "creation_ip" character varying(50),
@@ -26,15 +25,15 @@ export class CreateEntityStates1772993609657 implements MigrationInterface {
                 CONSTRAINT "UQ_states_code" UNIQUE ("code"),
                 CONSTRAINT "UQ_states_capital" UNIQUE ("capital")
             )`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "system"."states" ADD CONSTRAINT "FK_states_id_creation_user" FOREIGN KEY ("id_creation_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "system"."states" ADD CONSTRAINT "FK_states_id_modification_user" FOREIGN KEY ("id_modification_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-        );
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system"."states" ADD CONSTRAINT "FK_states_id_creation_user" FOREIGN KEY ("id_creation_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system"."states" ADD CONSTRAINT "FK_states_id_modification_user" FOREIGN KEY ("id_modification_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
 
-        await queryRunner.query(`
+    await queryRunner.query(`
             INSERT INTO system.states (name, code, capital, id_creation_user)
             VALUES
                 ('Amazonas', 'VE-Z', 'Puerto Ayacucho', 1),
@@ -63,13 +62,16 @@ export class CreateEntityStates1772993609657 implements MigrationInterface {
                 ('Yaracuy', 'VE-U', 'San Felipe', 1),
                 ('Zulia', 'VE-V', 'Maracaibo', 1)
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "system"."states" DROP CONSTRAINT "FK_states_id_modification_user"`);
-        await queryRunner.query(`ALTER TABLE "system"."states" DROP CONSTRAINT "FK_states_id_creation_user"`);
-        await queryRunner.query(`DROP TABLE "system"."states"`);
-        await queryRunner.query(`DROP TYPE "system"."states_status_enum"`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "system"."states" DROP CONSTRAINT "FK_states_id_modification_user"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "system"."states" DROP CONSTRAINT "FK_states_id_creation_user"`,
+    );
+    await queryRunner.query(`DROP TABLE "system"."states"`);
+    await queryRunner.query(`DROP TYPE "system"."states_status_enum"`);
+  }
 }

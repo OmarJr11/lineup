@@ -23,89 +23,98 @@ import { Queue } from 'bullmq';
  */
 @Injectable()
 export class ProductRatingsService extends BasicService<ProductRating> {
-    private readonly logger = new Logger(ProductRatingsService.name);
+  private readonly logger = new Logger(ProductRatingsService.name);
 
-    constructor(
-        @Inject(REQUEST)
-        private readonly userRequest: Request,
-        @InjectRepository(ProductRating)
-        private readonly productRatingRepository: Repository<ProductRating>,
-        private readonly productRatingsGettersService: ProductRatingsGettersService,
-        private readonly productRatingsSettersService: ProductRatingsSettersService,
-        private readonly productsGettersService: ProductsGettersService,
-        @InjectQueue(QueueNamesEnum.reviews)
-        private readonly Queue: Queue,
-    ) {
-        super(productRatingRepository, userRequest);
-    }
+  constructor(
+    @Inject(REQUEST)
+    private readonly userRequest: Request,
+    @InjectRepository(ProductRating)
+    private readonly productRatingRepository: Repository<ProductRating>,
+    private readonly productRatingsGettersService: ProductRatingsGettersService,
+    private readonly productRatingsSettersService: ProductRatingsSettersService,
+    private readonly productsGettersService: ProductsGettersService,
+    @InjectQueue(QueueNamesEnum.reviews)
+    private readonly Queue: Queue,
+  ) {
+    super(productRatingRepository, userRequest);
+  }
 
-    /**
-     * Rate a product. Creates a new rating if the user has not rated the product
-     * before, or updates the existing one. Recalculates and persists the product's
-     * average rating after every change.
-     * @param {RateProductInput} input - The rating data from the client.
-     * @param {IUserReq} userReq - The authenticated user.
-     * @returns {Promise<ProductRating>} The created or updated rating with relations.
-     */
-    @Transactional()
-    async rateProduct(input: RateProductInput, userReq: IUserReq): Promise<ProductRating> {
-        await this.productsGettersService.findOne(input.idProduct);
-        const existingRating = await this.productRatingsGettersService
-            .findOneByProductAndUser(input.idProduct, userReq.userId);
-        const rating = existingRating
-            ? await this.updateExistingRating(existingRating, input, userReq)
-            : await this.createNewRating(input, userReq);
-        await this.syncProductRatingAverage(input.idProduct, userReq);
-        return await this.productRatingsGettersService.findOne(rating.id);
-    }
+  /**
+   * Rate a product. Creates a new rating if the user has not rated the product
+   * before, or updates the existing one. Recalculates and persists the product's
+   * average rating after every change.
+   * @param {RateProductInput} input - The rating data from the client.
+   * @param {IUserReq} userReq - The authenticated user.
+   * @returns {Promise<ProductRating>} The created or updated rating with relations.
+   */
+  @Transactional()
+  async rateProduct(
+    input: RateProductInput,
+    userReq: IUserReq,
+  ): Promise<ProductRating> {
+    await this.productsGettersService.findOne(input.idProduct);
+    const existingRating =
+      await this.productRatingsGettersService.findOneByProductAndUser(
+        input.idProduct,
+        userReq.userId,
+      );
+    const rating = existingRating
+      ? await this.updateExistingRating(existingRating, input, userReq)
+      : await this.createNewRating(input, userReq);
+    await this.syncProductRatingAverage(input.idProduct, userReq);
+    return await this.productRatingsGettersService.findOne(rating.id);
+  }
 
-    /**
-     * Create a new rating record.
-     * @param {RateProductInput} input - Rating input data.
-     * @param {IUserReq} userReq - The authenticated user.
-     * @returns {Promise<ProductRating>} The newly created rating.
-     */
-    private async createNewRating(
-        input: RateProductInput,
-        userReq: IUserReq,
-    ): Promise<ProductRating> {
-        const data: ICreateProductRating = {
-            idProduct: input.idProduct,
-            idCreationUser: userReq.userId,
-            stars: input.stars,
-            comment: input.comment,
-        };
-        return await this.productRatingsSettersService.create(data, userReq);
-    }
+  /**
+   * Create a new rating record.
+   * @param {RateProductInput} input - Rating input data.
+   * @param {IUserReq} userReq - The authenticated user.
+   * @returns {Promise<ProductRating>} The newly created rating.
+   */
+  private async createNewRating(
+    input: RateProductInput,
+    userReq: IUserReq,
+  ): Promise<ProductRating> {
+    const data: ICreateProductRating = {
+      idProduct: input.idProduct,
+      idCreationUser: userReq.userId,
+      stars: input.stars,
+      comment: input.comment,
+    };
+    return await this.productRatingsSettersService.create(data, userReq);
+  }
 
-    /**
-     * Update an existing rating record with new stars and/or comment.
-     * @param {ProductRating} rating - The existing rating entity.
-     * @param {RateProductInput} input - New rating data.
-     * @param {IUserReq} userReq - The authenticated user.
-     * @returns {Promise<ProductRating>} The updated rating.
-     */
-    private async updateExistingRating(
-        rating: ProductRating,
-        input: RateProductInput,
-        userReq: IUserReq,
-    ): Promise<ProductRating> {
-        return await this.productRatingsSettersService.update(
-            rating,
-            { stars: input.stars, comment: input.comment },
-            userReq,
-        );
-    }
+  /**
+   * Update an existing rating record with new stars and/or comment.
+   * @param {ProductRating} rating - The existing rating entity.
+   * @param {RateProductInput} input - New rating data.
+   * @param {IUserReq} userReq - The authenticated user.
+   * @returns {Promise<ProductRating>} The updated rating.
+   */
+  private async updateExistingRating(
+    rating: ProductRating,
+    input: RateProductInput,
+    userReq: IUserReq,
+  ): Promise<ProductRating> {
+    return await this.productRatingsSettersService.update(
+      rating,
+      { stars: input.stars, comment: input.comment },
+      userReq,
+    );
+  }
 
-    /**
-     * Recompute the average rating for a product and persist it.
-     * @param {number} idProduct - The product ID.
-     * @param {IUserReq} user - The authenticated user.
-     */
-    private async syncProductRatingAverage(idProduct: number, user: IUserReq): Promise<void> {
-        await this.Queue.add(
-            ReviewsConsumerEnum.CalculateAverage,
-            { idProduct, user }
-        )
-    }
+  /**
+   * Recompute the average rating for a product and persist it.
+   * @param {number} idProduct - The product ID.
+   * @param {IUserReq} user - The authenticated user.
+   */
+  private async syncProductRatingAverage(
+    idProduct: number,
+    user: IUserReq,
+  ): Promise<void> {
+    await this.Queue.add(ReviewsConsumerEnum.CalculateAverage, {
+      idProduct,
+      user,
+    });
+  }
 }

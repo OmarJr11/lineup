@@ -6,11 +6,8 @@ import { ProductVisitsSettersService } from './product-visits-setters.service';
 import { ProductsModule } from '../products/products.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([ProductVisit]),
-        ProductsModule,
-    ],
-    providers: [ProductVisitsGettersService, ProductVisitsSettersService],
-    exports: [ProductVisitsGettersService, ProductVisitsSettersService],
+  imports: [TypeOrmModule.forFeature([ProductVisit]), ProductsModule],
+  providers: [ProductVisitsGettersService, ProductVisitsSettersService],
+  exports: [ProductVisitsGettersService, ProductVisitsSettersService],
 })
 export class ProductVisitsModule {}

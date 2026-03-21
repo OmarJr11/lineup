@@ -1,5 +1,5 @@
-import { Tag } from '../../entities';
-import { TagSchema } from '../../schemas';
+import type { Tag } from '../../entities';
+import type { TagSchema } from '../../schemas';
 
 /**
  * Maps Tag entity to TagSchema.
@@ -7,11 +7,11 @@ import { TagSchema } from '../../schemas';
  * @returns {TagSchema} The tag schema.
  */
 export function toTagSchema(tag: Tag): TagSchema {
-    return {
-        id: tag.id,
-        name: tag.name,
-        slug: tag.slug,
-        idCreationBusiness: tag.idCreationBusiness,
-        creationBusiness: tag.creationBusiness as TagSchema['creationBusiness'],
-    };
+  return {
+    id: tag.id,
+    name: tag.name,
+    slug: tag.slug,
+    idCreationBusiness: tag.idCreationBusiness,
+    creationBusiness: tag.creationBusiness as TagSchema['creationBusiness'],
+  };
 }

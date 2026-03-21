@@ -1,11 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
 import {
-    IsArray,
-    IsNotEmpty,
-    IsString,
-    MaxLength,
-    MinLength,
-    ValidateNested,
+  IsArray,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateProductVariationOptionInput } from './create-product-variation-option.input';
@@ -18,17 +18,17 @@ import { CreateProductVariationOptionInput } from './create-product-variation-op
  */
 @InputType()
 export class CreateProductVariationInput {
-    @Field()
-    @IsNotEmpty()
-    @MinLength(3)
-    @MaxLength(255)
-    @IsString()
-    title: string;
+  @Field()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(255)
+  @IsString()
+  title: string;
 
-    @Field(() => [CreateProductVariationOptionInput])
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => CreateProductVariationOptionInput)
-    options: CreateProductVariationOptionInput[];
+  @Field(() => [CreateProductVariationOptionInput])
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductVariationOptionInput)
+  options: CreateProductVariationOptionInput[];
 }

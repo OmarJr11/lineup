@@ -48,7 +48,7 @@ export class ValidationMailsSettersService extends BasicService<ValidationMail> 
     const code = this.generateCode();
     const expiresAt = this.buildExpiryDate();
     try {
-      const data = { email, code, expiresAt, isUsed: false }; 
+      const data = { email, code, expiresAt, isUsed: false };
       return await this.save(data);
     } catch (error) {
       LogError(this.logger, error, this.createValidationCode.name);

@@ -48,7 +48,7 @@ export class VerificationCodesSettersService extends BasicService<VerificationCo
   @Transactional()
   async createVerificationCode(
     input: CreateVerificationCodeDto,
-    user: IUserOrBusinessReq
+    user: IUserOrBusinessReq,
   ): Promise<VerificationCode> {
     const code = this.generateCode();
     const expiresAt = this.buildExpiryDate();
@@ -71,7 +71,10 @@ export class VerificationCodesSettersService extends BasicService<VerificationCo
    * @throws {BadRequestException} When the code has expired
    * @throws {InternalServerErrorException} When the update fails
    */
-  async verifyCode(record: VerificationCode, user: IUserOrBusinessReq): Promise<VerificationCode> {
+  async verifyCode(
+    record: VerificationCode,
+    user: IUserOrBusinessReq,
+  ): Promise<VerificationCode> {
     this.assertNotExpired(record);
     return await this.markAsUsed(record, user);
   }
@@ -98,7 +101,10 @@ export class VerificationCodesSettersService extends BasicService<VerificationCo
    * @throws {InternalServerErrorException} When the update fails
    */
   @Transactional()
-  private async markAsUsed(record: VerificationCode, user: IUserOrBusinessReq): Promise<VerificationCode> {
+  private async markAsUsed(
+    record: VerificationCode,
+    user: IUserOrBusinessReq,
+  ): Promise<VerificationCode> {
     try {
       const data = { isUsed: true, status: StatusEnum.COMPLETED };
       return await this.updateEntity(data, record, user);

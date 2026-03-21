@@ -1,6 +1,6 @@
 export interface IUserOrBusinessReq {
-    path?: string;
-    businessId?: number;
-    username?: string;
-    userId?: number;
+  path?: string;
+  businessId?: number;
+  username?: string;
+  userId?: number;
 }

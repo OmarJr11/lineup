@@ -9,16 +9,16 @@ import { StockMovementsSettersService } from './stock-movements-setters.service'
  * Module that encapsulates stock movement (inventory history) functionality.
  */
 @Module({
-    imports: [TypeOrmModule.forFeature([StockMovement])],
-    providers: [
-        StockMovementsService,
-        StockMovementsGettersService,
-        StockMovementsSettersService,
-    ],
-    exports: [
-        StockMovementsService,
-        StockMovementsGettersService,
-        StockMovementsSettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([StockMovement])],
+  providers: [
+    StockMovementsService,
+    StockMovementsGettersService,
+    StockMovementsSettersService,
+  ],
+  exports: [
+    StockMovementsService,
+    StockMovementsGettersService,
+    StockMovementsSettersService,
+  ],
 })
 export class StockMovementsModule {}

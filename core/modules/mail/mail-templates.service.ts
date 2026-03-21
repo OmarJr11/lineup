@@ -16,7 +16,13 @@ import { mailResponses } from '../../common/responses';
  * both in source (ts-node) and in compiled output (dist/), since .hbs files
  * are not copied to dist by the TypeScript compiler.
  */
-const TEMPLATES_DIR = join(process.cwd(), 'core', 'modules', 'mail', 'templates');
+const TEMPLATES_DIR = join(
+  process.cwd(),
+  'core',
+  'modules',
+  'mail',
+  'templates',
+);
 
 /**
  * Service responsible for rendering Handlebars email templates.
@@ -36,7 +42,10 @@ export class MailTemplatesService {
    * @throws {NotFoundException} When the template file does not exist
    * @throws {InternalServerErrorException} When Handlebars fails to compile or render
    */
-  renderTemplate(templateName: string, context: Record<string, unknown>): string {
+  renderTemplate(
+    templateName: string,
+    context: Record<string, unknown>,
+  ): string {
     const templatePath = this.resolveTemplatePath(templateName);
     const source = this.readTemplateSource(templatePath, templateName);
     return this.compileAndRender(source, context, templateName);
@@ -60,9 +69,16 @@ export class MailTemplatesService {
    * @returns {string} Raw Handlebars template source
    * @throws {NotFoundException} When the file does not exist at the given path
    */
-  private readTemplateSource(templatePath: string, templateName: string): string {
+  private readTemplateSource(
+    templatePath: string,
+    templateName: string,
+  ): string {
     if (!existsSync(templatePath)) {
-      LogError(this.logger, `Template not found: ${templateName}`, this.renderTemplate.name);
+      LogError(
+        this.logger,
+        `Template not found: ${templateName}`,
+        this.renderTemplate.name,
+      );
       throw new NotFoundException(this.rTemplate.templateNotFound);
     }
     return readFileSync(templatePath, 'utf-8');
@@ -86,7 +102,11 @@ export class MailTemplatesService {
       const compiled = Handlebars.compile(source);
       return compiled(context);
     } catch (error) {
-      LogError(this.logger, error, `${this.renderTemplate.name}:${templateName}`);
+      LogError(
+        this.logger,
+        error,
+        `${this.renderTemplate.name}:${templateName}`,
+      );
       throw new InternalServerErrorException(this.rTemplate.renderError);
     }
   }
