@@ -10,7 +10,7 @@ import { LogError, LogWarn } from '../../common/helpers/logger.helper';
 import * as argon2 from 'argon2';
 import { userResponses } from '../../common/responses';
 import { businessesResponses } from '../../common/responses';
-import { AdminPermission, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
+import { AdminPermissionsEnum, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
 import { BusinessesService } from '../businesses/businesses.service';
 import { CreateBusinessInput } from '../businesses/dto/create-business.input';
@@ -507,9 +507,7 @@ export class AuthService {
     let havePermission = false;
     for (const role of roles) {
       role.rolePermissions.map((p) => {
-        if (p.permission.code === AdminPermission.LOGIN) {
-          havePermission = true;
-        }
+        if (p.permission.code === AdminPermissionsEnum.LOGIN) { havePermission = true; }
       });
     }
     return havePermission;

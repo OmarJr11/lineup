@@ -2,11 +2,8 @@ import { Args, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
 import { Permissions, Response } from '../../../../core/common/decorators';
-import {
-    BusinessesPermissionsEnum,
-    UsersPermissionsEnum,
-} from '../../../../core/common/enums';
-import { businessesResponses, userResponses } from '../../../../core/common/responses';
+import { AdminPermissionsEnum } from '../../../../core/common/enums';
+import { userResponses } from '../../../../core/common/responses';
 import { AdminStatisticsGettersService } from '../../../../core/modules/admin-statistics/admin-statistics-getters.service';
 import {
     ADMIN_DISCOUNT_EXPIRING_DEFAULT_DAYS,
@@ -37,7 +34,7 @@ export class AdminStatisticsResolver {
      */
     @Query(() => AdminUserStatsSchema, { name: 'adminUserStats' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-    @Permissions(UsersPermissionsEnum.USRLISALL)
+    @Permissions(AdminPermissionsEnum.STATS)
     @Response(userResponses.list)
     async adminUserStats(
         @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
@@ -50,8 +47,8 @@ export class AdminStatisticsResolver {
      */
     @Query(() => AdminBusinessStatsSchema, { name: 'adminBusinessStats' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-    @Permissions(BusinessesPermissionsEnum.BURLISALL)
-    @Response(businessesResponses.list)
+    @Permissions(AdminPermissionsEnum.STATS)
+    @Response(userResponses.list)
     async adminBusinessStats(
         @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
     ): Promise<AdminBusinessStatsSchema> {
@@ -63,8 +60,8 @@ export class AdminStatisticsResolver {
      */
     @Query(() => AdminPlatformEngagementStatsSchema, { name: 'adminPlatformEngagementStats' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-    @Permissions(BusinessesPermissionsEnum.BURLISALL)
-    @Response(businessesResponses.list)
+    @Permissions(AdminPermissionsEnum.STATS)
+    @Response(userResponses.list)
     async adminPlatformEngagementStats(
         @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
     ): Promise<AdminPlatformEngagementStatsSchema> {
@@ -76,8 +73,8 @@ export class AdminStatisticsResolver {
      */
     @Query(() => AdminCatalogGlobalStatsSchema, { name: 'adminCatalogGlobalStats' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-    @Permissions(BusinessesPermissionsEnum.BURLISALL)
-    @Response(businessesResponses.list)
+    @Permissions(AdminPermissionsEnum.STATS)
+    @Response(userResponses.list)
     async adminCatalogGlobalStats(): Promise<AdminCatalogGlobalStatsSchema> {
         return await this.adminStatisticsGettersService.getCatalogGlobalStats();
     }
@@ -87,8 +84,8 @@ export class AdminStatisticsResolver {
      */
     @Query(() => AdminDiscountGlobalStatsSchema, { name: 'adminDiscountGlobalStats' })
     @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-    @Permissions(BusinessesPermissionsEnum.BURLISALL)
-    @Response(businessesResponses.list)
+    @Permissions(AdminPermissionsEnum.STATS)
+    @Response(userResponses.list)
     async adminDiscountGlobalStats(
         @Args('query', { type: () => AdminDiscountGlobalQueryInput, nullable: true })
         query?: AdminDiscountGlobalQueryInput,
