@@ -6,6 +6,8 @@ import { StatusEnum } from '../../common/enums';
 import { InfinityScrollInput } from '../../common/dtos';
 import { LogError } from '../../common/helpers/logger.helper';
 import { businessFollowersResponses } from '../../common/responses';
+import { ITimePeriodFilter } from '../../common/interfaces';
+import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { Business, BusinessFollower } from '../../entities';
 
 @Injectable()
@@ -129,6 +131,42 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
             LogError(this.logger, error, this.countByBusiness.name);
             return 0;
         }
+    }
+
+    /**
+     * Get count for statistics, optionally filtered by time period.
+     * 
+     * @param {number} idBusiness - The business ID.
+     * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
+     * @returns {Promise<number>} The count of followers.
+     */
+    async getCountForStatistics(
+        idBusiness: number,
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<number> {
+        const qb = this.createQueryBuilder('bf')
+            .where('bf.idBusiness = :idBusiness', { idBusiness })
+            .andWhere('bf.status <> :status', { status: StatusEnum.DELETED });
+        StatisticsQueryHelper.applyTimeFilter(qb, 'bf', timePeriod);
+        return qb.getCount();
+    }
+
+    /**
+     * Get time-series data for new followers.
+     * 
+     * @param {number} idBusiness - The business ID.
+     * @param {ITimePeriodFilter} timePeriod - The time period filter.
+     * @returns {Promise<ITimeSeriesDataPoint[]>} The time-series data.
+     */
+    async getTimeSeriesForStatistics(
+        idBusiness: number,
+        timePeriod: ITimePeriodFilter,
+    ) {
+        const qb = this.createQueryBuilder('bf')
+            .where('bf.idBusiness = :idBusiness', { idBusiness })
+            .andWhere('bf.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere(StatisticsQueryHelper.buildDateFilter('bf', timePeriod), StatisticsQueryHelper.getDateParams(timePeriod));
+        return StatisticsQueryHelper.getTimeSeriesFromQuery(qb as any, 'bf', timePeriod);
     }
 
     /**

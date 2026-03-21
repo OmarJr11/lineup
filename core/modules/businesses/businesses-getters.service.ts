@@ -2,7 +2,13 @@ import { Injectable, Logger, NotAcceptableException, UnauthorizedException } fro
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
+import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { BasicService } from '../../common/services';
+import {
+    IAdminStatusCount,
+    IAdminTimeSeriesStats,
+    ITimePeriodFilter,
+} from '../../common/interfaces';
 import { Business } from '../../entities';
 import { businessesResponses } from '../../common/responses';
 import { LogError } from '../../common/helpers/logger.helper';
@@ -241,7 +247,65 @@ export class BusinessesGettersService extends BasicService<Business> {
             throw new UnauthorizedException(this._uToken.tokenNotValid);
         });
     }
-    
+
+    /**
+     * Counts businesses that are not soft-deleted (admin statistics).
+     * @returns {Promise<number>} Business count.
+     */
+    async getNonDeletedBusinessesCountForAdminStatistics(): Promise<number> {
+        return this.businessRepository.count({
+            where: { status: Not(StatusEnum.DELETED) },
+        });
+    }
+
+    /**
+     * Counts non-deleted businesses marked online (admin statistics).
+     * @returns {Promise<number>} Online business count.
+     */
+    async getOnlineNonDeletedBusinessesCountForAdminStatistics(): Promise<number> {
+        return this.businessRepository.count({
+            where: {
+                status: Not(StatusEnum.DELETED),
+                isOnline: true,
+            },
+        });
+    }
+
+    /**
+     * Groups non-deleted businesses by status (admin statistics).
+     * @returns {Promise<IAdminStatusCount[]>} Status counts.
+     */
+    async getBusinessesGroupedByStatusForAdminStatistics(): Promise<IAdminStatusCount[]> {
+        const rows = await this.createQueryBuilder('b')
+            .select('b.status', 'status')
+            .addSelect('COUNT(*)', 'count')
+            .where('b.status <> :deleted', { deleted: StatusEnum.DELETED })
+            .groupBy('b.status')
+            .getRawMany<{ status: string; count: string }>();
+        return rows.map((r) => ({
+            status: r.status,
+            count: parseInt(r.count ?? '0', 10),
+        }));
+    }
+
+    /**
+     * New business registrations in a period, with optional granularity (admin statistics).
+     * @param {ITimePeriodFilter} timePeriod - Start, end, and optional granularity.
+     * @returns {Promise<IAdminTimeSeriesStats>} Totals and optional series.
+     */
+    async getNewBusinessesStatsForAdminStatistics(
+        timePeriod: ITimePeriodFilter,
+    ): Promise<IAdminTimeSeriesStats> {
+        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+            () => this.createQueryBuilder('b').where('b.status <> :businessStatus', {
+                businessStatus: StatusEnum.DELETED,
+            }),
+            'b',
+            timePeriod,
+        );
+        return { total: raw.total, data: raw.data };
+    }
+
     /**
      * Format Business data
      * @param {Business} business - Business entity

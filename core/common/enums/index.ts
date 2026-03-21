@@ -19,3 +19,4 @@ export * from './templates.enum';
 export * from './verification-code-channel.enum';
 export * from './cookies.enum';
 export * from './directories.enum';
+export * from './time-period-granularity.enum';

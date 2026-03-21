@@ -164,36 +164,21 @@ export class CatalogsGettersService extends BasicService<Catalog> {
             throw new NotFoundException(this.rList.notFound);
         }
     }
-    
+
     /**
-     * Apply common relations to a catalog query builder.
-     * @param {SelectQueryBuilder<Catalog>} queryBuilder - The query builder to apply relations to.
-     * @returns {SelectQueryBuilder<Catalog>} The query builder with relations applied.
+     * Get products count per catalog for statistics (frequency data).
      */
-    private getQueryRelations(
-        queryBuilder: SelectQueryBuilder<Catalog>
-    ): SelectQueryBuilder<Catalog> {
-        return queryBuilder
-            .leftJoinAndSelect('c.image', 'image')
-            .leftJoinAndSelect('c.business', 'business')
-            .leftJoinAndSelect('business.image', 'businessImage')
-            .leftJoinAndSelect(
-                'c.products',
-                'products',
-                'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
-            )
-            .leftJoinAndSelect(
-                'products.productFiles',
-                'productFiles',
-                'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
-            )
-            .leftJoinAndSelect('productFiles.file', 'productFilesFile')
-            .leftJoinAndSelect(
-                'products.variations',
-                'variations',
-                'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
-            )
-            .leftJoinAndSelect('products.reactions', 'reactions');
+    async getProductsPerCatalogForStatistics(
+        idBusiness: number,
+    ): Promise<{ label: string; count: number }[]> {
+        const catalogs = await this.find({
+            where: { idCreationBusiness: idBusiness, status: Not(StatusEnum.DELETED) },
+            select: ['id', 'title', 'productsCount'],
+        });
+        return catalogs.map((c) => ({
+            label: c.title,
+            count: Number(c.productsCount ?? 0),
+        }));
     }
 
     /**
@@ -232,5 +217,36 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         } while (true);
         
         return finalPath!;
+    }
+
+    /**
+     * Apply common relations to a catalog query builder.
+     * @param {SelectQueryBuilder<Catalog>} queryBuilder - The query builder to apply relations to.
+     * @returns {SelectQueryBuilder<Catalog>} The query builder with relations applied.
+     */
+    private getQueryRelations(
+        queryBuilder: SelectQueryBuilder<Catalog>
+    ): SelectQueryBuilder<Catalog> {
+        return queryBuilder
+            .leftJoinAndSelect('c.image', 'image')
+            .leftJoinAndSelect('c.business', 'business')
+            .leftJoinAndSelect('business.image', 'businessImage')
+            .leftJoinAndSelect(
+                'c.products',
+                'products',
+                'products.status <> :productStatus', { productStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect(
+                'products.productFiles',
+                'productFiles',
+                'productFiles.status <> :productFileStatus', { productFileStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('productFiles.file', 'productFilesFile')
+            .leftJoinAndSelect(
+                'products.variations',
+                'variations',
+                'variations.status <> :variationStatus', { variationStatus: StatusEnum.DELETED }
+            )
+            .leftJoinAndSelect('products.reactions', 'reactions');
     }
 }

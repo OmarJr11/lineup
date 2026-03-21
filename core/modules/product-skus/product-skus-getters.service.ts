@@ -110,6 +110,24 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
     }
 
     /**
+     * Count SKUs with low or out-of-stock for statistics.
+     * 
+     * @param {number} idBusiness - The business ID.
+     * @param {number} threshold - The threshold for low or out-of-stock.
+     * @returns {Promise<number>} The count of SKUs with low or out-of-stock.
+     */
+    async getLowOrOutOfStockCountForStatistics(
+        idBusiness: number,
+        threshold: number = 5,
+    ): Promise<number> {
+        return await this.createQueryBuilder('ps')
+            .where('ps.id_creation_business = :idBusiness', { idBusiness })
+            .andWhere('ps.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('(ps.quantity IS NULL OR ps.quantity <= :threshold)', { threshold })
+            .getCount();
+    }
+
+    /**
      * Get total stock (sum of quantity) for a product.
      * @param {number} idProduct - The product ID.
      * @returns {Promise<number>} Total quantity across all SKUs.
@@ -121,5 +139,19 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
             .andWhere('ps.status <> :status', { status: StatusEnum.DELETED })
             .getRawOne();
         return parseInt(result?.total ?? '0', 10);
+    }
+
+    /**
+     * Counts non-deleted SKUs linked to non-deleted products (admin statistics).
+     * @returns {Promise<number>} SKU count.
+     */
+    async getActiveSkusForNonDeletedProductsCountForAdminStatistics(): Promise<number> {
+        return this.createQueryBuilder('s')
+            .innerJoin('s.product', 'p')
+            .where('s.status <> :skuStatus', { skuStatus: StatusEnum.DELETED })
+            .andWhere('p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .getCount();
     }
 }

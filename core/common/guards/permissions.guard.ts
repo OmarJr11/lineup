@@ -7,14 +7,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { LogWarn } from '../helpers/logger.helper';
-import { RolesService } from '../../modules/roles/roles.service';
+import { RolesPermissionsCheckerService } from '../../modules/roles/roles-permissions-checker.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
     private readonly logger = new Logger(PermissionsGuard.name);
     constructor(
         private _reflector: Reflector,
-        private readonly _rolesService: RolesService
+        private readonly rolesPermissionsChecker: RolesPermissionsCheckerService,
     ) { }
 
     canActivate(context: ExecutionContext): boolean | Promise<boolean> {
@@ -27,7 +27,7 @@ export class PermissionsGuard implements CanActivate {
             ? context.switchToHttp().getRequest()
             : context.getArgByIndex(2)?.req;
         const user = request.user;
-        return user.userId 
+        return user.userId
             ? this.checkPermissionForUser(Number(user.userId), permissions, response)
             : this.checkPermissionForBusiness(Number(user.businessId), permissions, response);
     }
@@ -41,7 +41,7 @@ export class PermissionsGuard implements CanActivate {
      * @returns {Promise<boolean>}
      */
     async checkPermissionForUser(idUser: number, permissions: string[], response: [{}]): Promise<boolean> {
-        if (!(await this._rolesService.userHasPermission(idUser, permissions))) {
+        if (!(await this.rolesPermissionsChecker.userHasPermission(idUser, permissions))) {
             LogWarn(
                 this.logger,
                 'user has no permission to perform this request',
@@ -61,7 +61,7 @@ export class PermissionsGuard implements CanActivate {
      * @returns {Promise<boolean>}
      */
     async checkPermissionForBusiness(idBusiness: number, permissions: string[], response: [{}]): Promise<boolean> {
-        if (!(await this._rolesService.businessHasPermission(idBusiness, permissions))) {
+        if (!(await this.rolesPermissionsChecker.businessHasPermission(idBusiness, permissions))) {
             LogWarn(
                 this.logger,
                 'business has no permission to perform this request',

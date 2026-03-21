@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from '../../entities';
+import { Product, ProductRating } from '../../entities';
 import { ProductsGettersService } from './products-getters.service';
 import { ProductsSettersService } from './products-setters.service';
 import { ProductFilesModule } from '../product-files/product-files.module';
@@ -17,7 +17,7 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product]),
+    TypeOrmModule.forFeature([Product, ProductRating]),
     TagsModule,
     forwardRef(() => ProductTagsModule),
     ProductFilesModule,
