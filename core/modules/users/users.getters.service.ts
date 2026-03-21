@@ -2,7 +2,13 @@ import { Injectable, Logger, NotAcceptableException, UnauthorizedException } fro
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
+import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { BasicService } from '../../common/services';
+import {
+    IAdminStatusCount,
+    IAdminTimeSeriesStats,
+    ITimePeriodFilter,
+} from '../../common/interfaces';
 import { User } from '../../entities';
 import { userResponses } from '../../common/responses';
 import { UserUniqueFieldsDto } from './dto/unique.dto';
@@ -232,5 +238,50 @@ export class UsersGettersService extends BasicService<User> {
             throw new NotAcceptableException(this._uList.mailExists);
         }
         throw new NotAcceptableException(this._uList.error);
+    }
+
+    /**
+     * Counts users that are not soft-deleted (admin statistics).
+     * @returns {Promise<number>} User count.
+     */
+    async getNonDeletedUsersCountForAdminStatistics(): Promise<number> {
+        return this.userRepository.count({
+            where: { status: Not(StatusEnum.DELETED) },
+        });
+    }
+
+    /**
+     * Groups non-deleted users by status (admin statistics).
+     * @returns {Promise<IAdminStatusCount[]>} Status counts.
+     */
+    async getUsersGroupedByStatusForAdminStatistics(): Promise<IAdminStatusCount[]> {
+        const rows = await this.createQueryBuilder('u')
+            .select('u.status', 'status')
+            .addSelect('COUNT(*)', 'count')
+            .where('u.status <> :deleted', { deleted: StatusEnum.DELETED })
+            .groupBy('u.status')
+            .getRawMany<{ status: string; count: string }>();
+        return rows.map((r) => ({
+            status: r.status,
+            count: parseInt(r.count ?? '0', 10),
+        }));
+    }
+
+    /**
+     * New user registrations in a period, with optional time granularity (admin statistics).
+     * @param {ITimePeriodFilter} timePeriod - Start, end, and optional granularity.
+     * @returns {Promise<IAdminTimeSeriesStats>} Totals and optional series.
+     */
+    async getNewUsersStatsForAdminStatistics(
+        timePeriod: ITimePeriodFilter,
+    ): Promise<IAdminTimeSeriesStats> {
+        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+            () => this.createQueryBuilder('u').where('u.status <> :userStatus', {
+                userStatus: StatusEnum.DELETED,
+            }),
+            'u',
+            timePeriod,
+        );
+        return { total: raw.total, data: raw.data };
     }
 }

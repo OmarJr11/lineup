@@ -140,4 +140,18 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
             .getRawOne();
         return parseInt(result?.total ?? '0', 10);
     }
+
+    /**
+     * Counts non-deleted SKUs linked to non-deleted products (admin statistics).
+     * @returns {Promise<number>} SKU count.
+     */
+    async getActiveSkusForNonDeletedProductsCountForAdminStatistics(): Promise<number> {
+        return this.createQueryBuilder('s')
+            .innerJoin('s.product', 'p')
+            .where('s.status <> :skuStatus', { skuStatus: StatusEnum.DELETED })
+            .andWhere('p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .getCount();
+    }
 }

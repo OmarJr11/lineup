@@ -494,6 +494,47 @@ export class ProductsGettersService extends BasicService<Product> {
     }
 
     /**
+     * Counts non-deleted products platform-wide (admin statistics).
+     * @returns {Promise<number>} Product count.
+     */
+    async getNonDeletedProductsCountForAdminStatistics(): Promise<number> {
+        return this.productRepository.count({
+            where: { status: Not(StatusEnum.DELETED) },
+        });
+    }
+
+    /**
+     * Products with no SKUs or only null quantities on all non-deleted SKUs (admin, global).
+     * @returns {Promise<number>} Product count.
+     */
+    async getGlobalProductsWithoutStockCountForAdminStatistics(): Promise<number> {
+        const rows = await this.createQueryBuilder('p')
+            .leftJoin(
+                'p.skus',
+                'skus',
+                'skus.status <> :skuStatus',
+                { skuStatus: StatusEnum.DELETED },
+            )
+            .where('p.status <> :productStatus', {
+                productStatus: StatusEnum.DELETED,
+            })
+            .select('p.id', 'id')
+            .addSelect('SUM(CASE WHEN skus.quantity IS NULL THEN 1 ELSE 0 END)', 'nullCount')
+            .addSelect('COUNT(skus.id)', 'skuCount')
+            .groupBy('p.id')
+            .getRawMany<{ id: number; nullCount: string; skuCount: string }>();
+        let count = 0;
+        for (const row of rows) {
+            const skuCount = parseInt(row.skuCount ?? '0', 10);
+            const nullCount = parseInt(row.nullCount ?? '0', 10);
+            if (skuCount === 0 || (skuCount > 0 && nullCount === skuCount)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * Apply common relations to a product query builder
      * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
      * @returns {SelectQueryBuilder<Product>} The query builder with relations applied

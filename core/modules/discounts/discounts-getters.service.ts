@@ -7,7 +7,7 @@ import { discountsResponses } from '../../common/responses';
 import { DiscountScopeEnum, StatusEnum } from '../../common/enums';
 import { DiscountTypeEnum } from '../../common/enums/discount-type.enum';
 import { InfinityScrollInput } from '../../common/dtos';
-import { IPaginatedResult } from '../../common/interfaces';
+import { IAdminLabeledCount, IPaginatedResult } from '../../common/interfaces';
 import { Discount, EntityAudit } from '../../entities';
 import { DiscountProductsGettersService } from '../discount-products/discount-products-getters.service';
 import { EntityAuditsGettersService } from '../entity-audits/entity-audits-getters.service';
@@ -390,5 +390,58 @@ export class DiscountsGettersService extends BasicService<Discount> {
     async findAuditByDiscount(idDiscount: number, limit: number = 50): Promise<EntityAudit[]> {
         return await this.entityAuditsGettersService
             .findByDiscountProductByDiscountId(idDiscount, limit);
+    }
+
+    /**
+     * Loads start/end dates for lifecycle bucketing (admin global statistics).
+     * @returns {Promise<Pick<Discount, 'startDate' | 'endDate'>[]>} Discount date ranges.
+     */
+    async findDiscountDateRangesForAdminStatistics(): Promise<
+        Pick<Discount, 'startDate' | 'endDate'>[]
+    > {
+        return this.find({
+            where: { status: Not(StatusEnum.DELETED) },
+            select: ['startDate', 'endDate'],
+        });
+    }
+
+    /**
+     * Groups all non-deleted discounts by type (admin statistics).
+     * @returns {Promise<IAdminLabeledCount[]>} Counts per discount type.
+     */
+    async getGlobalDiscountsByTypeForAdminStatistics(): Promise<IAdminLabeledCount[]> {
+        const rows = await this.createQueryBuilder('d')
+            .select('d.discount_type', 'type')
+            .addSelect('COUNT(*)', 'count')
+            .where('d.status <> :status', { status: StatusEnum.DELETED })
+            .groupBy('d.discount_type')
+            .getRawMany<{ type: string; count: string }>();
+        const map: Record<string, number> = {
+            [DiscountTypeEnum.PERCENTAGE]: 0,
+            [DiscountTypeEnum.FIXED]: 0,
+        };
+        for (const r of rows) {
+            map[r.type] = parseInt(r.count ?? '0', 10);
+        }
+        return [
+            { label: DiscountTypeEnum.PERCENTAGE, count: map[DiscountTypeEnum.PERCENTAGE] ?? 0 },
+            { label: DiscountTypeEnum.FIXED, count: map[DiscountTypeEnum.FIXED] ?? 0 },
+        ];
+    }
+
+    /**
+     * Counts non-deleted discounts ending within the next `days` window (admin, global).
+     * @param {number} days - Horizon in days.
+     * @returns {Promise<number>} Count.
+     */
+    async getGlobalExpiringSoonDiscountCountForAdminStatistics(days: number): Promise<number> {
+        const now = new Date();
+        const future = new Date(now);
+        future.setDate(future.getDate() + days);
+        return this.createQueryBuilder('d')
+            .where('d.status <> :status', { status: StatusEnum.DELETED })
+            .andWhere('d.end_date >= :now', { now })
+            .andWhere('d.end_date <= :future', { future })
+            .getCount();
     }
 }

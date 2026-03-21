@@ -5,7 +5,7 @@ import { BasicService } from '../../common/services';
 import { ProductVisit } from '../../entities';
 import { StatusEnum } from '../../common/enums';
 import { IProductVisitsData } from '../business-statistics/interfaces';
-import { ITimePeriodFilter } from '../../common/interfaces';
+import { IAdminTimeSeriesStats, ITimePeriodFilter } from '../../common/interfaces';
 import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 
 /** Default limit for tag IDs returned from visited products. */
@@ -103,5 +103,24 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
         StatisticsQueryHelper.applyTimeFilter(qb, 'pv', timePeriod);
         const result = await qb.getRawOne<{ count: string }>();
         return parseInt(result?.count ?? '0', 10);
+    }
+
+    /**
+     * All product visits for non-deleted products (admin statistics).
+     * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
+     * @returns {Promise<IAdminTimeSeriesStats>} Visit totals and optional series.
+     */
+    async getGlobalVisitStatsForAdminStatistics(
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<IAdminTimeSeriesStats> {
+        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+            () => this.createQueryBuilder('pv').innerJoin('pv.product', 'p').where(
+                'p.status <> :productStatus',
+                { productStatus: StatusEnum.DELETED },
+            ),
+            'pv',
+            timePeriod,
+        );
+        return { total: raw.total, data: raw.data };
     }
 }

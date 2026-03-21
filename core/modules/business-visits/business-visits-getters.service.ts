@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
-import { ITimePeriodFilter } from '../../common/interfaces';
+import { IAdminTimeSeriesStats, ITimePeriodFilter } from '../../common/interfaces';
 import { ITimeSeriesDataPoint, StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { BusinessVisit } from '../../entities';
 
@@ -92,5 +92,21 @@ export class BusinessVisitsGettersService extends BasicService<BusinessVisit> {
             .where('bv.id_business = :idBusiness', { idBusiness });
         StatisticsQueryHelper.applyTimeFilter(qb, 'bv', timePeriod);
         return qb;
+    }
+
+    /**
+     * All business visits on the platform (admin statistics).
+     * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
+     * @returns {Promise<IAdminTimeSeriesStats>} Visit totals and optional series.
+     */
+    async getGlobalVisitStatsForAdminStatistics(
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<IAdminTimeSeriesStats> {
+        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+            () => this.createQueryBuilder('bv'),
+            'bv',
+            timePeriod,
+        );
+        return { total: raw.total, data: raw.data };
     }
 }

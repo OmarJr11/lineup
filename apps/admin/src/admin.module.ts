@@ -17,6 +17,7 @@ import { ConsumersModule } from '../../../core/consumers';
 import { CronsModule } from '../../../core/crons';
 import { SeedModule } from './seed/seed.module';
 import { RolesAdminModule } from './roles-admin/roles-admin.module';
+import { AdminStatisticsModule } from './admin-statistics/admin-statistics.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
     CronsModule,
     SeedModule,
     RolesAdminModule,
+    AdminStatisticsModule,
   ],
 })
 export class AdminModule implements NestModule {

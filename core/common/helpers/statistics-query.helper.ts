@@ -85,4 +85,36 @@ export class StatisticsQueryHelper {
             value: parseInt(r.value ?? '0', 10),
         }));
     }
+
+    /**
+     * Total count with optional time-series for any entity query (admin / dashboard use).
+     * @param {() => SelectQueryBuilder<unknown>} buildQb - Factory returning a fresh QB with alias `alias`.
+     * @param {string} alias - Root alias (must map to creation_date).
+     * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
+     * @returns {Promise<{ total: number; data?: ITimeSeriesDataPoint[] }>} Aggregated stats.
+     */
+    static async computeAggregatedTimeSeries(
+        buildQb: () => SelectQueryBuilder<unknown>,
+        alias: string,
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<{ total: number; data?: ITimeSeriesDataPoint[] }> {
+        if (!timePeriod?.startDate || !timePeriod?.endDate) {
+            const total = await buildQb().getCount();
+            return { total };
+        }
+        const filtered = buildQb();
+        StatisticsQueryHelper.applyTimeFilter(filtered, alias, timePeriod);
+        const total = await filtered.getCount();
+        if (!StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
+            return { total };
+        }
+        const forSeries = buildQb();
+        StatisticsQueryHelper.applyTimeFilter(forSeries, alias, timePeriod);
+        const data = await StatisticsQueryHelper.getTimeSeriesFromQuery(
+            forSeries,
+            alias,
+            timePeriod,
+        );
+        return { total, data };
+    }
 }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum } from '../../common/enums';
-import { ITimePeriodFilter } from '../../common/interfaces';
+import { IAdminTimeSeriesStats, ITimePeriodFilter } from '../../common/interfaces';
 import { ITimeSeriesDataPoint, StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { Catalog, CatalogVisit } from '../../entities';
 
@@ -99,5 +99,24 @@ export class CatalogVisitsGettersService extends BasicService<CatalogVisit> {
             .andWhere('c.status <> :status', { status: StatusEnum.DELETED });
         StatisticsQueryHelper.applyTimeFilter(qb, 'cv', timePeriod);
         return StatisticsQueryHelper.getTimeSeriesFromQuery(qb, 'cv', timePeriod);
+    }
+
+    /**
+     * All catalog visits for non-deleted catalogs (admin statistics).
+     * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
+     * @returns {Promise<IAdminTimeSeriesStats>} Visit totals and optional series.
+     */
+    async getGlobalVisitStatsForAdminStatistics(
+        timePeriod?: ITimePeriodFilter,
+    ): Promise<IAdminTimeSeriesStats> {
+        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+            () => this.createQueryBuilder('cv').innerJoin('cv.catalog', 'c').where(
+                'c.status <> :catalogStatus',
+                { catalogStatus: StatusEnum.DELETED },
+            ),
+            'cv',
+            timePeriod,
+        );
+        return { total: raw.total, data: raw.data };
     }
 }
