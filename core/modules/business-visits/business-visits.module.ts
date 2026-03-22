@@ -6,11 +6,8 @@ import { BusinessVisitsSettersService } from './business-visits-setters.service'
 import { BusinessesModule } from '../businesses/businesses.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([BusinessVisit]),
-        BusinessesModule,
-    ],
-    providers: [BusinessVisitsGettersService, BusinessVisitsSettersService],
-    exports: [BusinessVisitsGettersService, BusinessVisitsSettersService],
+  imports: [TypeOrmModule.forFeature([BusinessVisit]), BusinessesModule],
+  providers: [BusinessVisitsGettersService, BusinessVisitsSettersService],
+  exports: [BusinessVisitsGettersService, BusinessVisitsSettersService],
 })
 export class BusinessVisitsModule {}

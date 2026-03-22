@@ -1,9 +1,9 @@
-import { CookieOptions, Request } from 'express';
+import type { CookieOptions, Request } from 'express';
 
 export interface IReqWithCookies extends Request {
-    _cookies: {
-        name: string;
-        val: string;
-        options?: CookieOptions;
-    }[];
+  _cookies: {
+    name: string;
+    val: string;
+    options?: CookieOptions;
+  }[];
 }

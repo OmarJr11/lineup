@@ -20,7 +20,9 @@ Rules:
  * @param productData - Plain text representation of product data.
  * @returns The prompt string to send to the model.
  */
-export function buildProductSearchEnhancementPrompt(productData: string): string {
+export function buildProductSearchEnhancementPrompt(
+  productData: string,
+): string {
   return `Generate dense, search-optimized text for this product. The output will be indexed for full-text search (PostgreSQL tsvector).
 
 GOAL: A user searching by any of these should find the product even without knowing its exact name:
@@ -56,7 +58,9 @@ ${productData}
  * @param businessData - Plain text representation of business data.
  * @returns The prompt string to send to the model.
  */
-export function buildBusinessSearchEnhancementPrompt(businessData: string): string {
+export function buildBusinessSearchEnhancementPrompt(
+  businessData: string,
+): string {
   return `Generate search-optimized text for this business.
 Goal: a user searching by business type, services, location, or description should find it even without knowing the exact name.
 Include: name and variants, what it sells/offers, business type, services, phrases like "donde comprar", "negocio de", synonyms and terms people use when searching.
@@ -73,7 +77,9 @@ ${businessData}
  * @param catalogData - Plain text representation of catalog data.
  * @returns The prompt string to send to the model.
  */
-export function buildCatalogSearchEnhancementPrompt(catalogData: string): string {
+export function buildCatalogSearchEnhancementPrompt(
+  catalogData: string,
+): string {
   return `Generate search-optimized text for this catalog.
 Goal: a user searching by product type, category, or description should find it even without knowing the exact title.
 Include: title and variants, type of products it contains, categories, uses, occasions, synonyms and terms people would use when searching for such a catalog.

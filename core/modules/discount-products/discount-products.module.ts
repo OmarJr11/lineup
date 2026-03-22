@@ -9,16 +9,16 @@ import { DiscountProductsSettersService } from './discount-products-setters.serv
  * Module for discount-product (product-discount assignment) entity.
  */
 @Module({
-    imports: [TypeOrmModule.forFeature([DiscountProduct])],
-    providers: [
-        DiscountProductsService,
-        DiscountProductsGettersService,
-        DiscountProductsSettersService,
-    ],
-    exports: [
-        DiscountProductsService,
-        DiscountProductsGettersService,
-        DiscountProductsSettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([DiscountProduct])],
+  providers: [
+    DiscountProductsService,
+    DiscountProductsGettersService,
+    DiscountProductsSettersService,
+  ],
+  exports: [
+    DiscountProductsService,
+    DiscountProductsGettersService,
+    DiscountProductsSettersService,
+  ],
 })
 export class DiscountProductsModule {}

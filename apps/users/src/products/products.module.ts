@@ -10,16 +10,16 @@ import { ProductsModule as ProductsModuleCore } from '../../../../core/modules/p
 import { TagsModule } from '../../../../core/modules/tags/tags.module';
 
 @Module({
-    providers: [ProductsResolver, ProductRatingsResolver],
-    exports: [ProductsResolver, ProductRatingsResolver],
-    imports: [
-        ProductReactionsModule,
-        ProductRatingsModule,
-        RolesModule,
-        TokensModule,
-        AuthModule,
-        ProductsModuleCore,
-        TagsModule,
-    ],
+  providers: [ProductsResolver, ProductRatingsResolver],
+  exports: [ProductsResolver, ProductRatingsResolver],
+  imports: [
+    ProductReactionsModule,
+    ProductRatingsModule,
+    RolesModule,
+    TokensModule,
+    AuthModule,
+    ProductsModuleCore,
+    TagsModule,
+  ],
 })
 export class ProductsModule {}

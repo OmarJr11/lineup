@@ -22,18 +22,18 @@ import { QueueNamesEnum } from '../../common/enums';
       name: QueueNamesEnum.searchData,
       defaultJobOptions: {
         removeOnComplete: true,
-      }
+      },
     }),
   ],
   providers: [
     BusinessesService,
     BusinessesGettersService,
-    BusinessesSettersService
+    BusinessesSettersService,
   ],
   exports: [
     BusinessesService,
     BusinessesGettersService,
-    BusinessesSettersService
+    BusinessesSettersService,
   ],
 })
 export class BusinessesModule {}

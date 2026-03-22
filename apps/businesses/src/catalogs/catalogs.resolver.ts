@@ -5,21 +5,25 @@ import { UpdateCatalogInput } from '../../../../core/modules/catalogs/dto/update
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CatalogSchema, PaginatedCatalogs } from '../../../../core/schemas';
 import { IBusinessReq } from '../../../../core/common/interfaces';
-import { Permissions, BusinessDec, Response } from '../../../../core/common/decorators';
+import {
+  Permissions,
+  BusinessDec,
+  Response,
+} from '../../../../core/common/decorators';
 import { toCatalogSchema } from '../../../../core/common/functions';
-import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
+import {
+  JwtAuthGuard,
+  PermissionsGuard,
+  TokenGuard,
+} from '../../../../core/common/guards';
 import { catalogsResponses } from '../../../../core/common/responses';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 import { CatalogsPermissionsEnum } from '../../../../core/common/enums';
 
-
 @UsePipes(new ValidationPipe())
 @Resolver(() => CatalogSchema)
 export class CatalogsResolver {
-
-  constructor(
-    private readonly catalogsService: CatalogsService,
-  ) {}
+  constructor(private readonly catalogsService: CatalogsService) {}
 
   @Mutation(() => CatalogSchema, { name: 'createCatalog' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
@@ -27,7 +31,7 @@ export class CatalogsResolver {
   @Response(catalogsResponses.create)
   async create(
     @Args('data') data: CreateCatalogInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     const catalog = await this.catalogsService.create(data, businessReq);
     return toCatalogSchema(catalog);
@@ -36,15 +40,16 @@ export class CatalogsResolver {
   @Query(() => PaginatedCatalogs, { name: 'findAllCatalogs' })
   async findAll(
     @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput
+    pagination: InfinityScrollInput,
   ) {
-    const items = (await this.catalogsService.findAll(pagination))
-      .map(catalog => toCatalogSchema(catalog));
+    const items = (await this.catalogsService.findAll(pagination)).map(
+      (catalog) => toCatalogSchema(catalog),
+    );
     return {
       items,
       total: items.length,
       page: pagination.page,
-      limit: pagination.limit
+      limit: pagination.limit,
     };
   }
 
@@ -53,15 +58,16 @@ export class CatalogsResolver {
   async findAllMyCatalogs(
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
-    const items = (await this.catalogsService.findAllMyCatalogs(pagination, businessReq))
-      .map(catalog => toCatalogSchema(catalog));
+    const items = (
+      await this.catalogsService.findAllMyCatalogs(pagination, businessReq)
+    ).map((catalog) => toCatalogSchema(catalog));
     return {
       items,
       total: items.length,
       page: pagination.page,
-      limit: pagination.limit
+      limit: pagination.limit,
     };
   }
 
@@ -84,7 +90,7 @@ export class CatalogsResolver {
   async findCatalogsByBusinessId(
     @Args('idBusiness', { type: () => Int }) idBusiness: number,
     @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput
+    pagination: InfinityScrollInput,
   ) {
     const items = (
       await this.catalogsService.findAllByBusinessId(idBusiness, pagination)
@@ -103,16 +109,21 @@ export class CatalogsResolver {
   @Response(catalogsResponses.update)
   async update(
     @Args('data') data: UpdateCatalogInput,
-    @BusinessDec() businessReq: IBusinessReq
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
-    return toCatalogSchema(await this.catalogsService.update(data, businessReq));
+    return toCatalogSchema(
+      await this.catalogsService.update(data, businessReq),
+    );
   }
 
   @Mutation(() => CatalogSchema, { name: 'removeCatalog' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(CatalogsPermissionsEnum.CATDELETE)
   @Response(catalogsResponses.delete)
-  async remove(@Args('id') id: number, @BusinessDec() businessReq: IBusinessReq) {
+  async remove(
+    @Args('id') id: number,
+    @BusinessDec() businessReq: IBusinessReq,
+  ) {
     return toCatalogSchema(await this.catalogsService.remove(id, businessReq));
   }
 }

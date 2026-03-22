@@ -7,18 +7,18 @@ import { BusinessSchema, UserSchema } from '.';
  */
 @ObjectType()
 export class BusinessVisitSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idBusiness: number;
+  @Field(() => Int)
+  idBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => Int, { nullable: true })
-    idCreationUser?: number;
+  @Field(() => Int, { nullable: true })
+  idCreationUser?: number;
 
-    @Field(() => UserSchema, { nullable: true })
-    creationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  creationUser?: UserSchema;
 }

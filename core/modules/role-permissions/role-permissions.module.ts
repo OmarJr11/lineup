@@ -8,4 +8,4 @@ import { RolePermissionsService } from './role-permissions.service';
   providers: [RolePermissionsService],
   exports: [RolePermissionsService],
 })
-export class RolePermissionsModule { }
+export class RolePermissionsModule {}

@@ -33,7 +33,11 @@ export class VerificationCodesResolver {
     @Args('data') data: CreateVerificationCodeDto,
     @UserDec() user: IUserReq,
   ): Promise<BaseResponse> {
-    await this.verificationCodesService.createVerificationCode(data, user, true);
+    await this.verificationCodesService.createVerificationCode(
+      data,
+      user,
+      true,
+    );
     return userResponses.verificationCode.success;
   }
 

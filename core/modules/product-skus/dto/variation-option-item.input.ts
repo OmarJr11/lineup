@@ -7,15 +7,15 @@ import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
  */
 @InputType()
 export class VariationOptionItemInput {
-    @Field()
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(255)
-    variationTitle: string;
+  @Field()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  variationTitle: string;
 
-    @Field()
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(255)
-    option: string;
+  @Field()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  option: string;
 }

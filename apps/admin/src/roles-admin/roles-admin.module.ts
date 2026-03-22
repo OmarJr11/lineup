@@ -12,15 +12,15 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
  * Allows assigning and removing roles from users and businesses.
  */
 @Module({
-    imports: [
-        UserRolesModule,
-        BusinessRolesModule,
-        RolesModule,
-        UsersModule,
-        BusinessesModule,
-        RolesModule,
-        TokensModule
-    ],
-    providers: [RolesAdminResolver],
+  imports: [
+    UserRolesModule,
+    BusinessRolesModule,
+    RolesModule,
+    UsersModule,
+    BusinessesModule,
+    RolesModule,
+    TokensModule,
+  ],
+  providers: [RolesAdminResolver],
 })
 export class RolesAdminModule {}

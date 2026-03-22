@@ -8,11 +8,7 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
  * Module exposing verification code mutations for authenticated businesses.
  */
 @Module({
-  imports: [
-    VerificationCodesModuleCore,
-    RolesModule,
-    TokensModule,
-  ],
+  imports: [VerificationCodesModuleCore, RolesModule, TokensModule],
   providers: [VerificationCodesResolver],
 })
 export class VerificationCodesModule {}

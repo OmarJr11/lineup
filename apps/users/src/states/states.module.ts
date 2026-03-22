@@ -3,7 +3,7 @@ import { StatesModule as StatesModuleCore } from '../../../../core/modules/state
 import { StatesResolver } from './states.resolver';
 
 @Module({
-    providers: [StatesResolver],
-    imports: [StatesModuleCore],
+  providers: [StatesResolver],
+  imports: [StatesModuleCore],
 })
 export class StatesModule {}

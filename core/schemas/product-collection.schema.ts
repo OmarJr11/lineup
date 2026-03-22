@@ -7,12 +7,14 @@ import { ProductSchema } from './product.schema';
  */
 @ObjectType()
 export class ProductCollectionSchema {
-    @Field(() => String, { description: 'Unique identifier for the collection type' })
-    id: string;
+  @Field(() => String, {
+    description: 'Unique identifier for the collection type',
+  })
+  id: string;
 
-    @Field(() => String, { description: 'Display title for the collection' })
-    title: string;
+  @Field(() => String, { description: 'Display title for the collection' })
+  title: string;
 
-    @Field(() => [ProductSchema], { description: 'Products in the collection' })
-    products: ProductSchema[];
+  @Field(() => [ProductSchema], { description: 'Products in the collection' })
+  products: ProductSchema[];
 }

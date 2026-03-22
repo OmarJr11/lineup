@@ -7,19 +7,16 @@ import { ProductVariationsSettersService } from './product-variations-setters.se
 import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ProductVariation]),
-    EntityAuditsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([ProductVariation]), EntityAuditsModule],
   providers: [
     ProductVariationsService,
     ProductVariationsGettersService,
-    ProductVariationsSettersService
+    ProductVariationsSettersService,
   ],
   exports: [
     ProductVariationsService,
     ProductVariationsGettersService,
-    ProductVariationsSettersService
-  ]
+    ProductVariationsSettersService,
+  ],
 })
 export class ProductVariationsModule {}

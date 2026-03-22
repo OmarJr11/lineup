@@ -13,17 +13,17 @@ import { AdminStatisticsGettersService } from './admin-statistics-getters.servic
  * Core module exposing platform-wide statistics for the admin application.
  */
 @Module({
-    imports: [
-        UsersModule,
-        BusinessesModule,
-        BusinessVisitsModule,
-        ProductVisitsModule,
-        CatalogVisitsModule,
-        ProductsModule,
-        ProductSkusModule,
-        DiscountsModule,
-    ],
-    providers: [AdminStatisticsGettersService],
-    exports: [AdminStatisticsGettersService],
+  imports: [
+    UsersModule,
+    BusinessesModule,
+    BusinessVisitsModule,
+    ProductVisitsModule,
+    CatalogVisitsModule,
+    ProductsModule,
+    ProductSkusModule,
+    DiscountsModule,
+  ],
+  providers: [AdminStatisticsGettersService],
+  exports: [AdminStatisticsGettersService],
 })
 export class AdminStatisticsModule {}

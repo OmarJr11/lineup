@@ -7,30 +7,33 @@ import { BusinessSchema } from './business.schema';
  */
 @ObjectType()
 export class BusinessSearchIndexSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idBusiness: number;
+  @Field(() => Int)
+  idBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field({ nullable: true, description: 'Full-text search vector (internal use)' })
-    searchVector?: string;
+  @Field({
+    nullable: true,
+    description: 'Full-text search vector (internal use)',
+  })
+  searchVector?: string;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  visits: number;
 
-    @Field(() => Int)
-    followers: number;
+  @Field(() => Int)
+  followers: number;
 
-    @Field(() => Int)
-    catalogVisitsTotal: number;
+  @Field(() => Int)
+  catalogVisitsTotal: number;
 
-    @Field(() => Int)
-    productLikesTotal: number;
+  @Field(() => Int)
+  productLikesTotal: number;
 
-    @Field(() => Int)
-    productVisitsTotal: number;
+  @Field(() => Int)
+  productVisitsTotal: number;
 }

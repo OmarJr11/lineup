@@ -15,17 +15,9 @@ import { FilesModule } from '../files/files.module';
     RolesModule,
     UserRolesModule,
     StatesModule,
-    FilesModule
+    FilesModule,
   ],
-  providers: [
-    UsersService,
-    UsersSettersService,
-    UsersGettersService
-  ],
-  exports: [
-    UsersService,
-    UsersSettersService,
-    UsersGettersService
-  ],
+  providers: [UsersService, UsersSettersService, UsersGettersService],
+  exports: [UsersService, UsersSettersService, UsersGettersService],
 })
-export class UsersModule { }
+export class UsersModule {}

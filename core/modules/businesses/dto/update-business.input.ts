@@ -1,6 +1,14 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 @InputType()
 export class UpdateBusinessInput {
@@ -46,7 +54,10 @@ export class UpdateBusinessInput {
   @IsString()
   path?: string;
 
-  @Field({ nullable: true, description: 'Whether the business operates online' })
+  @Field({
+    nullable: true,
+    description: 'Whether the business operates online',
+  })
   @IsOptional()
   @IsBoolean()
   isOnline?: boolean;

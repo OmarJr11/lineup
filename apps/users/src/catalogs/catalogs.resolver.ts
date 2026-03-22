@@ -32,7 +32,7 @@ export class CatalogsResolver {
   async findCatalogsByBusinessId(
     @Args('idBusiness', { type: () => Int }) idBusiness: number,
     @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput
+    pagination: InfinityScrollInput,
   ) {
     const items = (
       await this.catalogsService.findAllByBusinessId(idBusiness, pagination)

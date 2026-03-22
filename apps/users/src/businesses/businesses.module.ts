@@ -14,7 +14,7 @@ import { BusinessesModule as BusinessesModuleCore } from '../../../../core/modul
     BusinessFollowersModule,
     RolesModule,
     TokensModule,
-    AuthModule
+    AuthModule,
   ],
 })
 export class BusinessesModule {}

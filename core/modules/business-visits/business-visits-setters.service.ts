@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
@@ -16,36 +21,38 @@ import { BusinessesSettersService } from '../businesses/businesses-setters.servi
  */
 @Injectable()
 export class BusinessVisitsSettersService extends BasicService<BusinessVisit> {
-    private readonly logger = new Logger(BusinessVisitsSettersService.name);
-    private readonly rCreate = visitsResponses.create;
+  private readonly logger = new Logger(BusinessVisitsSettersService.name);
+  private readonly rCreate = visitsResponses.create;
 
-    constructor(
-        @InjectRepository(BusinessVisit)
-        private readonly businessVisitRepository: Repository<BusinessVisit>,
-        private readonly businessesGettersService: BusinessesGettersService,
-        private readonly businessesSettersService: BusinessesSettersService
-    ) {
-        super(businessVisitRepository);
-    }
+  constructor(
+    @InjectRepository(BusinessVisit)
+    private readonly businessVisitRepository: Repository<BusinessVisit>,
+    private readonly businessesGettersService: BusinessesGettersService,
+    private readonly businessesSettersService: BusinessesSettersService,
+  ) {
+    super(businessVisitRepository);
+  }
 
-    /**
-     * Records a visit to a business.
-     * @param {ICreateBusinessVisit} data - The visit data.
-     * @param {IUserReq | null} user - The logged-in user, or null for anonymous.
-     */
-    @Transactional()
-    async create(
-        data: ICreateBusinessVisit,
-        user: IUserReq | null
-    ) {
-        const business = await this.businessesGettersService.findOne(data.idBusiness);
-        try {
-            const visitData = { idBusiness: data.idBusiness, creationUser: user?.userId ?? undefined }
-            await this.save(visitData, user);
-            await this.businessesSettersService.incrementVisits(business);
-        } catch (error) {
-            LogError(this.logger, error, this.create.name, user);
-            throw new InternalServerErrorException(this.rCreate.error);
-        }
+  /**
+   * Records a visit to a business.
+   * @param {ICreateBusinessVisit} data - The visit data.
+   * @param {IUserReq | null} user - The logged-in user, or null for anonymous.
+   */
+  @Transactional()
+  async create(data: ICreateBusinessVisit, user: IUserReq | null) {
+    const business = await this.businessesGettersService.findOne(
+      data.idBusiness,
+    );
+    try {
+      const visitData = {
+        idBusiness: data.idBusiness,
+        creationUser: user?.userId ?? undefined,
+      };
+      await this.save(visitData, user);
+      await this.businessesSettersService.incrementVisits(business);
+    } catch (error) {
+      LogError(this.logger, error, this.create.name, user);
+      throw new InternalServerErrorException(this.rCreate.error);
     }
+  }
 }

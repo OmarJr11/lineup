@@ -1,5 +1,4 @@
 export enum SeedPermissionsEnum {
-    /** Permission to seed businesses and catalogs (development). */
-    SEEDBUS = 'SEEDBUS',
-    
+  /** Permission to seed businesses and catalogs (development). */
+  SEEDBUS = 'SEEDBUS',
 }

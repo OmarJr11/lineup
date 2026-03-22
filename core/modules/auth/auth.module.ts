@@ -30,4 +30,4 @@ import { ValidationMailsModule } from '../validation-mails/validation-mails.modu
   providers: [AuthService, AuthMailService, JwtStrategy, WsJwtStrategy],
   exports: [AuthService, AuthMailService],
 })
-export class AuthModule { }
+export class AuthModule {}

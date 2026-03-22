@@ -7,15 +7,15 @@ import { IsInt, IsNotEmpty } from 'class-validator';
  */
 @InputType()
 export class RemoveRoleFromUserInput {
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idUser: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idUser: number;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idRole: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idRole: number;
 }

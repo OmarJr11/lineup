@@ -14,7 +14,7 @@ import {
   ProductVariationSchema,
   DiscountSchema,
   DiscountProductSchema,
-  EntityAuditSchema
+  EntityAuditSchema,
 } from '.';
 
 @ObjectType()

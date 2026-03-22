@@ -10,26 +10,26 @@ export class StatisticsRootSchema {}
 
 @ObjectType()
 export class TimeSeriesStatsSchema {
-    @Field(() => Int, { description: 'Total count in the period' })
-    total: number;
+  @Field(() => Int, { description: 'Total count in the period' })
+  total: number;
 
-    @Field(() => [TimeSeriesDataPointSchema], {
-        nullable: true,
-        description: 'Data points for line charts (when granularity provided)',
-    })
-    data?: TimeSeriesDataPointSchema[];
+  @Field(() => [TimeSeriesDataPointSchema], {
+    nullable: true,
+    description: 'Data points for line charts (when granularity provided)',
+  })
+  data?: TimeSeriesDataPointSchema[];
 }
 
 @ObjectType()
 export class VisitsByAuthTypeSchema {
-    @Field(() => Int)
-    anonymous: number;
+  @Field(() => Int)
+  anonymous: number;
 
-    @Field(() => Int)
-    identified: number;
+  @Field(() => Int)
+  identified: number;
 
-    @Field(() => [TimeSeriesDataPointSchema], { nullable: true })
-    data?: TimeSeriesDataPointSchema[];
+  @Field(() => [TimeSeriesDataPointSchema], { nullable: true })
+  data?: TimeSeriesDataPointSchema[];
 }
 
 /**
@@ -37,15 +37,15 @@ export class VisitsByAuthTypeSchema {
  */
 @ObjectType()
 export class BusinessVisitsStatsSchema {
-    @Field(() => TimeSeriesStatsSchema, {
-        description: 'Total visits and optional time-series data',
-    })
-    visits: TimeSeriesStatsSchema;
+  @Field(() => TimeSeriesStatsSchema, {
+    description: 'Total visits and optional time-series data',
+  })
+  visits: TimeSeriesStatsSchema;
 
-    @Field(() => VisitsByAuthTypeSchema, {
-        description: 'Visits split by anonymous vs identified users',
-    })
-    visitsByAuthType: VisitsByAuthTypeSchema;
+  @Field(() => VisitsByAuthTypeSchema, {
+    description: 'Visits split by anonymous vs identified users',
+  })
+  visitsByAuthType: VisitsByAuthTypeSchema;
 }
 
 /**
@@ -53,75 +53,75 @@ export class BusinessVisitsStatsSchema {
  */
 @ObjectType()
 export class EngagementStatsSchema {
-    @Field(() => BusinessVisitsStatsSchema, {
-        description: 'Business visits stats (total and by auth type)',
-    })
-    visits: BusinessVisitsStatsSchema;
+  @Field(() => BusinessVisitsStatsSchema, {
+    description: 'Business visits stats (total and by auth type)',
+  })
+  visits: BusinessVisitsStatsSchema;
 
-    @Field(() => TimeSeriesStatsSchema, {
-        description: 'New followers stats',
-    })
-    newFollowers: TimeSeriesStatsSchema;
+  @Field(() => TimeSeriesStatsSchema, {
+    description: 'New followers stats',
+  })
+  newFollowers: TimeSeriesStatsSchema;
 }
 
 @ObjectType()
 export class ProductStatItemSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  visits: number;
 }
 
 @ObjectType()
 export class ProductRatingStatItemSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field(() => Float)
-    ratingAverage: number;
+  @Field(() => Float)
+  ratingAverage: number;
 }
 
 @ObjectType()
 export class ProductLikesStatItemSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field(() => Int)
-    likes: number;
+  @Field(() => Int)
+  likes: number;
 }
 
 @ObjectType()
 export class VisitToLikeRatioSchema {
-    @Field(() => Int)
-    totalVisits: number;
+  @Field(() => Int)
+  totalVisits: number;
 
-    @Field(() => Int)
-    totalLikes: number;
+  @Field(() => Int)
+  totalLikes: number;
 
-    @Field(() => Float)
-    ratio: number;
+  @Field(() => Float)
+  ratio: number;
 }
 
 @ObjectType()
 export class CatalogStatItemSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  visits: number;
 }
 
 /**
@@ -129,14 +129,14 @@ export class CatalogStatItemSchema {
  */
 @ObjectType()
 export class DiscountStatsSchema {
-    @Field(() => [FrequencyDataPointSchema])
-    byStatus: FrequencyDataPointSchema[];
+  @Field(() => [FrequencyDataPointSchema])
+  byStatus: FrequencyDataPointSchema[];
 
-    @Field(() => [FrequencyDataPointSchema])
-    byType: FrequencyDataPointSchema[];
+  @Field(() => [FrequencyDataPointSchema])
+  byType: FrequencyDataPointSchema[];
 
-    @Field(() => Int)
-    expiringSoonCount: number;
+  @Field(() => Int)
+  expiringSoonCount: number;
 }
 
 /**
@@ -144,14 +144,14 @@ export class DiscountStatsSchema {
  */
 @ObjectType()
 export class CatalogStatsSchema {
-    @Field(() => [CatalogStatItemSchema])
-    topByVisits: CatalogStatItemSchema[];
+  @Field(() => [CatalogStatItemSchema])
+  topByVisits: CatalogStatItemSchema[];
 
-    @Field(() => [FrequencyDataPointSchema])
-    productsPerCatalog: FrequencyDataPointSchema[];
+  @Field(() => [FrequencyDataPointSchema])
+  productsPerCatalog: FrequencyDataPointSchema[];
 
-    @Field(() => TimeSeriesStatsSchema)
-    catalogVisitsOverTime: TimeSeriesStatsSchema;
+  @Field(() => TimeSeriesStatsSchema)
+  catalogVisitsOverTime: TimeSeriesStatsSchema;
 }
 
 /**
@@ -159,38 +159,38 @@ export class CatalogStatsSchema {
  */
 @ObjectType()
 export class ProductStatsSchema {
-    @Field(() => [ProductStatItemSchema])
-    topByVisits: ProductStatItemSchema[];
+  @Field(() => [ProductStatItemSchema])
+  topByVisits: ProductStatItemSchema[];
 
-    @Field(() => [ProductRatingStatItemSchema])
-    topByRating: ProductRatingStatItemSchema[];
+  @Field(() => [ProductRatingStatItemSchema])
+  topByRating: ProductRatingStatItemSchema[];
 
-    @Field(() => [ProductLikesStatItemSchema])
-    topByLikes: ProductLikesStatItemSchema[];
+  @Field(() => [ProductLikesStatItemSchema])
+  topByLikes: ProductLikesStatItemSchema[];
 
-    @Field(() => Int)
-    withoutVisitsCount: number;
+  @Field(() => Int)
+  withoutVisitsCount: number;
 
-    @Field(() => Int)
-    withoutRatingsCount: number;
+  @Field(() => Int)
+  withoutRatingsCount: number;
 
-    @Field(() => VisitToLikeRatioSchema)
-    visitToLikeRatio: VisitToLikeRatioSchema;
+  @Field(() => VisitToLikeRatioSchema)
+  visitToLikeRatio: VisitToLikeRatioSchema;
 }
 
 @ObjectType()
 export class StockMovementStatItemSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    type: string;
+  @Field()
+  type: string;
 
-    @Field(() => Int)
-    quantityDelta: number;
+  @Field(() => Int)
+  quantityDelta: number;
 
-    @Field()
-    creationDate: Date;
+  @Field()
+  creationDate: Date;
 }
 
 /**
@@ -198,15 +198,15 @@ export class StockMovementStatItemSchema {
  */
 @ObjectType()
 export class InventoryStatsSchema {
-    @Field(() => Int)
-    skusLowOrOutOfStockCount: number;
+  @Field(() => Int)
+  skusLowOrOutOfStockCount: number;
 
-    @Field(() => [StockMovementStatItemSchema])
-    recentStockMovements: StockMovementStatItemSchema[];
+  @Field(() => [StockMovementStatItemSchema])
+  recentStockMovements: StockMovementStatItemSchema[];
 
-    @Field(() => TimeSeriesStatsSchema)
-    salesCount: TimeSeriesStatsSchema;
+  @Field(() => TimeSeriesStatsSchema)
+  salesCount: TimeSeriesStatsSchema;
 
-    @Field(() => Int)
-    productsWithoutStockCount: number;
+  @Field(() => Int)
+  productsWithoutStockCount: number;
 }

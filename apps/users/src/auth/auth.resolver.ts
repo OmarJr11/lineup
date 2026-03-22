@@ -20,24 +20,26 @@ const cookiePrefix = CookiesPrefixEnum.USERS;
 
 @Resolver()
 export class AuthResolver {
-
   constructor(
     private readonly authService: AuthService,
     private readonly authMailService: AuthMailService,
-  ) { }
+  ) {}
 
   @Mutation(() => LoginResponse)
-  async login(
-    @Args('login') login: LoginDto,
-    @Context() ctx: any,
-  ) {
+  async login(@Args('login') login: LoginDto, @Context() ctx: any) {
     const res: Response = ctx.res;
     const result = await this.authService.validateUser(login);
     const token = result.token;
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -58,7 +60,13 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -79,13 +87,17 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService.setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   @Mutation(() => LoginResponse)
-  async refreshToken(
-    @Context() ctx: any,
-  ) {
+  async refreshToken(@Context() ctx: any) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
     return await this.authService.refreshAndSetCookies(req, res, cookiePrefix);
@@ -93,42 +105,43 @@ export class AuthResolver {
 
   @UseGuards(JwtAuthGuard, TokenGuard)
   @Mutation(() => BaseResponse)
-  async logout(
-    @Context() ctx: any,
-    @UserDec() user: IUserReq,
-  ) {
+  async logout(@Context() ctx: any, @UserDec() user: IUserReq) {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService.logout(req, res, user, userResponses.logout, cookiePrefix);
+    return await this.authService.logout(
+      req,
+      res,
+      user,
+      userResponses.logout,
+      cookiePrefix,
+    );
   }
 
-    /**
+  /**
    * Creates a 6-digit verification code in the database and sends it
    * to the provided email address via the mails queue.
    *
    * @param {SendVerificationCodeInput} data - Input containing the recipient email
    * @returns {Promise<BaseResponse>}
    */
-    @Mutation(() => BaseResponse)
-    async sendVerificationCode(
-      @Args('data') data: SendVerificationCodeInput,
-    ): Promise<BaseResponse> {
-      await this.authMailService.sendVerificationCodeEmail(data.email);
-      return userResponses.verificationCode.success;
-    }
-  
-    /**
-     * Validates the 6-digit code submitted by the user against the stored record.
-     * Marks the code as used if valid and not expired.
-     *
-     * @param {VerifyCodeInput} data - Input containing the email and the code
-     * @returns {Promise<BaseResponse>}
-     */
-    @Mutation(() => BaseResponse)
-    async verifyCode(
-      @Args('data') data: VerifyCodeInput,
-    ): Promise<BaseResponse> {
-      await this.authMailService.verifyCode(data.email, data.code);
-      return userResponses.verifyCode.success;
-    }
+  @Mutation(() => BaseResponse)
+  async sendVerificationCode(
+    @Args('data') data: SendVerificationCodeInput,
+  ): Promise<BaseResponse> {
+    await this.authMailService.sendVerificationCodeEmail(data.email);
+    return userResponses.verificationCode.success;
+  }
+
+  /**
+   * Validates the 6-digit code submitted by the user against the stored record.
+   * Marks the code as used if valid and not expired.
+   *
+   * @param {VerifyCodeInput} data - Input containing the email and the code
+   * @returns {Promise<BaseResponse>}
+   */
+  @Mutation(() => BaseResponse)
+  async verifyCode(@Args('data') data: VerifyCodeInput): Promise<BaseResponse> {
+    await this.authMailService.verifyCode(data.email, data.code);
+    return userResponses.verifyCode.success;
+  }
 }

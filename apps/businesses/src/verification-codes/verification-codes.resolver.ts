@@ -32,7 +32,11 @@ export class VerificationCodesResolver {
     @Args('data') data: CreateVerificationCodeDto,
     @BusinessDec() business: IBusinessReq,
   ): Promise<BaseResponse> {
-    await this.verificationCodesService.createVerificationCode(data, business, false);
+    await this.verificationCodesService.createVerificationCode(
+      data,
+      business,
+      false,
+    );
     return businessesResponses.verificationCode.success;
   }
 

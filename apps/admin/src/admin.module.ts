@@ -22,10 +22,10 @@ import { AdminStatisticsModule } from './admin-statistics/admin-statistics.modul
 @Module({
   imports: [
     ConfigModule.forRoot({
-        ignoreEnvFile: false,
-        isGlobal: true,
-        load: [configuration],
-        validationSchema: ValidatingEnv,
+      ignoreEnvFile: false,
+      isGlobal: true,
+      load: [configuration],
+      validationSchema: ValidatingEnv,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -65,13 +65,17 @@ import { AdminStatisticsModule } from './admin-statistics/admin-statistics.modul
         } else if (extCode) {
           switch (String(extCode)) {
             case 'BAD_REQUEST':
-              code = 400; break;
+              code = 400;
+              break;
             case 'UNAUTHORIZED':
-              code = 401; break;
+              code = 401;
+              break;
             case 'FORBIDDEN':
-              code = 403; break;
+              code = 403;
+              break;
             case 'NOT_FOUND':
-              code = 404; break;
+              code = 404;
+              break;
             default:
               code = 500;
           }
@@ -82,10 +86,10 @@ import { AdminStatisticsModule } from './admin-statistics/admin-statistics.modul
     }),
     BullModule.forRoot({
       connection: {
-          host: process.env.REDIS_HOST,
-          port: Number(process.env.REDIS_PORT),
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
       },
-  }),
+    }),
     UsersModule,
     AuthModule,
     FilesModule,

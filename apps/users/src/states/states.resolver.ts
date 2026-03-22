@@ -10,15 +10,15 @@ import { toStateSchema } from '../../../../core/common/functions';
 @UsePipes(new ValidationPipe())
 @Resolver(() => StateSchema)
 export class StatesResolver {
-    constructor(private readonly statesService: StatesService) {}
+  constructor(private readonly statesService: StatesService) {}
 
-    /**
-     * Get all states.
-     * @returns {Promise<StateSchema[]>} List of all states
-     */
-    @Query(() => [StateSchema], { name: 'findAllStates' })
-    async findAll(): Promise<StateSchema[]> {
-        const states = await this.statesService.findAll();
-        return states.map((state) => toStateSchema(state));
-    }
+  /**
+   * Get all states.
+   * @returns {Promise<StateSchema[]>} List of all states
+   */
+  @Query(() => [StateSchema], { name: 'findAllStates' })
+  async findAll(): Promise<StateSchema[]> {
+    const states = await this.statesService.findAll();
+    return states.map((state) => toStateSchema(state));
+  }
 }

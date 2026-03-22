@@ -30,7 +30,7 @@ export class UserRolesService extends BasicService<UserRole> {
     private readonly userRequest: Request,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
-    private readonly userRolesGettersService: UserRolesGettersService 
+    private readonly userRolesGettersService: UserRolesGettersService,
   ) {
     super(userRoleRepository, userRequest);
   }
@@ -45,7 +45,12 @@ export class UserRolesService extends BasicService<UserRole> {
   async create(idUser: number, idRole: number, user: IUserReq) {
     const existing = await this.userRolesGettersService.findOne(idUser, idRole);
     if (existing) {
-      LogError(this.logger, this.rCreate.alreadyExists.message, this.create.name, user);
+      LogError(
+        this.logger,
+        this.rCreate.alreadyExists.message,
+        this.create.name,
+        user,
+      );
       throw new BadRequestException(this.rCreate.alreadyExists);
     }
     try {
@@ -64,9 +69,12 @@ export class UserRolesService extends BasicService<UserRole> {
    */
   @Transactional()
   async removeUserRole(idUser: number, idRole: number, user: IUserReq) {
-    const userRole = await this.userRolesGettersService.findOneOrFail(idUser, idRole);
+    const userRole = await this.userRolesGettersService.findOneOrFail(
+      idUser,
+      idRole,
+    );
     try {
-      await this.deleteEntity(userRole, { data: user});
+      await this.deleteEntity(userRole, { data: user });
     } catch (error) {
       LogError(this.logger, error, this.rDelete.error.message, user);
       throw new InternalServerErrorException(this.rDelete.error);

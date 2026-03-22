@@ -6,11 +6,8 @@ import { CatalogVisitsSettersService } from './catalog-visits-setters.service';
 import { CatalogsModule } from '../catalogs/catalogs.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([CatalogVisit, Catalog]),
-        CatalogsModule,
-    ],
-    providers: [CatalogVisitsGettersService, CatalogVisitsSettersService],
-    exports: [CatalogVisitsGettersService, CatalogVisitsSettersService],
+  imports: [TypeOrmModule.forFeature([CatalogVisit, Catalog]), CatalogsModule],
+  providers: [CatalogVisitsGettersService, CatalogVisitsSettersService],
+  exports: [CatalogVisitsGettersService, CatalogVisitsSettersService],
 })
 export class CatalogVisitsModule {}

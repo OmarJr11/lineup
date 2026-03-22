@@ -10,8 +10,8 @@ import { DiscountScopeEnum } from '../../../common/enums';
  */
 @InputType()
 export class FindDiscountsByScopeInput {
-    @Field(() => DiscountScopeEnum)
-    @IsNotEmpty()
-    @IsEnum(DiscountScopeEnum)
-    scope: DiscountScopeEnum;
+  @Field(() => DiscountScopeEnum)
+  @IsNotEmpty()
+  @IsEnum(DiscountScopeEnum)
+  scope: DiscountScopeEnum;
 }

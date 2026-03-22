@@ -11,20 +11,20 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
  * Module that encapsulates all product SKU (stock) functionality.
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([ProductSku]),
-        EntityAuditsModule,
-        StockMovementsModule,
-    ],
-    providers: [
-        ProductSkusService,
-        ProductSkusGettersService,
-        ProductSkusSettersService,
-    ],
-    exports: [
-        ProductSkusService,
-        ProductSkusGettersService,
-        ProductSkusSettersService,
-    ],
+  imports: [
+    TypeOrmModule.forFeature([ProductSku]),
+    EntityAuditsModule,
+    StockMovementsModule,
+  ],
+  providers: [
+    ProductSkusService,
+    ProductSkusGettersService,
+    ProductSkusSettersService,
+  ],
+  exports: [
+    ProductSkusService,
+    ProductSkusGettersService,
+    ProductSkusSettersService,
+  ],
 })
 export class ProductSkusModule {}

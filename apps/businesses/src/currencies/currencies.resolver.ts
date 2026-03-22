@@ -7,11 +7,11 @@ import { toCurrencySchema } from '../../../../core/common/functions';
 @UsePipes(new ValidationPipe())
 @Resolver(() => CurrencySchema)
 export class CurrenciesResolver {
-    constructor(private readonly currenciesService: CurrenciesService) {}
+  constructor(private readonly currenciesService: CurrenciesService) {}
 
-    @Query(() => [CurrencySchema], { name: 'findAllCurrencies' })
-    async findAll() {
-        const currencies = await this.currenciesService.findAll();
-        return currencies.map((currency) => toCurrencySchema(currency));
-    }
+  @Query(() => [CurrencySchema], { name: 'findAllCurrencies' })
+  async findAll() {
+    const currencies = await this.currenciesService.findAll();
+    return currencies.map((currency) => toCurrencySchema(currency));
+  }
 }

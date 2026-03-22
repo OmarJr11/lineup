@@ -13,13 +13,7 @@ import { FilesGettersService } from './files-getters.service';
       envFilePath: '.env',
     }),
   ],
-  providers: [
-    FilesService,
-    FilesGettersService
-  ],
-  exports: [
-    FilesService,
-    FilesGettersService
-  ],
+  providers: [FilesService, FilesGettersService],
+  exports: [FilesService, FilesGettersService],
 })
 export class FilesModule {}

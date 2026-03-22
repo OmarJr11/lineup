@@ -14,7 +14,14 @@ import { Request } from 'express';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
-import { IBusinessReq, IRefreshToken, IResponse, IResponseWithData, ITokenGenerate, IUserReq } from '../../common/interfaces';
+import {
+  IBusinessReq,
+  IRefreshToken,
+  IResponse,
+  IResponseWithData,
+  ITokenGenerate,
+  IUserReq,
+} from '../../common/interfaces';
 import { BasicService } from '../../common/services/base.service';
 import { Business, Token, User } from '../../entities';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
@@ -33,7 +40,7 @@ export class TokensService extends BasicService<Token> {
     private readonly jwtService: JwtService,
     @InjectRepository(Token)
     private readonly tokenRepository: Repository<Token>,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {
     super(tokenRepository, userRequest);
   }
@@ -54,7 +61,7 @@ export class TokensService extends BasicService<Token> {
    * @returns {ITokenGenerate}
    */
   decodeToken(token: string): ITokenGenerate {
-    return this.jwtService.decode(token) as ITokenGenerate;
+    return this.jwtService.decode<ITokenGenerate>(token);
   }
 
   /**
@@ -154,11 +161,13 @@ export class TokensService extends BasicService<Token> {
    */
   async removeTokenUser(refreshToken: string, token: string, user: IUserReq) {
     const rt = await this.tokenRepository.findOne({
-      where: [{ 
-        idUser: Number(user.userId),
-        token,
-        refresh: refreshToken
-      }],
+      where: [
+        {
+          idUser: Number(user.userId),
+          token,
+          refresh: refreshToken,
+        },
+      ],
     });
 
     if (rt) {
@@ -172,13 +181,19 @@ export class TokensService extends BasicService<Token> {
    * @param {string} token - current Token
    * @param {IBusinessReq} business - Logged business
    */
-  async removeTokenBusiness(refreshToken: string, token: string, business: IBusinessReq) {
+  async removeTokenBusiness(
+    refreshToken: string,
+    token: string,
+    business: IBusinessReq,
+  ) {
     const rt = await this.tokenRepository.findOne({
-      where: [{ 
-        idBusiness: Number(business.businessId),
-        token,
-        refresh: refreshToken
-      }],
+      where: [
+        {
+          idBusiness: Number(business.businessId),
+          token,
+          refresh: refreshToken,
+        },
+      ],
     });
 
     if (rt) {
@@ -199,24 +214,24 @@ export class TokensService extends BasicService<Token> {
     refreshToken: string,
     token: string,
     user: User | Business,
-    responses: IResponseWithData
+    responses: IResponseWithData,
   ): Promise<IRefreshToken> {
     let rt: Token;
-    if(user['username']) {
-      rt = await this
-        .findOneWithOptionsOrFail({ where: { idUser: user.id, token, refresh: refreshToken } })
-        .catch((error) => {
-          LogError(this.logger, error, this.updateRefreshToken.name, user);
-          throw new UnauthorizedException(responses.refreshNotValid);
-        });
+    if (user['username']) {
+      rt = await this.findOneWithOptionsOrFail({
+        where: { idUser: user.id, token, refresh: refreshToken },
+      }).catch((error) => {
+        LogError(this.logger, error, this.updateRefreshToken.name, user);
+        throw new UnauthorizedException(responses.refreshNotValid);
+      });
       rt.idUser = user.id;
     } else {
-      rt = await this
-        .findOneWithOptionsOrFail({ where: { idBusiness: user.id, token, refresh: refreshToken } })
-        .catch((error) => {
-          LogError(this.logger, error, this.updateRefreshToken.name, user);
-          throw new UnauthorizedException(responses.refreshNotValid);
-        });
+      rt = await this.findOneWithOptionsOrFail({
+        where: { idBusiness: user.id, token, refresh: refreshToken },
+      }).catch((error) => {
+        LogError(this.logger, error, this.updateRefreshToken.name, user);
+        throw new UnauthorizedException(responses.refreshNotValid);
+      });
       rt.idBusiness = user.id;
     }
 

@@ -9,40 +9,40 @@ import { TimePeriodGranularityEnum } from '../../../common/enums/time-period-gra
  */
 @InputType()
 export class TimePeriodInput {
-    /**
-     * Start of the period (ISO 8601 date string).
-     * Omit for all-time totals.
-     */
-    @Field({
-        nullable: true,
-        description: 'Start of the period (ISO 8601). Omit for all-time.'
-    })
-    @IsOptional()
-    @IsDateString()
-    startDate?: string;
+  /**
+   * Start of the period (ISO 8601 date string).
+   * Omit for all-time totals.
+   */
+  @Field({
+    nullable: true,
+    description: 'Start of the period (ISO 8601). Omit for all-time.',
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
 
-    /**
-     * End of the period (ISO 8601 date string).
-     * Omit for all-time totals.
-     */
-    @Field({ 
-        nullable: true,
-        description: 'End of the period (ISO 8601). Omit for all-time.'
-    })
-    @IsOptional()
-    @IsDateString()
-    endDate?: string;
+  /**
+   * End of the period (ISO 8601 date string).
+   * Omit for all-time totals.
+   */
+  @Field({
+    nullable: true,
+    description: 'End of the period (ISO 8601). Omit for all-time.',
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 
-    /**
-     * Granularity for time-series grouping (day/week/month).
-     * Used when building data for line charts.
-     * Ignored when startDate/endDate are omitted.
-     */
-    @Field(() => TimePeriodGranularityEnum, {
-        nullable: true,
-        description: 'Grouping for time-series. Ignored for all-time.',
-    })
-    @IsOptional()
-    @IsEnum(TimePeriodGranularityEnum)
-    granularity?: TimePeriodGranularityEnum;
+  /**
+   * Granularity for time-series grouping (day/week/month).
+   * Used when building data for line charts.
+   * Ignored when startDate/endDate are omitted.
+   */
+  @Field(() => TimePeriodGranularityEnum, {
+    nullable: true,
+    description: 'Grouping for time-series. Ignored for all-time.',
+  })
+  @IsOptional()
+  @IsEnum(TimePeriodGranularityEnum)
+  granularity?: TimePeriodGranularityEnum;
 }

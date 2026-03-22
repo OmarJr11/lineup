@@ -1,10 +1,10 @@
 import { Field, InputType } from '@nestjs/graphql';
 import {
-    IsEnum,
-    IsNotEmpty,
-    IsString,
-    MaxLength,
-    MinLength
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 import { SocialMediasEnum } from '../../../common/enums';
 

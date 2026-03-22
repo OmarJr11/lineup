@@ -8,30 +8,42 @@ import { Type } from 'class-transformer';
  */
 @InputType()
 export class ProductSearchFiltersInput {
-    @Field(() => Float, { nullable: true, description: 'Minimum price (inclusive)' })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Min(0)
-    minPrice?: number;
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Minimum price (inclusive)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
 
-    @Field(() => Float, { nullable: true, description: 'Maximum price (inclusive)' })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Min(0)
-    maxPrice?: number;
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Maximum price (inclusive)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
 
-    @Field({ nullable: true, description: 'Location text to filter (ILIKE match)' })
-    @IsOptional()
-    @IsString()
-    location?: string;
+  @Field({
+    nullable: true,
+    description: 'Location text to filter (ILIKE match)',
+  })
+  @IsOptional()
+  @IsString()
+  location?: string;
 
-    @Field(() => Float, { nullable: true, description: 'Minimum rating (0.00–5.00, inclusive)' })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Min(0)
-    @Max(5)
-    minRating?: number;
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Minimum rating (0.00–5.00, inclusive)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  minRating?: number;
 }

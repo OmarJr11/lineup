@@ -8,7 +8,7 @@ import { AdminStatisticsResolver } from './admin-statistics.resolver';
  * Admin GraphQL statistics (single resolver, multiple queries).
  */
 @Module({
-    imports: [AdminStatisticsCoreModule, RolesModule, TokensModule],
-    providers: [AdminStatisticsResolver],
+  imports: [AdminStatisticsCoreModule, RolesModule, TokensModule],
+  providers: [AdminStatisticsResolver],
 })
 export class AdminStatisticsModule {}

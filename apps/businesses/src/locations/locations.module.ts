@@ -5,11 +5,7 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
 import { LocationsResolver } from './locations.resolver';
 
 @Module({
-  imports: [
-    LocationsModuleCore,
-    RolesModule,
-    TokensModule,
-  ],
+  imports: [LocationsModuleCore, RolesModule, TokensModule],
   providers: [LocationsResolver],
 })
 export class LocationsModule {}

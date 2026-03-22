@@ -1,6 +1,6 @@
-import { Location } from '../../entities';
-import { LocationSchema } from '../../schemas';
+import type { Location } from '../../entities';
+import type { LocationSchema } from '../../schemas';
 
 export function toLocationSchema(location: Location): LocationSchema {
-    return location as LocationSchema;
+  return location as LocationSchema;
 }

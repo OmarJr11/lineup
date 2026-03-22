@@ -1,4 +1,4 @@
-import { SocialMediasEnum } from '../enums';
+import type { SocialMediasEnum } from '../enums';
 
 export interface ISocialMedias {
   name: SocialMediasEnum;

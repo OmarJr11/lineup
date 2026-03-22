@@ -6,16 +6,16 @@ import { CurrenciesGettersService } from './currencies-getters.service';
 import { CurrenciesSettersService } from './currencies-setters.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Currency])],
-    providers: [
-        CurrenciesService,
-        CurrenciesGettersService,
-        CurrenciesSettersService,
-    ],
-    exports: [
-        CurrenciesService,
-        CurrenciesGettersService,
-        CurrenciesSettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([Currency])],
+  providers: [
+    CurrenciesService,
+    CurrenciesGettersService,
+    CurrenciesSettersService,
+  ],
+  exports: [
+    CurrenciesService,
+    CurrenciesGettersService,
+    CurrenciesSettersService,
+  ],
 })
 export class CurrenciesModule {}

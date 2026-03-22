@@ -1,10 +1,10 @@
-import { IFrequencyDataPoint } from './frequency-data-point.interface';
+import type { IFrequencyDataPoint } from './frequency-data-point.interface';
 
 /**
  * Combined discount statistics.
  */
 export interface IDiscountStats {
-    byStatus: IFrequencyDataPoint[];
-    byType: IFrequencyDataPoint[];
-    expiringSoonCount: number;
+  byStatus: IFrequencyDataPoint[];
+  byType: IFrequencyDataPoint[];
+  expiringSoonCount: number;
 }

@@ -1,10 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import {
-    IsArray,
-    IsNotEmpty,
-    ValidateNested,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 import { UpdateProductSkuItemInput } from './update-product-sku-item.input';
 
 /**
@@ -12,10 +8,10 @@ import { UpdateProductSkuItemInput } from './update-product-sku-item.input';
  */
 @InputType()
 export class UpdateProductSkusInput {
-    @Field(() => [UpdateProductSkuItemInput])
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => UpdateProductSkuItemInput)
-    skus: UpdateProductSkuItemInput[];
+  @Field(() => [UpdateProductSkuItemInput])
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateProductSkuItemInput)
+  skus: UpdateProductSkuItemInput[];
 }

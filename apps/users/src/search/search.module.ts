@@ -13,16 +13,16 @@ import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
  * Records search terms for logged-in users to build personalized collections.
  */
 @Module({
-    imports: [
-        SearchModuleCore,
-        UserSearchesModule,
-        JwtModule.registerAsync({
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                secret: config.get<string>('JWT_SECRET'),
-            }),
-        }),
-    ],
-    providers: [SearchResolver, OptionalJwtAuthGuard],
+  imports: [
+    SearchModuleCore,
+    UserSearchesModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+    }),
+  ],
+  providers: [SearchResolver, OptionalJwtAuthGuard],
 })
 export class SearchModule {}

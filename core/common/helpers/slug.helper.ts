@@ -5,11 +5,11 @@
  * @returns {string} The slug.
  */
 export function toSlug(text: string): string {
-    return text
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w\u00C0-\u024F-]+/g, '')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\u00C0-\u024F-]+/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }

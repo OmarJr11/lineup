@@ -6,16 +6,8 @@ import { StatesGettersService } from './states-getters.service';
 import { StatesSettersService } from './states-setters.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([State])],
-    providers: [
-        StatesService,
-        StatesGettersService,
-        StatesSettersService,
-    ],
-    exports: [
-        StatesService,
-        StatesGettersService,
-        StatesSettersService,
-    ],
+  imports: [TypeOrmModule.forFeature([State])],
+  providers: [StatesService, StatesGettersService, StatesSettersService],
+  exports: [StatesService, StatesGettersService, StatesSettersService],
 })
 export class StatesModule {}

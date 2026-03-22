@@ -32,12 +32,20 @@ export class GeminiService {
     this.model = this.configService.get<string>('GEMINI_MODEL');
 
     if (!this.apiKey) {
-      LogError(this.logger, this.rConfig.apiKeyNotSet.message, this.constructor.name);
+      LogError(
+        this.logger,
+        this.rConfig.apiKeyNotSet.message,
+        this.constructor.name,
+      );
       throw new InternalServerErrorException(this.rConfig.apiKeyNotSet);
     }
 
     if (!this.model) {
-      LogError(this.logger, this.rConfig.modelNotSet.message, this.constructor.name);
+      LogError(
+        this.logger,
+        this.rConfig.modelNotSet.message,
+        this.constructor.name,
+      );
       throw new InternalServerErrorException(this.rConfig.modelNotSet);
     }
 
@@ -50,17 +58,26 @@ export class GeminiService {
    * @param {IGenerateContentInput} input - Input parameters for generation
    * @returns {Promise<IGenerateContentOutput>} Generated text and metadata
    */
-  async generateContent(input: IGenerateContentInput): Promise<IGenerateContentOutput> {
+  async generateContent(
+    input: IGenerateContentInput,
+  ): Promise<IGenerateContentOutput> {
     const { contents, model = this.model, systemInstruction, config } = input;
     if (!contents || typeof contents !== 'string') {
-      LogError(this.logger, this.rGenerateContent.invalidContent.message, this.generateContent.name);
+      LogError(
+        this.logger,
+        this.rGenerateContent.invalidContent.message,
+        this.generateContent.name,
+      );
       throw new BadRequestException(this.rGenerateContent.invalidContent);
     }
 
     try {
       const requestConfig = this.buildRequestConfig(config, systemInstruction);
-      const response = await this.client.models
-        .generateContent({ model, contents, config: requestConfig });
+      const response = await this.client.models.generateContent({
+        model,
+        contents,
+        config: requestConfig,
+      });
       const text = response.text ?? '';
       return { text, rawResponse: response };
     } catch (error) {
@@ -78,7 +95,7 @@ export class GeminiService {
    */
   private buildRequestConfig(
     config?: IGenerateContentConfig,
-    systemInstruction?: string
+    systemInstruction?: string,
   ): object {
     const result: Record<string, unknown> = {};
 
@@ -88,8 +105,10 @@ export class GeminiService {
 
     if (!config) return result;
 
-    if (config.temperature !== undefined) result.temperature = config.temperature;
-    if (config.maxOutputTokens !== undefined) result.maxOutputTokens = config.maxOutputTokens;
+    if (config.temperature !== undefined)
+      result.temperature = config.temperature;
+    if (config.maxOutputTokens !== undefined)
+      result.maxOutputTokens = config.maxOutputTokens;
     if (config.topP !== undefined) result.topP = config.topP;
     if (config.topK !== undefined) result.topK = config.topK;
 

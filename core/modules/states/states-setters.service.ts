@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BasicService } from '../../common/services';
 import { State } from '../../entities';
@@ -12,67 +16,67 @@ import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 @Injectable()
 export class StatesSettersService extends BasicService<State> {
-    private logger = new Logger(StatesSettersService.name);
-    private readonly rCreate = statesResponses.create;
-    private readonly rUpdate = statesResponses.update;
-    private readonly rDelete = statesResponses.delete;
+  private logger = new Logger(StatesSettersService.name);
+  private readonly rCreate = statesResponses.create;
+  private readonly rUpdate = statesResponses.update;
+  private readonly rDelete = statesResponses.delete;
 
-    constructor(
-        @InjectRepository(State)
-        private readonly stateRepository: Repository<State>,
-    ) {
-        super(stateRepository);
-    }
+  constructor(
+    @InjectRepository(State)
+    private readonly stateRepository: Repository<State>,
+  ) {
+    super(stateRepository);
+  }
 
-    /**
-     * Create State
-     * @param {CreateStateInput} data - Data to create a state
-     * @param {IUserReq} userReq - The user request object
-     * @returns {Promise<State>}
-     */
-    @Transactional()
-    async create(data: CreateStateInput, userReq: IUserReq): Promise<State> {
-        try {
-            return await this.save(data, userReq);
-        } catch (error) {
-            LogError(this.logger, error, this.create.name, userReq);
-            throw new InternalServerErrorException(this.rCreate.error);
-        }
+  /**
+   * Create State
+   * @param {CreateStateInput} data - Data to create a state
+   * @param {IUserReq} userReq - The user request object
+   * @returns {Promise<State>}
+   */
+  @Transactional()
+  async create(data: CreateStateInput, userReq: IUserReq): Promise<State> {
+    try {
+      return await this.save(data, userReq);
+    } catch (error) {
+      LogError(this.logger, error, this.create.name, userReq);
+      throw new InternalServerErrorException(this.rCreate.error);
     }
+  }
 
-    /**
-     * Update State
-     * @param {UpdateStateInput} data - Data to update the state
-     * @param {State} state - The state entity to update
-     * @param {IUserReq} userReq - The user request object
-     * @returns {Promise<State>}
-     */
-    @Transactional()
-    async update(
-        data: UpdateStateInput,
-        state: State,
-        userReq: IUserReq,
-    ): Promise<State> {
-        try {
-            return await this.updateEntity(data, state, userReq);
-        } catch (error) {
-            LogError(this.logger, error, this.update.name, userReq);
-            throw new InternalServerErrorException(this.rUpdate.error);
-        }
+  /**
+   * Update State
+   * @param {UpdateStateInput} data - Data to update the state
+   * @param {State} state - The state entity to update
+   * @param {IUserReq} userReq - The user request object
+   * @returns {Promise<State>}
+   */
+  @Transactional()
+  async update(
+    data: UpdateStateInput,
+    state: State,
+    userReq: IUserReq,
+  ): Promise<State> {
+    try {
+      return await this.updateEntity(data, state, userReq);
+    } catch (error) {
+      LogError(this.logger, error, this.update.name, userReq);
+      throw new InternalServerErrorException(this.rUpdate.error);
     }
+  }
 
-    /**
-     * Remove State (soft delete)
-     * @param {State} state - The state entity to remove
-     * @param {IUserReq} userReq - The user request object
-     */
-    @Transactional()
-    async remove(state: State, userReq: IUserReq): Promise<void> {
-        try {
-            await this.deleteEntityByStatus(state, userReq);
-        } catch (error) {
-            LogError(this.logger, error, this.remove.name, userReq);
-            throw new InternalServerErrorException(this.rDelete.error);
-        }
+  /**
+   * Remove State (soft delete)
+   * @param {State} state - The state entity to remove
+   * @param {IUserReq} userReq - The user request object
+   */
+  @Transactional()
+  async remove(state: State, userReq: IUserReq): Promise<void> {
+    try {
+      await this.deleteEntityByStatus(state, userReq);
+    } catch (error) {
+      LogError(this.logger, error, this.remove.name, userReq);
+      throw new InternalServerErrorException(this.rDelete.error);
     }
+  }
 }

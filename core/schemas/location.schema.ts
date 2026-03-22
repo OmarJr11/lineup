@@ -4,34 +4,34 @@ import { BusinessSchema } from './business.schema';
 
 @ObjectType()
 export class LocationSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    /** User-defined label for this location. */
-    @Field()
-    name: string;
+  /** User-defined label for this location. */
+  @Field()
+  name: string;
 
-    @Field(() => Float)
-    lat: number;
+  @Field(() => Float)
+  lat: number;
 
-    @Field(() => Float)
-    lng: number;
+  @Field(() => Float)
+  lng: number;
 
-    @Field()
-    address: string;
+  @Field()
+  address: string;
 
-    @Field()
-    formattedAddress: string;
+  @Field()
+  formattedAddress: string;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => BusinessSchema)
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema)
+  business?: BusinessSchema;
 
-    @Field(() => BusinessSchema)
-    modificationBusiness?: BusinessSchema;
+  @Field(() => BusinessSchema)
+  modificationBusiness?: BusinessSchema;
 }

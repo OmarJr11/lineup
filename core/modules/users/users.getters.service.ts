@@ -1,13 +1,18 @@
-import { Injectable, Logger, NotAcceptableException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
 import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { BasicService } from '../../common/services';
 import {
-    IAdminStatusCount,
-    IAdminTimeSeriesStats,
-    ITimePeriodFilter,
+  IAdminStatusCount,
+  IAdminTimeSeriesStats,
+  ITimePeriodFilter,
 } from '../../common/interfaces';
 import { User } from '../../entities';
 import { userResponses } from '../../common/responses';
@@ -15,273 +20,278 @@ import { UserUniqueFieldsDto } from './dto/unique.dto';
 import { LogError } from '../../common/helpers/logger.helper';
 import { InfinityScrollInput } from '../../common/dtos';
 
-
 @Injectable()
 export class UsersGettersService extends BasicService<User> {
-    private logger: Logger = new Logger(UsersGettersService.name);
-    private readonly _relations = ['state', 'profileImage'];
-    private readonly _uList = userResponses.list;
-    private readonly _uToken = userResponses.token;
+  private logger: Logger = new Logger(UsersGettersService.name);
+  private readonly _relations = ['state', 'profileImage'];
+  private readonly _uList = userResponses.list;
+  private readonly _uToken = userResponses.token;
 
-    constructor(
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
-    ) {
-        super(userRepository);
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {
+    super(userRepository);
+  }
+
+  /**
+   * Get all Users
+   * @param {InfinityScrollInput} query - query parameters for pagination
+   * @returns {Promise<User[]>}
+   */
+  async findAll(query: InfinityScrollInput): Promise<User[]> {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+    const order = query.order || 'DESC';
+    const orderBy = query.orderBy || 'creation_date';
+    return await this.createQueryBuilder('u')
+      .leftJoinAndSelect('u.state', 'state')
+      .leftJoinAndSelect('u.profileImage', 'profileImage')
+      .where('u.status <> :status', { status: StatusEnum.DELETED })
+      .limit(limit)
+      .offset(skip)
+      .orderBy(`u.${orderBy}`, order)
+      .getMany();
+  }
+
+  /**
+   * Get User by ID
+   * @param {number} id - user ID
+   * @returns {Promise<User>}
+   */
+  async findOne(id: number): Promise<User> {
+    const user = await this.findOneWithOptionsOrFail({
+      where: { id, status: Not(StatusEnum.DELETED) },
+      relations: this._relations,
+    }).catch((error) => {
+      LogError(this.logger, error, this.findOne.name);
+      throw new NotAcceptableException(this._uList.userNotFound);
+    });
+    return user;
+  }
+
+  /**
+   * Find User by email
+   * @param {string} email - user email
+   * @returns {Promise<User>}
+   */
+  async findOneByEmail(email: string): Promise<User> {
+    return await this.findOneWithOptionsOrFail({
+      where: { email: email.toLowerCase(), status: Not(StatusEnum.DELETED) },
+    }).catch((error) => {
+      LogError(this.logger, error, this.findOneByEmail.name);
+      throw new NotAcceptableException(this._uList.userNotFound);
+    });
+  }
+
+  /**
+   * Check if a user exists with the given email
+   * @param {string} email - email to check
+   * @returns {Promise<boolean>}
+   */
+  async checkUserExistByEmail(email: string): Promise<boolean> {
+    const user = await this.findOneWithOptions({
+      where: { email: email.toLowerCase(), status: Not(StatusEnum.DELETED) },
+    });
+    return !!user;
+  }
+
+  /**
+   * Find a user by mail
+   * @param {string} email - email
+   * @returns {Promise<User>}
+   */
+  async findOneByEmailWithPassword(email: string): Promise<User> {
+    const user = await this.createQueryBuilder('user')
+      .addSelect('user.password')
+      .leftJoinAndSelect('user.userRoles', 'userRoles')
+      .leftJoinAndSelect('userRoles.role', 'role')
+      .leftJoinAndSelect('role.rolePermissions', 'rolePermissions')
+      .leftJoinAndSelect('rolePermissions.permission', 'permission')
+      .where('LOWER(user.email) = LOWER(:email)', { email })
+      .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
+      .getOneOrFail()
+      .catch((error) => {
+        LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+        throw new UnauthorizedException(this._uList.userNotFound);
+      });
+    if (!user) {
+      LogError(
+        this.logger,
+        this._uList.userNotFound,
+        this.findOneByEmailWithPassword.name,
+      );
+      throw new UnauthorizedException(this._uList.userNotFound);
+    }
+    return user;
+  }
+
+  /**
+   * Find User by username
+   * @param {string} username - username
+   * @returns {Promise<User>}
+   */
+  async findByUsername(username: string): Promise<User> {
+    return await this.findOneWithOptions({
+      where: { username, status: Not(StatusEnum.DELETED) },
+      relations: this._relations,
+    });
+  }
+
+  /**
+   * Find User by username
+   * @param {string} username - username
+   * @returns {Promise<User>}
+   */
+  async findByUsernameOrFail(username: string): Promise<User> {
+    return await this.findOneWithOptionsOrFail({
+      where: { username, status: Not(StatusEnum.DELETED) },
+      relations: this._relations,
+    }).catch((error) => {
+      LogError(this.logger, error, this.findByUsernameOrFail.name);
+      throw new NotAcceptableException(this._uList.userNotFound);
+    });
+  }
+
+  /**
+   * Find User by ID with password (for change password flow)
+   * @param {number} id - user ID
+   * @returns {Promise<User>}
+   */
+  async findOneByIdWithPassword(id: number): Promise<User> {
+    try {
+      return await this.createQueryBuilder('user')
+        .addSelect('user.password')
+        .where('user.id = :id', { id })
+        .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
+        .getOneOrFail();
+    } catch (error) {
+      LogError(this.logger, error, this.findOneByIdWithPassword.name);
+      throw new NotAcceptableException(this._uList.userNotFound);
+    }
+  }
+
+  /**
+   * Find User by ID, email and status
+   * @param {number} id - user ID
+   * @param {string} email - user email
+   * @param {StatusEnum} status - user status
+   * @returns {Promise<User>}
+   */
+  async findOneByIdUserAndToken(
+    id: number,
+    email: string,
+    status: StatusEnum,
+  ): Promise<User> {
+    return await this.findOneWithOptionsOrFail({
+      where: { id, email, status },
+    }).catch((error) => {
+      LogError(this.logger, error, this.findOneByIdUserAndToken.name);
+      throw new UnauthorizedException(this._uToken.tokenNotValid);
+    });
+  }
+
+  /**
+   * Search Users by username
+   * @param {string} username - username
+   * @returns {Promise<User[]>}
+   */
+  async searchUsersByUsername(username: string): Promise<User[]> {
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.state', 'state')
+      .leftJoinAndSelect('u.profileImage', 'profileImage')
+      .where('u.status <> :status', { status: StatusEnum.DELETED })
+      .andWhere('u.username iLIKE :username', { username })
+      .getMany();
+  }
+
+  /**
+   * function responsible for the validation of the fields that have to be unique in users
+   *
+   * @param {UserUniqueFieldsDto} data - unique fields for users
+   * @param {number} [id]
+   */
+  async validateUniqueFields(data: UserUniqueFieldsDto, id?: number) {
+    let query = this.userRepository.createQueryBuilder('u');
+    if (id) query = query.andWhere('u.id <> :id', { id });
+    query = query
+      .andWhere('(u.email iLIKE :email', { email: data.email })
+      .andWhere('u.status <> :status', { status: StatusEnum.DELETED })
+      .orWhere('u.username iLIKE :username)', { username: data.username });
+
+    const user = await query.getOne();
+    if (!user) {
+      return;
+    }
+    if (data.username.toLowerCase() === user.username.toLocaleLowerCase()) {
+      LogError(
+        this.logger,
+        this._uList.usernameExists,
+        this.validateUniqueFields.name,
+        user,
+      );
+      throw new NotAcceptableException(this._uList.usernameExists);
     }
 
-    /**
-     * Get all Users
-     * @param {InfinityScrollInput} query - query parameters for pagination
-     * @returns {Promise<User[]>}
-     */
-    async findAll(query: InfinityScrollInput): Promise<User[]> {
-        const page = query.page || 1;
-        const limit = query.limit || 10;
-        const skip = (page - 1) * limit;
-        const order = query.order || 'DESC';
-        const orderBy = query.orderBy || 'creation_date';
-        return await this.createQueryBuilder('u')
-            .leftJoinAndSelect('u.state', 'state')
-            .leftJoinAndSelect('u.profileImage', 'profileImage')
-            .where('u.status <> :status', { status: StatusEnum.DELETED })
-            .limit(limit)
-            .offset(skip)
-            .orderBy(`u.${orderBy}`, order)
-            .getMany();
+    if (data.email.toLowerCase() === user.email.toLocaleLowerCase()) {
+      LogError(
+        this.logger,
+        this._uList.mailExists,
+        this.validateUniqueFields.name,
+        user,
+      );
+      throw new NotAcceptableException(this._uList.mailExists);
     }
+    throw new NotAcceptableException(this._uList.error);
+  }
 
-    /**
-     * Get User by ID
-     * @param {number} id - user ID
-     * @returns {Promise<User>}
-     */
-    async findOne(id: number): Promise<User> {
-        const user = await this.findOneWithOptionsOrFail({
-            where: { id, status: Not(StatusEnum.DELETED) },
-            relations: this._relations
-        }).catch((error) => {
-            LogError(this.logger, error, this.findOne.name);
-            throw new NotAcceptableException(this._uList.userNotFound);
-        });
-        return user;
-    }
+  /**
+   * Counts users that are not soft-deleted (admin statistics).
+   * @returns {Promise<number>} User count.
+   */
+  async getNonDeletedUsersCountForAdminStatistics(): Promise<number> {
+    return this.userRepository.count({
+      where: { status: Not(StatusEnum.DELETED) },
+    });
+  }
 
-    /**
-     * Find User by email
-     * @param {string} email - user email
-     * @returns {Promise<User>}
-     */
-    async findOneByEmail(email: string): Promise<User> {
-        return await this.findOneWithOptionsOrFail({
-            where: { email: email.toLowerCase(), status: Not(StatusEnum.DELETED) },
-        }).catch((error) => {
-            LogError(this.logger, error, this.findOneByEmail.name);
-            throw new NotAcceptableException(this._uList.userNotFound);
-        });
-    }
+  /**
+   * Groups non-deleted users by status (admin statistics).
+   * @returns {Promise<IAdminStatusCount[]>} Status counts.
+   */
+  async getUsersGroupedByStatusForAdminStatistics(): Promise<
+    IAdminStatusCount[]
+  > {
+    const rows = await this.createQueryBuilder('u')
+      .select('u.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('u.status <> :deleted', { deleted: StatusEnum.DELETED })
+      .groupBy('u.status')
+      .getRawMany<{ status: string; count: string }>();
+    return rows.map((r) => ({
+      status: r.status,
+      count: parseInt(r.count ?? '0', 10),
+    }));
+  }
 
-    /**
-     * Check if a user exists with the given email
-     * @param {string} email - email to check
-     * @returns {Promise<boolean>}
-     */
-    async checkUserExistByEmail(email: string): Promise<boolean> {
-        const user = await this.findOneWithOptions({
-            where: { email: email.toLowerCase(), status: Not(StatusEnum.DELETED) },
-        });
-        return !!user;
-    }
-
-    /**
-     * Find a user by mail
-     * @param {string} email - email
-     * @returns {Promise<User>}
-     */
-    async findOneByEmailWithPassword(email: string): Promise<User> {
-        const user = await this
-            .createQueryBuilder('user')
-            .addSelect('user.password')
-            .leftJoinAndSelect('user.userRoles', 'userRoles')
-            .leftJoinAndSelect('userRoles.role', 'role')
-            .leftJoinAndSelect('role.rolePermissions', 'rolePermissions')
-            .leftJoinAndSelect('rolePermissions.permission', 'permission')
-            .where('LOWER(user.email) = LOWER(:email)', { email })
-            .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
-            .getOneOrFail()
-            .catch((error) => {
-                LogError(this.logger, error, this.findOneByEmailWithPassword.name);
-                throw new UnauthorizedException(this._uList.userNotFound);
-            });
-        if (!user) {
-            LogError(this.logger, this._uList.userNotFound, this.findOneByEmailWithPassword.name);
-            throw new UnauthorizedException(this._uList.userNotFound);
-        }
-        return user;
-    }
-
-    /**
-     * Find User by username
-     * @param {string} username - username
-     * @returns {Promise<User>}
-     */
-    async findByUsername(username: string): Promise<User> {
-        return await this.findOneWithOptions({
-            where: { username, status: Not(StatusEnum.DELETED) },
-            relations: this._relations
-        });
-    }
-
-    /**
-     * Find User by username
-     * @param {string} username - username
-     * @returns {Promise<User>}
-     */
-    async findByUsernameOrFail(username: string): Promise<User> {
-        return await this.findOneWithOptionsOrFail({
-            where: { username, status: Not(StatusEnum.DELETED) },
-            relations: this._relations
-        }).catch((error) => {
-            LogError(this.logger, error, this.findByUsernameOrFail.name);
-            throw new NotAcceptableException(this._uList.userNotFound);
-        });
-    }
-
-    /**
-     * Find User by ID with password (for change password flow)
-     * @param {number} id - user ID
-     * @returns {Promise<User>}
-     */
-    async findOneByIdWithPassword(id: number): Promise<User> {
-        try {
-            return await this.createQueryBuilder('user')
-                .addSelect('user.password')
-                .where('user.id = :id', { id })
-                .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
-                .getOneOrFail();
-        } catch (error) {
-            LogError(this.logger, error, this.findOneByIdWithPassword.name);
-            throw new NotAcceptableException(this._uList.userNotFound);
-        }
-    }
-
-    /**
-     * Find User by ID, email and status
-     * @param {number} id - user ID
-     * @param {string} email - user email
-     * @param {StatusEnum} status - user status
-     * @returns {Promise<User>}
-     */
-    async findOneByIdUserAndToken(
-        id: number,
-        email: string,
-        status: StatusEnum
-    ): Promise<User> {
-        return await this.findOneWithOptionsOrFail({ 
-            where: { id, email, status }
-        }).catch((error) => {
-            LogError(this.logger, error, this.findOneByIdUserAndToken.name);
-            throw new UnauthorizedException(this._uToken.tokenNotValid);
-        });
-    }
-
-    /**
-     * Search Users by username
-     * @param {string} username - username
-     * @returns {Promise<User[]>}
-     */
-    async searchUsersByUsername(username: string): Promise<User[]> {
-        return await this.userRepository
-            .createQueryBuilder('u')
-            .leftJoinAndSelect('u.state', 'state')
-            .leftJoinAndSelect('u.profileImage', 'profileImage')
-            .where('u.status <> :status', { status: StatusEnum.DELETED })
-            .andWhere('u.username iLIKE :username', { username })
-            .getMany();
-    }
-
-    /**
-     * function responsible for the validation of the fields that have to be unique in users
-     *
-     * @param {UserUniqueFieldsDto} data - unique fields for users
-     * @param {number} [id]
-     */
-    async validateUniqueFields(data: UserUniqueFieldsDto, id?: number) {
-        let query = this.userRepository.createQueryBuilder('u');
-        if (id) query = query.andWhere('u.id <> :id', { id });
-        query = query
-            .andWhere('(u.email iLIKE :email', { email: data.email })
-            .andWhere('u.status <> :status', { status: StatusEnum.DELETED })
-            .orWhere('u.username iLIKE :username)', { username: data.username });
-
-        const user = await query.getOne();
-        if (!user) {
-            return;
-        }
-        if (data.username.toLowerCase() === user.username.toLocaleLowerCase()) {
-            LogError(
-                this.logger,
-                this._uList.usernameExists,
-                this.validateUniqueFields.name,
-                user
-            );
-            throw new NotAcceptableException(this._uList.usernameExists);
-        }
-
-        if (data.email.toLowerCase() === user.email.toLocaleLowerCase()) {
-            LogError(
-                this.logger,
-                this._uList.mailExists,
-                this.validateUniqueFields.name,
-                user
-            );
-            throw new NotAcceptableException(this._uList.mailExists);
-        }
-        throw new NotAcceptableException(this._uList.error);
-    }
-
-    /**
-     * Counts users that are not soft-deleted (admin statistics).
-     * @returns {Promise<number>} User count.
-     */
-    async getNonDeletedUsersCountForAdminStatistics(): Promise<number> {
-        return this.userRepository.count({
-            where: { status: Not(StatusEnum.DELETED) },
-        });
-    }
-
-    /**
-     * Groups non-deleted users by status (admin statistics).
-     * @returns {Promise<IAdminStatusCount[]>} Status counts.
-     */
-    async getUsersGroupedByStatusForAdminStatistics(): Promise<IAdminStatusCount[]> {
-        const rows = await this.createQueryBuilder('u')
-            .select('u.status', 'status')
-            .addSelect('COUNT(*)', 'count')
-            .where('u.status <> :deleted', { deleted: StatusEnum.DELETED })
-            .groupBy('u.status')
-            .getRawMany<{ status: string; count: string }>();
-        return rows.map((r) => ({
-            status: r.status,
-            count: parseInt(r.count ?? '0', 10),
-        }));
-    }
-
-    /**
-     * New user registrations in a period, with optional time granularity (admin statistics).
-     * @param {ITimePeriodFilter} timePeriod - Start, end, and optional granularity.
-     * @returns {Promise<IAdminTimeSeriesStats>} Totals and optional series.
-     */
-    async getNewUsersStatsForAdminStatistics(
-        timePeriod: ITimePeriodFilter,
-    ): Promise<IAdminTimeSeriesStats> {
-        const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
-            () => this.createQueryBuilder('u').where('u.status <> :userStatus', {
-                userStatus: StatusEnum.DELETED,
-            }),
-            'u',
-            timePeriod,
-        );
-        return { total: raw.total, data: raw.data };
-    }
+  /**
+   * New user registrations in a period, with optional time granularity (admin statistics).
+   * @param {ITimePeriodFilter} timePeriod - Start, end, and optional granularity.
+   * @returns {Promise<IAdminTimeSeriesStats>} Totals and optional series.
+   */
+  async getNewUsersStatsForAdminStatistics(
+    timePeriod: ITimePeriodFilter,
+  ): Promise<IAdminTimeSeriesStats> {
+    const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
+      () =>
+        this.createQueryBuilder('u').where('u.status <> :userStatus', {
+          userStatus: StatusEnum.DELETED,
+        }),
+      'u',
+      timePeriod,
+    );
+    return { total: raw.total, data: raw.data };
+  }
 }

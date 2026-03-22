@@ -6,15 +6,15 @@ import { VisitsModule as VisitsModuleCore } from '../../../../core/modules/visit
 import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
 
 @Module({
-    imports: [
-        VisitsModuleCore,
-        JwtModule.registerAsync({
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                secret: config.get<string>('JWT_SECRET')
-            })
-        })
-    ],
-    providers: [VisitsResolver, OptionalJwtAuthGuard]
+  imports: [
+    VisitsModuleCore,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+    }),
+  ],
+  providers: [VisitsResolver, OptionalJwtAuthGuard],
 })
 export class VisitsModule {}

@@ -10,45 +10,47 @@ import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
  */
 @ObjectType()
 export class ProductSkuSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idProduct: number;
+  @Field(() => Int)
+  idProduct: number;
 
-    @Field(() => ProductSchema, { nullable: true })
-    product?: ProductSchema;
+  @Field(() => ProductSchema, { nullable: true })
+  product?: ProductSchema;
 
-    @Field()
-    skuCode: string;
+  @Field()
+  skuCode: string;
 
-    /**
-     * Variation options as key-value object, e.g. {"Color":"Amarillo","Talla":"M"}.
-     */
-    @Field(() => GraphQLJSON, { description: 'Variation options as key-value object' })
-    variationOptions: VariationOptions;
+  /**
+   * Variation options as key-value object, e.g. {"Color":"Amarillo","Talla":"M"}.
+   */
+  @Field(() => GraphQLJSON, {
+    description: 'Variation options as key-value object',
+  })
+  variationOptions: VariationOptions;
 
-    @Field(() => Int, { nullable: true })
-    quantity?: number | null;
+  @Field(() => Int, { nullable: true })
+  quantity?: number | null;
 
-    @Field(() => Float, { nullable: true })
-    price?: number;
+  @Field(() => Float, { nullable: true })
+  price?: number;
 
-    @Field(() => Int, { nullable: true })
-    idCurrency?: number;
+  @Field(() => Int, { nullable: true })
+  idCurrency?: number;
 
-    @Field(() => CurrencySchema, { nullable: true })
-    currency?: CurrencySchema;
+  @Field(() => CurrencySchema, { nullable: true })
+  currency?: CurrencySchema;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    modificationBusiness?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  modificationBusiness?: BusinessSchema;
 }

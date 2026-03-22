@@ -7,29 +7,29 @@ import { TokenExpiredError } from 'jsonwebtoken';
  */
 @Injectable()
 export class TokenInfoGuard extends AuthGuard('jwt') {
-    private readonly logger = new Logger(TokenInfoGuard.name);
-    canActivate(context: ExecutionContext) {
-        const request = context.switchToHttp().getRequest();
+  private readonly logger = new Logger(TokenInfoGuard.name);
+  canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest();
 
-        if (!request?.cookies?.token && !request?.headers?.token) {
-            return true;
-        }
-
-        return super.canActivate(context);
+    if (!request?.cookies?.token && !request?.headers?.token) {
+      return true;
     }
 
-    handleRequest(err, user, info): any {
-        if (info instanceof TokenExpiredError) {
-            return null;
-        }
-        if (err) {
-            return null;
-        }
+    return super.canActivate(context);
+  }
 
-        if (!user) {
-            return null;
-        }
-        this.logger.log(`user => ${JSON.stringify(user)}`);
-        return user;
+  handleRequest(err, user, info): any {
+    if (info instanceof TokenExpiredError) {
+      return null;
     }
+    if (err) {
+      return null;
+    }
+
+    if (!user) {
+      return null;
+    }
+    this.logger.log(`user => ${JSON.stringify(user)}`);
+    return user;
+  }
 }

@@ -7,6 +7,5 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
 @Module({
   providers: [UsersResolver],
   imports: [UsersModuleCore, RolesModule, TokensModule],
-
 })
-export class UsersModule { }
+export class UsersModule {}

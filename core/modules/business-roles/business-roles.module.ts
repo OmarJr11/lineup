@@ -9,4 +9,4 @@ import { BusinessRolesGettersService } from './business-roles-getters.service';
   providers: [BusinessRolesService, BusinessRolesGettersService],
   exports: [BusinessRolesService, BusinessRolesGettersService],
 })
-export class BusinessRolesModule { }
+export class BusinessRolesModule {}

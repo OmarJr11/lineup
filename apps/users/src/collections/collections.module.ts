@@ -10,15 +10,15 @@ import { OptionalJwtAuthGuard } from '../../../../core/common/guards';
  * Exposes product collections query for personalized recommendations.
  */
 @Module({
-    imports: [
-        ProductCollectionsModule,
-        JwtModule.registerAsync({
-            inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                secret: config.get<string>('JWT_SECRET'),
-            }),
-        }),
-    ],
-    providers: [CollectionsResolver, OptionalJwtAuthGuard],
+  imports: [
+    ProductCollectionsModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+    }),
+  ],
+  providers: [CollectionsResolver, OptionalJwtAuthGuard],
 })
 export class CollectionsModule {}

@@ -26,15 +26,24 @@ export class QueuesManager {
   }
 
   constructor(
-    @InjectQueue(QueuesManager.queueNames.cache) cacheQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.catalogs) catalogsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.searchData) searchDataQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.mails) mailsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.reviews) reviewsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.discounts) discountsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.entityAudits) entityAuditsQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.files) filesQueue: Queue,
-    @InjectQueue(QueuesManager.queueNames.products) productsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.cache)
+    private readonly cacheQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.catalogs)
+    private readonly catalogsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.searchData)
+    private readonly searchDataQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.mails)
+    private readonly mailsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.reviews)
+    private readonly reviewsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.discounts)
+    private readonly discountsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.entityAudits)
+    private readonly entityAuditsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.files)
+    private readonly filesQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.products)
+    private readonly productsQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
     this.queues[QueuesManager.queueNames.catalogs] = catalogsQueue;
@@ -47,20 +56,20 @@ export class QueuesManager {
     this.queues[QueuesManager.queueNames.products] = productsQueue;
 
     if (
-      Object.keys(this.queues).length !=
+      Object.keys(this.queues).length !==
       Object.keys(QueuesManager.queueNames).length
     ) {
       throw new Error(`Queues length mismatch! All queues should be loaded`);
     }
 
-    this.resumeQueues();
+    void this.resumeQueues();
     this.logger.log('Setting up graceful stop for queues');
     this.setupGracefulStop();
   }
 
-  setupGracefulStop() {
-    process.on('SIGTERM', this.gracefulStop.bind(this));
-    process.on('SIGINT', this.gracefulStop.bind(this));
+  setupGracefulStop(): void {
+    process.on('SIGTERM', this.handleShutdownSignal);
+    process.on('SIGINT', this.handleShutdownSignal);
   }
 
   private sigReceived = false;
@@ -78,12 +87,9 @@ export class QueuesManager {
 
     // Process receives 2 signals in a row because of it's parent/child hierarchy
     // We should react to only one
-    setTimeout(
-      function () {
-        this.sigReceiving = false;
-      }.bind(this),
-      1000,
-    );
+    setTimeout(() => {
+      this.sigReceiving = false;
+    }, 1000);
 
     this.sigReceived = true;
     this.logger.warn(`Received ${sig}. Pausing queues`);
@@ -95,7 +101,7 @@ export class QueuesManager {
     this.logger.log('Resuming queues if they are paused');
     await Promise.all(
       Object.values(this.queues).map(async (q) => {
-        if (q.isPaused()) {
+        if (await q.isPaused()) {
           this.logger.log(`Resuming queue: ${q.name}`);
           await q.resume();
         }
@@ -107,8 +113,12 @@ export class QueuesManager {
     return Object.keys(QueuesManager.queueNames).map((qk) =>
       BullModule.registerQueue({
         name: QueuesManager.queueNames[qk],
-        defaultJobOptions: { removeOnComplete: true }
+        defaultJobOptions: { removeOnComplete: true },
       }),
     );
   }
+
+  private readonly handleShutdownSignal = (signal: NodeJS.Signals): void => {
+    void this.gracefulStop(signal);
+  };
 }

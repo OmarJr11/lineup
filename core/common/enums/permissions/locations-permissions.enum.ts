@@ -1,5 +1,5 @@
 export enum LocationsPermission {
-    CREATE = 'LOCCREATE',
-    UPDATE = 'LOCUPDATE',
-    DELETE = 'LOCDELETE',
+  CREATE = 'LOCCREATE',
+  UPDATE = 'LOCUPDATE',
+  DELETE = 'LOCDELETE',
 }

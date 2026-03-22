@@ -37,11 +37,12 @@ export class RolesService extends BasicService<Role> {
    * @returns {Promise<Role>} - The found role
    */
   async findByCode(code: RolesCodesEnum): Promise<Role> {
-    return await this.findOneWithOptionsOrFail({ where: { code } })
-      .catch((error) => {
+    return await this.findOneWithOptionsOrFail({ where: { code } }).catch(
+      (error) => {
         LogError(this.logger, error, this.rList.roleNotFound.message);
         throw new NotFoundException(this.rList.roleNotFound);
-      });
+      },
+    );
   }
 
   /**
@@ -62,7 +63,13 @@ export class RolesService extends BasicService<Role> {
    * @param {string[]} codes - permissions code to verify
    * @returns {Promise<boolean>}
    */
-  async businessHasPermission(idBusiness: number, codes: string[]): Promise<boolean> {
-    return this.rolesPermissionsChecker.businessHasPermission(idBusiness, codes);
+  async businessHasPermission(
+    idBusiness: number,
+    codes: string[],
+  ): Promise<boolean> {
+    return this.rolesPermissionsChecker.businessHasPermission(
+      idBusiness,
+      codes,
+    );
   }
 }

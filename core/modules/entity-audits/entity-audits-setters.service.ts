@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
@@ -14,31 +18,31 @@ import { RecordEntityAuditDto } from './dto';
  */
 @Injectable()
 export class EntityAuditsSettersService extends BasicService<EntityAudit> {
-    private readonly logger = new Logger(EntityAuditsSettersService.name);
-    private readonly rCreate = entityAuditsResponses.create;
+  private readonly logger = new Logger(EntityAuditsSettersService.name);
+  private readonly rCreate = entityAuditsResponses.create;
 
-    constructor(
-        @InjectRepository(EntityAudit)
-        private readonly entityAuditRepository: Repository<EntityAudit>,
-    ) {
-        super(entityAuditRepository);
-    }
+  constructor(
+    @InjectRepository(EntityAudit)
+    private readonly entityAuditRepository: Repository<EntityAudit>,
+  ) {
+    super(entityAuditRepository);
+  }
 
-    /**
-     * Record an audit entry for any entity change.
-     * @param {RecordEntityAuditDto} input - The audit data.
-     * @returns {Promise<EntityAudit>} The created audit record.
-     */
-    @Transactional()
-    async record(
-        input: RecordEntityAuditDto,
-        userOrBusinessReq: IUserOrBusinessReq
-    ): Promise<EntityAudit> {
-        try {
-            return await this.save(input, userOrBusinessReq);
-        } catch (error) {
-            LogError(this.logger, error, this.record.name, userOrBusinessReq);
-            throw new InternalServerErrorException(this.rCreate.error);
-        }
+  /**
+   * Record an audit entry for any entity change.
+   * @param {RecordEntityAuditDto} input - The audit data.
+   * @returns {Promise<EntityAudit>} The created audit record.
+   */
+  @Transactional()
+  async record(
+    input: RecordEntityAuditDto,
+    userOrBusinessReq: IUserOrBusinessReq,
+  ): Promise<EntityAudit> {
+    try {
+      return await this.save(input, userOrBusinessReq);
+    } catch (error) {
+      LogError(this.logger, error, this.record.name, userOrBusinessReq);
+      throw new InternalServerErrorException(this.rCreate.error);
     }
+  }
 }

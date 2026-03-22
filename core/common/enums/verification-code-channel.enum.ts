@@ -6,4 +6,6 @@ export enum VerificationCodeChannelEnum {
   PHONE = 'phone',
 }
 
-registerEnumType(VerificationCodeChannelEnum, { name: 'VerificationCodeChannelEnum' });
+registerEnumType(VerificationCodeChannelEnum, {
+  name: 'VerificationCodeChannelEnum',
+});

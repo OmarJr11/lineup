@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  Scope,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -21,7 +16,7 @@ export class RolePermissionsService extends BasicService<RolePermission> {
     @Inject(REQUEST)
     private readonly userRequest: Request,
     @InjectRepository(RolePermission)
-    private readonly rolePermissionsRepository: Repository<RolePermission>
+    private readonly rolePermissionsRepository: Repository<RolePermission>,
   ) {
     super(rolePermissionsRepository, userRequest);
   }

@@ -1,7 +1,7 @@
 export class CreateTokenDto {
-    idUser?: number;
-    idBusiness?: number;
-    token: string;
-    refresh: string;
-    creationDate: Date;
+  idUser?: number;
+  idBusiness?: number;
+  token: string;
+  refresh: string;
+  creationDate: Date;
 }

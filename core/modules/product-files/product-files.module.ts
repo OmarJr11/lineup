@@ -7,19 +7,16 @@ import { ProductFilesSettersService } from './product-files-setters.service';
 import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ProductFile]),
-    EntityAuditsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([ProductFile]), EntityAuditsModule],
   providers: [
     ProductFilesService,
     ProductFilesGettersService,
-    ProductFilesSettersService
+    ProductFilesSettersService,
   ],
   exports: [
     ProductFilesService,
     ProductFilesGettersService,
-    ProductFilesSettersService
-  ]
+    ProductFilesSettersService,
+  ],
 })
 export class ProductFilesModule {}

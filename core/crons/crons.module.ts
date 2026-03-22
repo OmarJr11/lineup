@@ -10,11 +10,11 @@ import { DiscountsModule } from '../modules/discounts/discounts.module';
  * Used by the admin app for background tasks.
  */
 @Module({
-    imports: [
-        ScheduleModule.forRoot(),
-        BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
-        DiscountsModule,
-    ],
-    providers: [DiscountsCronService],
+  imports: [
+    ScheduleModule.forRoot(),
+    BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
+    DiscountsModule,
+  ],
+  providers: [DiscountsCronService],
 })
 export class CronsModule {}

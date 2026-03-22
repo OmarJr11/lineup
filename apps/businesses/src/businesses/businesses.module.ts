@@ -6,12 +6,7 @@ import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { AuthModule } from '../../../../core/modules/auth/auth.module';
 
 @Module({
-  imports: [
-    BusinessesModuleCore,
-    RolesModule,
-    TokensModule,
-    AuthModule
-  ],
+  imports: [BusinessesModuleCore, RolesModule, TokensModule, AuthModule],
   providers: [BusinessesResolver],
 })
 export class BusinessesModule {}

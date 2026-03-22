@@ -1,11 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
 import {
-    IsNotEmpty,
-    IsPhoneNumber,
-    IsString,
-    IsUrl,
-    Validate,
-    ValidateIf,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  IsUrl,
+  Validate,
+  ValidateIf,
 } from 'class-validator';
 import { UrlOrPhoneExclusiveValidator } from '../../../common/validators/url-or-phone-exclusive.validator';
 
@@ -15,19 +15,19 @@ import { UrlOrPhoneExclusiveValidator } from '../../../common/validators/url-or-
  */
 @InputType()
 export class SocialNetworkContactInput {
-    @Field({ nullable: true })
-    @Validate(UrlOrPhoneExclusiveValidator)
-    @ValidateIf((o) => !o.phone || o.url)
-    @IsNotEmpty({ message: 'url or phone must be provided' })
-    @IsString()
-    @IsUrl()
-    url?: string;
+  @Field({ nullable: true })
+  @Validate(UrlOrPhoneExclusiveValidator)
+  @ValidateIf((o) => !o.phone || o.url)
+  @IsNotEmpty({ message: 'url or phone must be provided' })
+  @IsString()
+  @IsUrl()
+  url?: string;
 
-    @Field({ nullable: true })
-    @Validate(UrlOrPhoneExclusiveValidator)
-    @ValidateIf((o) => !o.url || o.phone)
-    @IsNotEmpty({ message: 'url or phone must be provided' })
-    @IsString()
-    @IsPhoneNumber()
-    phone?: string;
+  @Field({ nullable: true })
+  @Validate(UrlOrPhoneExclusiveValidator)
+  @ValidateIf((o) => !o.url || o.phone)
+  @IsNotEmpty({ message: 'url or phone must be provided' })
+  @IsString()
+  @IsPhoneNumber()
+  phone?: string;
 }

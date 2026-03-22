@@ -20,12 +20,12 @@ import { QueueNamesEnum } from '../../common/enums';
   providers: [
     ProductReactionsService,
     ProductReactionsGettersService,
-    ProductReactionsSettersService
+    ProductReactionsSettersService,
   ],
   exports: [
     ProductReactionsService,
     ProductReactionsGettersService,
-    ProductReactionsSettersService
-  ]
+    ProductReactionsSettersService,
+  ],
 })
 export class ProductReactionsModule {}
