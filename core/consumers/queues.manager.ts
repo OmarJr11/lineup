@@ -18,6 +18,7 @@ export class QueuesManager {
       entityAudits: QueueNamesEnum.entityAudits,
       files: QueueNamesEnum.files,
       products: QueueNamesEnum.products,
+      currency: QueueNamesEnum.currency,
     };
   }
 
@@ -44,6 +45,8 @@ export class QueuesManager {
     private readonly filesQueue: Queue,
     @InjectQueue(QueuesManager.queueNames.products)
     private readonly productsQueue: Queue,
+    @InjectQueue(QueuesManager.queueNames.currency)
+    private readonly currencyQueue: Queue,
   ) {
     this.queues[QueuesManager.queueNames.cache] = cacheQueue;
     this.queues[QueuesManager.queueNames.catalogs] = catalogsQueue;
@@ -54,6 +57,7 @@ export class QueuesManager {
     this.queues[QueuesManager.queueNames.entityAudits] = entityAuditsQueue;
     this.queues[QueuesManager.queueNames.files] = filesQueue;
     this.queues[QueuesManager.queueNames.products] = productsQueue;
+    this.queues[QueuesManager.queueNames.currency] = currencyQueue;
 
     if (
       Object.keys(this.queues).length !==

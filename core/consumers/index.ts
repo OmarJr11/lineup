@@ -1,4 +1,5 @@
 export * from './catalogs.consumer';
+export * from './currency.consumer';
 export * from './consumers.module';
 export * from './discounts.consumer';
 export * from './entity-audits.consumer';

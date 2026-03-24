@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import type { Request, Response } from 'express';
+import type { GraphQLFormattedError } from 'graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
 import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middleware.middleware';
@@ -51,20 +53,44 @@ import { BullModule } from '@nestjs/bullmq';
       driver: ApolloDriver,
       resolvers: { JSON: GraphQLJSON },
       autoSchemaFile: true,
-      playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
-      debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
+      playground:
+        process.env.NODE_ENV !== (EnvironmentsEnum.Production as string),
+      debug: process.env.NODE_ENV !== (EnvironmentsEnum.Production as string),
       sortSchema: true,
       introspection: true,
-      context: ({ req, res }) => ({ req, res }),
-      installSubscriptionHandlers: true,
-      formatError: (error: any) => {
-        const message = error?.message || 'Internal server error';
-        const extCode = error?.extensions?.code;
-        const extResponse = error?.extensions?.response;
+      context: ({ req, res }: { req: Request; res: Response }) => ({
+        req,
+        res,
+      }),
+      installSubscriptionHandlers: false,
+      formatError: (formattedError: GraphQLFormattedError) => {
+        const message = formattedError.message || 'Internal server error';
+        const extensions = formattedError.extensions;
+        const extCode =
+          extensions !== undefined &&
+          extensions !== null &&
+          typeof extensions === 'object' &&
+          'code' in extensions
+            ? extensions.code
+            : undefined;
         let code = 500;
-        if (extResponse && typeof extResponse.statusCode === 'number') {
-          code = extResponse.statusCode;
-        } else if (extCode) {
+        const responsePayload =
+          extensions !== undefined &&
+          extensions !== null &&
+          typeof extensions === 'object' &&
+          'response' in extensions
+            ? extensions.response
+            : undefined;
+        if (
+          responsePayload !== undefined &&
+          responsePayload !== null &&
+          typeof responsePayload === 'object' &&
+          'statusCode' in responsePayload &&
+          typeof (responsePayload as { statusCode: unknown }).statusCode ===
+            'number'
+        ) {
+          code = (responsePayload as { statusCode: number }).statusCode;
+        } else if (typeof extCode === 'string' || typeof extCode === 'number') {
           switch (String(extCode)) {
             case 'BAD_REQUEST':
               code = 400;

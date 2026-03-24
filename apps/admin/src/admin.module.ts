@@ -54,7 +54,7 @@ import { AdminStatisticsModule } from './admin-statistics/admin-statistics.modul
       // Include both `req` and `res` in the GraphQL context so resolvers
       // can set cookies on the response (used by AuthService.setCookies).
       context: ({ req, res }) => ({ req, res }),
-      installSubscriptionHandlers: true,
+      installSubscriptionHandlers: false,
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
