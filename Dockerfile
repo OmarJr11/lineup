@@ -1,10 +1,18 @@
-# Use official Node.js image (latest LTS 22.16.0)
-FROM node:22.16.0-alpine
+# Debian slim: Puppeteer's bundled Chrome targets glibc; Alpine (musl) often yields ENOENT or a broken binary.
+FROM node:24.14.0-bookworm-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    chromium \
+    ca-certificates \
+    fonts-liberation \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 COPY package*.json ./
 RUN npm install
 

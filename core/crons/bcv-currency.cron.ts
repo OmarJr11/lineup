@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Queue } from 'bullmq';
 import {
@@ -12,7 +12,7 @@ import {
  * Actual scraping runs in {@link CurrencyConsumer}.
  */
 @Injectable()
-export class BcvCurrencyCronService {
+export class BcvCurrencyCronService implements OnModuleInit {
   private readonly logger = new Logger(BcvCurrencyCronService.name);
 
   /**
@@ -22,6 +22,10 @@ export class BcvCurrencyCronService {
     @InjectQueue(QueueNamesEnum.currency)
     private readonly currencyQueue: Queue,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.enqueueSaveBcvOfficialRates();
+  }
 
   /**
    * Adds a {@link CurrencyConsumerEnum.SaveDataCurrencyBCV} job every day at 00:00 `America/Caracas`.

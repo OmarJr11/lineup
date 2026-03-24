@@ -13,6 +13,13 @@ const CARACAS_TIME_ZONE = 'America/Caracas';
 const DESKTOP_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+const PUPPETEER_DOCKER_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+] as const;
+
 /**
  * Scrapes official USD/EUR rates from the BCV website and stores a snapshot in Redis.
  */
@@ -124,8 +131,10 @@ export class ScrappingCacheService {
   }> {
     let browser: puppeteer.Browser | null = null;
     try {
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
       browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        ...(executablePath ? { executablePath } : {}),
+        args: [...PUPPETEER_DOCKER_ARGS],
       });
       const page = await browser.newPage();
       await page.setUserAgent(DESKTOP_USER_AGENT);
