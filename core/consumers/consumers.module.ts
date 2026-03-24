@@ -3,6 +3,7 @@ import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
+  CurrencyConsumer,
   DiscountsConsumer,
   EntityAuditsConsumer,
   MailsConsumer,
@@ -24,6 +25,7 @@ import { EntityAuditsModule } from '../modules/entity-audits/entity-audits.modul
 import { DiscountsModule } from '../modules/discounts/discounts.module';
 import { GeminiModule } from '../modules/gemini/gemini.module';
 import { TagsModule } from '../modules/tags/tags.module';
+import { ScrappingModule } from '../modules/scrapping/scrapping.module';
 
 @Module({})
 export class ConsumersModule {
@@ -47,10 +49,13 @@ export class ConsumersModule {
         EntityAuditsModule,
         DiscountsModule,
         GeminiModule,
+        TagsModule,
+        ScrappingModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
         CatalogsConsumer,
+        CurrencyConsumer,
         DiscountsConsumer,
         EntityAuditsConsumer,
         MailsConsumer,

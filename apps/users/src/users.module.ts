@@ -55,7 +55,7 @@ import { StatesModule } from './states/states.module';
       sortSchema: true,
       introspection: true,
       context: ({ req, res }) => ({ req, res }),
-      installSubscriptionHandlers: true,
+      installSubscriptionHandlers: false,
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
