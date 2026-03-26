@@ -5,7 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThan, LessThanOrEqual, Not, Repository } from 'typeorm';
+import {
+  In,
+  LessThan,
+  LessThanOrEqual,
+  Not,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { BasicService } from '../../common/services';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
@@ -18,7 +25,9 @@ import { DiscountProductsGettersService } from '../discount-products/discount-pr
 import { EntityAuditsGettersService } from '../entity-audits/entity-audits-getters.service';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 import { ProductsGettersService } from '../products/products-getters.service';
+import type { ITimeSeriesStats } from '../business-statistics/interfaces/business-visits-stats.interface';
 
+const DEFAULT_TOP_LIMIT = 10;
 /**
  * Read-only service for querying discounts.
  */
@@ -50,8 +59,8 @@ export class DiscountsGettersService extends BasicService<Discount> {
         where: { id, status: Not(StatusEnum.DELETED) },
         relations: this.relations,
       });
-    } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -72,8 +81,8 @@ export class DiscountsGettersService extends BasicService<Discount> {
         relations: this.relations,
       });
       return discount;
-    } catch (error) {
-      LogError(this.logger, error, this.findOneByIdAndScope.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findOneByIdAndScope.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -357,28 +366,39 @@ export class DiscountsGettersService extends BasicService<Discount> {
   }
 
   /**
-   * Get discounts by status (active, pending, expired) for statistics.
+   * Discounts by lifecycle bucket for statistics.
+   * Optional overlap on [startDate, endDate]; snapshot at period end (or now).
+   * Optional limit caps rows (id ASC). Ignored when undefined or ≤ 0.
+   * @param {number} idBusiness - The business ID.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
+   * @returns {Promise<{ label: string; count: number }[]>} The discounts by status.
    */
   async getByStatusForStatistics(
     idBusiness: number,
+    startDate: string,
+    endDate: string,
   ): Promise<{ label: string; count: number }[]> {
-    const now = new Date();
-    const discounts = await this.find({
-      where: {
-        idCreationBusiness: idBusiness,
-        status: Not(StatusEnum.DELETED),
-      },
-      select: ['id', 'status', 'startDate', 'endDate'],
-    });
+    const qb = this.createDiscountStatisticsBaseQuery(idBusiness);
+    this.attachDiscountStatisticsOverlapFilter(qb, startDate, endDate);
+    qb.select([
+      'd.id',
+      'd.status',
+      'd.startDate',
+      'd.endDate',
+      'd.isExpired',
+    ]).orderBy('d.id', 'ASC');
+    const discounts = await qb.getMany();
+    const asOf = startDate && endDate ? new Date(endDate) : new Date();
     const buckets: Record<string, number> = {
       active: 0,
       pending: 0,
       expired: 0,
     };
     for (const d of discounts) {
-      if (d.endDate < now) {
+      if (d.isExpired || new Date(d.endDate) < asOf) {
         buckets.expired++;
-      } else if (d.startDate > now) {
+      } else if (new Date(d.startDate) > asOf) {
         buckets.pending++;
       } else {
         buckets.active++;
@@ -392,27 +412,30 @@ export class DiscountsGettersService extends BasicService<Discount> {
   }
 
   /**
-   * Get discounts by type for statistics.
-   *
+   * Discounts by type (same visibility, overlap, and row cap as by status).
    * @param {number} idBusiness - The business ID.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<{ label: string; count: number }[]>} The discounts by type.
    */
   async getByTypeForStatistics(
     idBusiness: number,
+    startDate: string,
+    endDate: string,
   ): Promise<{ label: string; count: number }[]> {
-    const rows = await this.createQueryBuilder('d')
-      .select('d.discount_type', 'type')
-      .addSelect('COUNT(*)', 'count')
-      .where('d.id_creation_business = :idBusiness', { idBusiness })
-      .andWhere('d.status <> :status', { status: StatusEnum.DELETED })
-      .groupBy('d.discount_type')
-      .getRawMany<{ type: string; count: string }>();
+    const qb = this.createDiscountStatisticsBaseQuery(idBusiness);
+    this.attachDiscountStatisticsOverlapFilter(qb, startDate, endDate);
+    qb.select(['d.discountType']).orderBy('d.id', 'ASC');
+    const rows = await qb.getMany();
     const map: Record<string, number> = {
       [DiscountTypeEnum.PERCENTAGE]: 0,
       [DiscountTypeEnum.FIXED]: 0,
     };
     for (const r of rows) {
-      map[r.type] = parseInt(r.count ?? '0', 10);
+      const t = r.discountType;
+      if (t === DiscountTypeEnum.PERCENTAGE || t === DiscountTypeEnum.FIXED) {
+        map[t]++;
+      }
     }
     return [
       {
@@ -427,25 +450,48 @@ export class DiscountsGettersService extends BasicService<Discount> {
   }
 
   /**
-   * Count discounts expiring soon for statistics.
+   * Among discounts **created** in `[startDate, endDate]`, counts those whose `end_date`
+   * falls in that same window (inclusive) — campaigns created in the period that also
+   * expire during it (“van a vencer” dentro del rango analizado).
    *
    * @param {number} idBusiness - The business ID.
-   * @param {number} days - The number of days to check for expiring discounts.
-   * @returns {Promise<number>} The count of expiring discounts.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
+   * @returns {Promise<ITimeSeriesStats>} Total matching discounts.
    */
-  async getExpiringSoonCountForStatistics(
+  async getExpiringSoonStatsForStatistics(
     idBusiness: number,
-    days: number = 7,
-  ): Promise<number> {
-    const now = new Date();
-    const future = new Date(now);
-    future.setDate(future.getDate() + days);
-    return await this.createQueryBuilder('d')
-      .where('d.id_creation_business = :idBusiness', { idBusiness })
-      .andWhere('d.status <> :status', { status: StatusEnum.DELETED })
-      .andWhere('d.end_date >= :now', { now })
-      .andWhere('d.end_date <= :future', { future })
-      .getCount();
+    startDate: string,
+    endDate: string,
+  ): Promise<ITimeSeriesStats> {
+    const rangeStart = new Date(startDate);
+    const rangeEnd = new Date(endDate);
+    const buildBase = (): SelectQueryBuilder<Discount> => {
+      const qb = this.createDiscountStatisticsBaseQuery(idBusiness);
+      qb.andWhere('d.creationDate >= :expRangeStart', {
+        expRangeStart: rangeStart,
+      }).andWhere('d.creationDate <= :expRangeEnd', { expRangeEnd: rangeEnd });
+      return qb;
+    };
+    const discounts = await buildBase().getMany();
+
+    const today = new Date();
+    const d = today.getUTCDate();
+    const m = today.getUTCMonth();
+    const y = today.getUTCFullYear();
+    const asOf = new Date(Date.UTC(y, m, d + 7, 23, 59, 59, 999));
+    let total = 0;
+    for (const d of discounts) {
+      if (
+        d.status === StatusEnum.ACTIVE &&
+        new Date(d.endDate) <= asOf &&
+        asOf >= new Date(d.startDate)
+      ) {
+        total++;
+      }
+    }
+
+    return { total };
   }
 
   /**
@@ -525,5 +571,69 @@ export class DiscountsGettersService extends BasicService<Discount> {
       .andWhere('d.end_date >= :now', { now })
       .andWhere('d.end_date <= :future', { future })
       .getCount();
+  }
+
+  /**
+   * Parses an inclusive `[rangeStart, rangeEnd]` on `end_date` from ISO bounds.
+   * @param {string} [startDate] - Range start.
+   * @param {string} [endDate] - Range end.
+   * @returns {{ rangeStart: Date; rangeEnd: Date } | null} Null when missing or invalid.
+   */
+  private resolveExpiringSoonFilterWindow(
+    startDate?: string,
+    endDate?: string,
+  ): { rangeStart: Date; rangeEnd: Date } | null {
+    if (!startDate || !endDate) {
+      return null;
+    }
+    const rangeStart = new Date(startDate);
+    const rangeEnd = new Date(endDate);
+    if (
+      Number.isNaN(rangeStart.getTime()) ||
+      Number.isNaN(rangeEnd.getTime()) ||
+      rangeStart > rangeEnd
+    ) {
+      return null;
+    }
+    return { rangeStart, rangeEnd };
+  }
+
+  /**
+   * Base QB for business discount statistics (expired soft-deletes included).
+   * @param {number} idBusiness - Business id.
+   * @returns {SelectQueryBuilder<Discount>} Alias `d`.
+   */
+  private createDiscountStatisticsBaseQuery(
+    idBusiness: number,
+  ): SelectQueryBuilder<Discount> {
+    return this.createQueryBuilder('d')
+      .where('d.idCreationBusiness = :idBusiness', { idBusiness })
+      .andWhere(
+        '(d.status <> :deletedStatus OR (d.status = :deletedStatus AND d.isExpired = :expiredTrue))',
+        {
+          deletedStatus: StatusEnum.DELETED,
+          expiredTrue: true,
+        },
+      );
+  }
+
+  /**
+   * Keeps discounts whose campaign interval intersects the given period.
+   * @param {SelectQueryBuilder<Discount>} queryBuilder - Alias `d`.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
+   */
+  private attachDiscountStatisticsOverlapFilter(
+    queryBuilder: SelectQueryBuilder<Discount>,
+    startDate: string,
+    endDate: string,
+  ): void {
+    if (startDate && endDate) {
+      queryBuilder
+        .andWhere('d.creationDate <= :rangeEnd', { rangeEnd: endDate })
+        .andWhere('d.creationDate >= :rangeStart', {
+          rangeStart: startDate,
+        });
+    }
   }
 }

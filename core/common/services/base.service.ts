@@ -725,13 +725,28 @@ export class BasicService<Entity extends ObjectLiteral> {
    * @param {*} data - Data to update the entity
    * @param {(Entity|Entity[])} entity - Entity to update
    * @param {IUserOrBusinessReq} [userOrBusiness] - User or business who executed the action
-   * @returns {Promise<any>} with the updated entity
+   * @returns {Promise<Entity | Entity[]>} with the updated entity
    */
+  protected async updateEntity(
+    data: any,
+    entity: Entity,
+    userOrBusiness?: IUserOrBusinessReq,
+  ): Promise<Entity>;
+  protected async updateEntity(
+    data: any,
+    entity: Entity[],
+    userOrBusiness?: IUserOrBusinessReq,
+  ): Promise<Entity[]>;
   protected async updateEntity(
     data: any,
     entity: Entity | Entity[],
     userOrBusiness?: IUserOrBusinessReq,
-  ): Promise<any> {
+  ): Promise<Entity | Entity[]>;
+  protected async updateEntity(
+    data: any,
+    entity: Entity | Entity[],
+    userOrBusiness?: IUserOrBusinessReq,
+  ): Promise<Entity | Entity[]> {
     if (this._request !== undefined) {
       const { ip, coordinate } = this.getIpAndCoordinate();
       data.modificationIp = ip;

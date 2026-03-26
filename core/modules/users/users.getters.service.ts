@@ -283,7 +283,7 @@ export class UsersGettersService extends BasicService<User> {
    */
   async getNewUsersStatsForAdminStatistics(
     timePeriod: ITimePeriodFilter,
-  ): Promise<IAdminTimeSeriesStats> {
+  ): Promise<IAdminTimeSeriesStats> {/*
     const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
       () =>
         this.createQueryBuilder('u').where('u.status <> :userStatus', {
@@ -291,7 +291,7 @@ export class UsersGettersService extends BasicService<User> {
         }),
       'u',
       timePeriod,
-    );
-    return { total: raw.total, data: raw.data };
+    );*/
+    return { total: 0, data: [] };
   }
 }

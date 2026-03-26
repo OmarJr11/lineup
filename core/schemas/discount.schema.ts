@@ -37,6 +37,9 @@ export class DiscountSchema {
   @Field()
   endDate: Date;
 
+  @Field()
+  isExpired: boolean;
+
   @Field(() => DiscountScopeEnum)
   scope: DiscountScopeEnum;
 

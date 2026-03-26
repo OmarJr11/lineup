@@ -41,8 +41,11 @@ export class DiscountsConsumer extends WorkerHost {
    * Process incoming jobs.
    * @param {Job} job - The job to process.
    */
-  async process(job: Job): Promise<void> {
-    switch (job.name) {
+  async process(
+    job: Job<ActivateDiscountJobData | RemoveExpiredDiscountJobData>,
+  ): Promise<void> {
+    const name: DiscountsConsumerEnum = job.name as DiscountsConsumerEnum;
+    switch (name) {
       case DiscountsConsumerEnum.ActivateDiscount:
         await this.processActivateDiscount(job);
         break;
@@ -97,7 +100,9 @@ export class DiscountsConsumer extends WorkerHost {
     }
     const discounts = await this.discountsGettersService.findAllByIds(ids);
     const userReq: IUserReq = { userId: 1, username: 'admin' };
-    for (const discount of discounts)
+    for (const discount of discounts) {
+      await this.discountsSettersService.markAsExpired(discount, userReq);
       await this.discountsSettersService.removeDiscount(discount, userReq);
+    }
   }
 }

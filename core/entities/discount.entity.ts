@@ -52,6 +52,12 @@ export class Discount extends BaseEntity {
   @Column({ type: 'timestamp with time zone', name: 'end_date' })
   endDate: Date;
 
+  /**
+   * True when the discount period has ended (removal time is after endDate), e.g. natural expiry or manual delete after the end date.
+   */
+  @Column({ type: 'boolean', name: 'is_expired', default: false })
+  isExpired: boolean;
+
   @Column({ type: 'enum', enum: DiscountScopeEnum })
   scope: DiscountScopeEnum;
 

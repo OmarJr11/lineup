@@ -1,11 +1,8 @@
-import type { ITimeSeriesDataPoint } from './time-series-data-point.interface';
-
 /**
  * Time-series stats: total count and optional data points for charts.
  */
 export interface ITimeSeriesStats {
   total: number;
-  data?: ITimeSeriesDataPoint[];
 }
 
 /**
@@ -14,7 +11,6 @@ export interface ITimeSeriesStats {
 export interface IVisitsByAuthType {
   anonymous: number;
   identified: number;
-  data?: ITimeSeriesDataPoint[];
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { ProductVisit } from '../../entities';
 import { StatusEnum } from '../../common/enums';
@@ -9,7 +9,9 @@ import {
   IAdminTimeSeriesStats,
   ITimePeriodFilter,
 } from '../../common/interfaces';
-import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
+
+/** Physical `creation_date` column for alias `pv`. */
+const PV_CREATION = '"pv"."creation_date"';
 
 /** Default limit for tag IDs returned from visited products. */
 const DEFAULT_TAG_IDS_LIMIT = 10;
@@ -25,6 +27,61 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
     private readonly productVisitRepository: Repository<ProductVisit>,
   ) {
     super(productVisitRepository);
+  }
+
+  /**
+   * Inclusive local-calendar bounds (server TZ) for ISO start/end.
+   * @param {string} startIso - Range start.
+   * @param {string} endIso - Range end.
+   * @returns {{ start: Date; end: Date }} Bounds for the driver.
+   */
+  private boundsToLocalCalendarInclusive(
+    startIso: string,
+    endIso: string,
+  ): { start: Date; end: Date } {
+    const s = new Date(startIso);
+    const e = new Date(endIso);
+    const start = new Date(
+      s.getFullYear(),
+      s.getMonth(),
+      s.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+    const end = new Date(
+      e.getFullYear(),
+      e.getMonth(),
+      e.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    return { start, end };
+  }
+
+  /**
+   * Appends inclusive `creation_date` filter when both bounds exist.
+   * @param {SelectQueryBuilder<ProductVisit>} qb - Builder with alias `pv`.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional range.
+   */
+  private appendCreationDateRange(
+    qb: SelectQueryBuilder<ProductVisit>,
+    timePeriod?: ITimePeriodFilter,
+  ): void {
+    if (!timePeriod?.startDate || !timePeriod?.endDate) {
+      return;
+    }
+    const { start, end } = this.boundsToLocalCalendarInclusive(
+      timePeriod.startDate,
+      timePeriod.endDate,
+    );
+    qb.andWhere(
+      `${PV_CREATION} >= :pvRangeStart AND ${PV_CREATION} <= :pvRangeEnd`,
+      { pvRangeStart: start, pvRangeEnd: end },
+    );
   }
 
   /**
@@ -56,25 +113,23 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
   }
 
   /**
-   * Get top products by visits for a business (for statistics).
+   * Get products by visits for a business (for statistics), ordered by visit count descending.
    * @param {number} idBusiness - The ID of the business.
    * @param {ITimePeriodFilter} timePeriod - The time period filter.
-   * @param {number} limit - The limit of the top products.
-   * @returns {Promise<{ idProduct: number; visits: number }[]>} The top products by visits.
+   * @returns {Promise<{ idProduct: number; visits: number }[]>} Products with visit totals.
    */
   async getTopProductsByVisits(
     idBusiness: number,
     timePeriod: ITimePeriodFilter | undefined,
-    limit: number,
   ): Promise<IProductVisitsData[]> {
     const subQb = this.createQueryBuilder('pv')
       .innerJoin('pv.product', 'p')
       .where('p.id_creation_business = :idBusiness', { idBusiness })
       .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
-      .select('pv.id_product', 'idProduct')
+      .select('pv.idProduct', 'idProduct')
       .addSelect('COUNT(*)', 'visits')
-      .groupBy('pv.id_product');
-    StatisticsQueryHelper.applyTimeFilter(subQb, 'pv', timePeriod);
+      .groupBy('pv.idProduct');
+    this.appendCreationDateRange(subQb, timePeriod);
     const subQuery = subQb.getQuery();
     const params = subQb.getParameters();
     const rows = await this.productVisitRepository.manager
@@ -84,7 +139,7 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
       .from(`(${subQuery})`, 'sub')
       .setParameters(params)
       .orderBy('visits', 'DESC')
-      .limit(limit)
+      .limit(10)
       .getRawMany<{ idProduct: number; visits: string }>();
     return rows.map((r) => ({
       idProduct: r.idProduct,
@@ -103,29 +158,35 @@ export class ProductVisitsGettersService extends BasicService<ProductVisit> {
     const qb = this.createQueryBuilder('pv')
       .where('pv.id_product IN (:...productIds)', { productIds })
       .select('COUNT(*)', 'count');
-    StatisticsQueryHelper.applyTimeFilter(qb, 'pv', timePeriod);
+    this.appendCreationDateRange(qb, timePeriod);
     const result = await qb.getRawOne<{ count: string }>();
     return parseInt(result?.count ?? '0', 10);
   }
 
   /**
-   * All product visits for non-deleted products (admin statistics).
-   * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
-   * @returns {Promise<IAdminTimeSeriesStats>} Visit totals and optional series.
+   * Count product visits for non-deleted products (admin statistics).
+   * With `startDate` and `endDate`, counts rows whose `creation_date` lies in that inclusive range; otherwise counts all such visits.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional date bounds.
+   * @returns {Promise<IAdminTimeSeriesStats>} Total visits only (`data` is never set).
    */
   async getGlobalVisitStatsForAdminStatistics(
     timePeriod?: ITimePeriodFilter,
   ): Promise<IAdminTimeSeriesStats> {
-    const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
-      () =>
-        this.createQueryBuilder('pv')
-          .innerJoin('pv.product', 'p')
-          .where('p.status <> :productStatus', {
-            productStatus: StatusEnum.DELETED,
-          }),
-      'pv',
-      timePeriod,
-    );
-    return { total: raw.total, data: raw.data };
+    const qb = this.createQueryBuilder('pv')
+      .innerJoin('pv.product', 'p')
+      .where('p.status <> :productStatus', {
+        productStatus: StatusEnum.DELETED,
+      });
+    if (timePeriod?.startDate && timePeriod?.endDate) {
+      qb.andWhere(
+        'pv.creationDate >= :startDate AND pv.creationDate <= :endDate',
+        {
+          startDate: timePeriod.startDate,
+          endDate: timePeriod.endDate,
+        },
+      );
+    }
+    const total = await qb.getCount();
+    return { total };
   }
 }

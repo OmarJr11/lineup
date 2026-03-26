@@ -71,18 +71,11 @@ export class DiscountsService extends BasicService<Discount> {
       businessReq,
     );
     const productIds = await this.resolveProductIds(data, idBusiness);
-    const auditMetadata = {
-      scope: data.scope,
-      discountType: data.discountType,
-      value: data.value,
-      idCurrency: data.idCurrency,
-    };
     for (const idProduct of productIds) {
       await this.discountsSettersService.upsertDiscountProduct(
         idProduct,
         discount.id,
         businessReq,
-        auditMetadata,
       );
     }
     return await this.discountsGettersService.findOne(discount.id);

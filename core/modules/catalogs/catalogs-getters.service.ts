@@ -165,8 +165,8 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         .where('c.path = :path', { path })
         .andWhere('c.status <> :status', { status: StatusEnum.DELETED })
         .getOneOrFail();
-    } catch (error) {
-      LogError(this.logger, error, this.getOneByPathOrFail.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.getOneByPathOrFail.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }

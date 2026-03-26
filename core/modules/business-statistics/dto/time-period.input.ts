@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { TimePeriodGranularityEnum } from '../../../common/enums/time-period-granularity.enum';
 
 /**
@@ -27,7 +27,8 @@ export class TimePeriodInput {
    */
   @Field({
     nullable: true,
-    description: 'End of the period (ISO 8601). Omit for all-time.',
+    description:
+      'End of the period (ISO 8601). Omit for all-time. For discountStats expiringSoon: upper bound from now with optional granularity buckets.',
   })
   @IsOptional()
   @IsDateString()
@@ -40,9 +41,10 @@ export class TimePeriodInput {
    */
   @Field(() => TimePeriodGranularityEnum, {
     nullable: true,
-    description: 'Grouping for time-series. Ignored for all-time.',
+    description:
+      'Grouping for time-series. For discountStats expiringSoon without endDate: defines current UTC day/week/month window and buckets.',
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsEnum(TimePeriodGranularityEnum)
-  granularity?: TimePeriodGranularityEnum;
+  granularity: TimePeriodGranularityEnum;
 }

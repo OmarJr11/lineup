@@ -1,14 +1,17 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { LogError } from '../../common/helpers/logger.helper';
 import { stockMovementsResponses } from '../../common/responses';
 import { ITimePeriodFilter } from '../../common/interfaces';
 import { IStockMovementStatItem } from './interfaces/stock-movement-stat-item.interface';
-import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { StockMovement } from '../../entities';
 import { StockMovementTypeEnum } from '../../common/enums/stock-movement-type.enum';
+import { ITimeSeriesStats } from '../business-statistics/interfaces/business-visits-stats.interface';
+
+/** Physical `creation_date` column for alias `sm`. */
+const SM_CREATION = '"sm"."creation_date"';
 
 /**
  * Read-only service for querying stock movements.
@@ -24,6 +27,61 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
     private readonly stockMovementRepository: Repository<StockMovement>,
   ) {
     super(stockMovementRepository);
+  }
+
+  /**
+   * Inclusive local-calendar bounds (server TZ) for ISO start/end.
+   * @param {string} startIso - Range start.
+   * @param {string} endIso - Range end.
+   * @returns {{ start: Date; end: Date }} Bounds for the driver.
+   */
+  private boundsToLocalCalendarInclusive(
+    startIso: string,
+    endIso: string,
+  ): { start: Date; end: Date } {
+    const s = new Date(startIso);
+    const e = new Date(endIso);
+    const start = new Date(
+      s.getFullYear(),
+      s.getMonth(),
+      s.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+    const end = new Date(
+      e.getFullYear(),
+      e.getMonth(),
+      e.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    return { start, end };
+  }
+
+  /**
+   * Appends inclusive `creation_date` range when both bounds exist.
+   * @param {SelectQueryBuilder<StockMovement>} qb - Builder with alias `sm`.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional range.
+   */
+  private appendCreationDateRange(
+    qb: SelectQueryBuilder<StockMovement>,
+    timePeriod?: ITimePeriodFilter,
+  ): void {
+    if (!timePeriod?.startDate || !timePeriod?.endDate) {
+      return;
+    }
+    const { start, end } = this.boundsToLocalCalendarInclusive(
+      timePeriod.startDate,
+      timePeriod.endDate,
+    );
+    qb.andWhere(
+      `${SM_CREATION} >= :smRangeStart AND ${SM_CREATION} <= :smRangeEnd`,
+      { smRangeStart: start, smRangeEnd: end },
+    );
   }
 
   /**
@@ -122,29 +180,20 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
   }
 
   /**
-   * Get sales count for statistics (total or time-series).
+   * Get SALE movement count for statistics in the date range (total only).
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @returns {Promise<ITimeSeriesStats>} The sales count.
+   * @param {ITimePeriodFilter} timePeriod - inclusive range (`granularity` ignored).
+   * @returns {Promise<ITimeSeriesStats>} Total sales movements in range.
    */
   async getSalesCountForStatistics(
     idBusiness: number,
-    timePeriod?: ITimePeriodFilter,
-  ): Promise<{ total: number; data?: { period: string; value: number }[] }> {
+    timePeriod: ITimePeriodFilter,
+  ): Promise<ITimeSeriesStats> {
     const qb = this.createQueryBuilder('sm')
       .where('sm.id_creation_business = :idBusiness', { idBusiness })
       .andWhere('sm.type = :type', { type: StockMovementTypeEnum.SALE });
-    StatisticsQueryHelper.applyTimeFilter(qb, 'sm', timePeriod);
-    if (StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      const data = await StatisticsQueryHelper.getTimeSeriesFromQuery(
-        qb as any,
-        'sm',
-        timePeriod,
-      );
-      const total = data.reduce((sum, d) => sum + d.value, 0);
-      return { total, data };
-    }
+    this.appendCreationDateRange(qb, timePeriod);
     const total = await qb.getCount();
     return { total };
   }

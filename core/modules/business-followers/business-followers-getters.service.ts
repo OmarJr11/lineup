@@ -1,14 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum } from '../../common/enums';
 import { InfinityScrollInput } from '../../common/dtos';
 import { LogError } from '../../common/helpers/logger.helper';
 import { businessFollowersResponses } from '../../common/responses';
 import { ITimePeriodFilter } from '../../common/interfaces';
-import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { Business, BusinessFollower } from '../../entities';
+
+/** Physical column for `creationDate` (alias `bf`). */
+const BF_CREATION = '"bf"."creation_date"';
 
 @Injectable()
 export class BusinessFollowersGettersService extends BasicService<BusinessFollower> {
@@ -137,6 +139,60 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
   }
 
   /**
+   * Inclusive local-calendar bounds (server TZ) for ISO start/end.
+   * @param {string} startIso - Range start.
+   * @param {string} endIso - Range end.
+   * @returns {{ start: Date; end: Date }} Bounds for the driver.
+   */
+  private boundsToLocalCalendarInclusive(
+    startIso: string,
+    endIso: string,
+  ): { start: Date; end: Date } {
+    const s = new Date(startIso);
+    const e = new Date(endIso);
+    const start = new Date(
+      s.getFullYear(),
+      s.getMonth(),
+      s.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+    const end = new Date(
+      e.getFullYear(),
+      e.getMonth(),
+      e.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    return { start, end };
+  }
+
+  /**
+   * Appends inclusive `creation_date` range (local calendar day bounds).
+   * @param {SelectQueryBuilder<BusinessFollower>} qb - Builder with alias `bf`.
+   * @param {string} startDate - Range start (ISO).
+   * @param {string} endDate - Range end (ISO).
+   */
+  private appendCreationDateRange(
+    qb: SelectQueryBuilder<BusinessFollower>,
+    startDate: string,
+    endDate: string,
+  ): void {
+    const { start, end } = this.boundsToLocalCalendarInclusive(
+      startDate,
+      endDate,
+    );
+    qb.andWhere(
+      `${BF_CREATION} >= :bfRangeStart AND ${BF_CREATION} <= :bfRangeEnd`,
+      { bfRangeStart: start, bfRangeEnd: end },
+    );
+  }
+
+  /**
    * Get count for statistics, optionally filtered by time period.
    *
    * @param {number} idBusiness - The business ID.
@@ -150,33 +206,34 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
     const qb = this.createQueryBuilder('bf')
       .where('bf.idBusiness = :idBusiness', { idBusiness })
       .andWhere('bf.status <> :status', { status: StatusEnum.DELETED });
-    StatisticsQueryHelper.applyTimeFilter(qb, 'bf', timePeriod);
+    if (timePeriod?.startDate && timePeriod?.endDate) {
+      this.appendCreationDateRange(
+        qb,
+        timePeriod.startDate,
+        timePeriod.endDate,
+      );
+    }
     return qb.getCount();
   }
 
   /**
-   * Get time-series data for new followers.
+   * Count new followers in `[startDate, endDate]` (inclusive) for statistics.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {ITimePeriodFilter} timePeriod - The time period filter.
-   * @returns {Promise<ITimeSeriesDataPoint[]>} The time-series data.
+   * @param {string} startDate - Inclusive range start (ISO string).
+   * @param {string} endDate - Inclusive range end (ISO string).
+   * @returns {Promise<number>} Follower count in that window.
    */
   async getTimeSeriesForStatistics(
     idBusiness: number,
-    timePeriod: ITimePeriodFilter,
-  ) {
+    startDate: string,
+    endDate: string,
+  ): Promise<number> {
     const qb = this.createQueryBuilder('bf')
       .where('bf.idBusiness = :idBusiness', { idBusiness })
-      .andWhere('bf.status <> :status', { status: StatusEnum.DELETED })
-      .andWhere(
-        StatisticsQueryHelper.buildDateFilter('bf', timePeriod),
-        StatisticsQueryHelper.getDateParams(timePeriod),
-      );
-    return StatisticsQueryHelper.getTimeSeriesFromQuery(
-      qb as any,
-      'bf',
-      timePeriod,
-    );
+      .andWhere('bf.status <> :status', { status: StatusEnum.DELETED });
+    this.appendCreationDateRange(qb, startDate, endDate);
+    return qb.getCount();
   }
 
   /**

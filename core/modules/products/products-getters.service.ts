@@ -471,7 +471,7 @@ export class ProductsGettersService extends BasicService<Product> {
   ): Promise<IStatItemWithVisits[]> {
     const { visitData, idBusiness } = input;
     if (visitData.length === 0) return [];
-    const productIds = visitData.map((v) => v.idProduct);
+    const productIds = visitData.map((v) => Number(v.idProduct));
     const products = await this.productRepository.find({
       where: {
         id: In(productIds),
@@ -480,13 +480,18 @@ export class ProductsGettersService extends BasicService<Product> {
       },
       select: ['id', 'title'],
     });
-    const visitMap = new Map(visitData.map((v) => [v.idProduct, v.visits]));
+    const visitMap = new Map(
+      visitData.map((v) => [Number(v.idProduct), v.visits] as const),
+    );
     return products
-      .map((p) => ({
-        id: p.id,
-        title: p.title,
-        visits: visitMap.get(p.id) ?? 0,
-      }))
+      .map((p) => {
+        const id = Number(p.id);
+        return {
+          id,
+          title: p.title,
+          visits: visitMap.get(id) ?? 0,
+        };
+      })
       .sort((a, b) => b.visits - a.visits);
   }
 

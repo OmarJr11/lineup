@@ -125,6 +125,18 @@ export class CatalogStatItemSchema {
 }
 
 /**
+ * Date range metadata for discount statistics (ISO 8601 bounds).
+ */
+@ObjectType()
+export class DiscountStatsDateRangeSchema {
+  @Field({ description: 'Range start (inclusive), ISO 8601' })
+  startDate: string;
+
+  @Field({ description: 'Range end (inclusive), ISO 8601' })
+  endDate: string;
+}
+
+/**
  * Combined discount statistics.
  */
 @ObjectType()
@@ -135,8 +147,11 @@ export class DiscountStatsSchema {
   @Field(() => [FrequencyDataPointSchema])
   byType: FrequencyDataPointSchema[];
 
-  @Field(() => Int)
-  expiringSoonCount: number;
+  @Field(() => TimeSeriesStatsSchema, {
+    description:
+      'Discounts expiring in the given period (end_date in range); optional buckets when granularity is set',
+  })
+  expiringSoon: TimeSeriesStatsSchema;
 }
 
 /**

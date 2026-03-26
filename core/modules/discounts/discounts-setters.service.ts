@@ -7,11 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BasicService } from '../../common/services';
-import {
-  IBusinessReq,
-  IUserOrBusinessReq,
-  IUserReq,
-} from '../../common/interfaces';
+import { IBusinessReq, IUserOrBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { discountsResponses } from '../../common/responses';
 import {
@@ -86,9 +82,34 @@ export class DiscountsSettersService extends BasicService<Discount> {
         userOrBusinessReq: businessReq,
       });
       return discount;
-    } catch (error) {
-      LogError(this.logger, error, this.createDiscount.name, businessReq);
+    } catch (error: unknown) {
+      LogError(
+        this.logger,
+        error as Error,
+        this.createDiscount.name,
+        businessReq,
+      );
       throw new InternalServerErrorException(this.rCreate.error);
+    }
+  }
+
+  /**
+   * Mark a discount as expired.
+   * @param {Discount} discount - The discount to mark as expired.
+   * @param {IUserOrBusinessReq} businessReq - The business request.
+   */
+  @Transactional()
+  async markAsExpired(discount: Discount, businessReq: IUserOrBusinessReq) {
+    try {
+      await this.updateEntity({ isExpired: true }, discount, businessReq);
+    } catch (error: unknown) {
+      LogError(
+        this.logger,
+        error as Error,
+        this.markAsExpired.name,
+        businessReq,
+      );
+      throw new InternalServerErrorException(this.rUpdate.error);
     }
   }
 
@@ -115,7 +136,7 @@ export class DiscountsSettersService extends BasicService<Discount> {
         if (data.endDate) updateData.endDate = formatted.endDate;
       }
       const oldValues = toEntityAuditValues(discount);
-      const updated = await this.updateEntity(
+      const updated: Discount = await this.updateEntity(
         updateData,
         discount,
         businessReq,
@@ -129,8 +150,13 @@ export class DiscountsSettersService extends BasicService<Discount> {
         userOrBusinessReq: businessReq,
       });
       return updated;
-    } catch (error) {
-      LogError(this.logger, error, this.updateDiscount.name, businessReq);
+    } catch (error: unknown) {
+      LogError(
+        this.logger,
+        error as Error,
+        this.updateDiscount.name,
+        businessReq,
+      );
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }
@@ -174,8 +200,8 @@ export class DiscountsSettersService extends BasicService<Discount> {
           });
         }
       }
-    } catch (error) {
-      LogError(this.logger, error, this.updateMany.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.updateMany.name);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }
@@ -193,16 +219,9 @@ export class DiscountsSettersService extends BasicService<Discount> {
     idProduct: number,
     idDiscount: number,
     businessReq: IBusinessReq,
-    auditMetadata?: DiscountAuditMetadata,
   ): Promise<DiscountProduct> {
     const existing =
       await this.discountProductsGettersService.findByProductId(idProduct);
-    const auditPayload = {
-      scope: auditMetadata?.scope,
-      discountType: auditMetadata?.discountType,
-      value: auditMetadata?.value,
-      idCurrency: auditMetadata?.idCurrency,
-    };
     if (existing) {
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.DiscountProduct,
@@ -269,8 +288,13 @@ export class DiscountsSettersService extends BasicService<Discount> {
         businessReq,
       );
       await this.deleteEntityByStatus(discount, businessReq);
-    } catch (error) {
-      LogError(this.logger, error, this.removeDiscount.name, businessReq);
+    } catch (error: unknown) {
+      LogError(
+        this.logger,
+        error as Error,
+        this.removeDiscount.name,
+        businessReq,
+      );
       throw new InternalServerErrorException(this.rDelete.error);
     }
   }

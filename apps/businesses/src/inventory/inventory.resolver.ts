@@ -52,18 +52,15 @@ export class InventoryResolver {
     return toProductSkuSchemaFromInventory(sku);
   }
 
-  @Mutation(() => ProductSkuSchema, { name: 'registerPurchase' })
+  @Mutation(() => ProductSkuSchema, { name: 'registerSale' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(InventoryPermissionsEnum.INVMGMT)
   @Response(inventoryResponses.registerPurchase)
-  async registerPurchase(
+  async registerSale(
     @Args('data') data: RegisterPurchaseInput,
     @BusinessDec() businessReq: IBusinessReq,
   ) {
-    const sku = await this.productSkusService.registerPurchase(
-      data,
-      businessReq,
-    );
+    const sku = await this.productSkusService.registerSale(data, businessReq);
     return toProductSkuSchemaFromInventory(sku);
   }
 

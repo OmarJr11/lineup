@@ -6,11 +6,10 @@ import {
   IAdminTimeSeriesStats,
   ITimePeriodFilter,
 } from '../../common/interfaces';
-import {
-  ITimeSeriesDataPoint,
-  StatisticsQueryHelper,
-} from '../../common/helpers/statistics-query.helper';
 import { BusinessVisit } from '../../entities';
+
+/** Raw SQL column for visit timestamp (alias `bv`). */
+const BV_CREATION = '"bv"."creation_date"';
 
 /**
  * Read-only service for business visit queries.
@@ -22,6 +21,61 @@ export class BusinessVisitsGettersService extends BasicService<BusinessVisit> {
     private readonly businessVisitRepository: Repository<BusinessVisit>,
   ) {
     super(businessVisitRepository);
+  }
+
+  /**
+   * Inclusive local-calendar bounds (server TZ) for ISO start/end.
+   * @param {string} startIso - Range start.
+   * @param {string} endIso - Range end.
+   * @returns {{ start: Date; end: Date }} Bounds as Date for the driver.
+   */
+  private boundsToLocalCalendarInclusive(
+    startIso: string,
+    endIso: string,
+  ): { start: Date; end: Date } {
+    const s = new Date(startIso);
+    const e = new Date(endIso);
+    const start = new Date(
+      s.getFullYear(),
+      s.getMonth(),
+      s.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+    const end = new Date(
+      e.getFullYear(),
+      e.getMonth(),
+      e.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
+    return { start, end };
+  }
+
+  /**
+   * Appends `creation_date` range when both bounds exist.
+   * @param {SelectQueryBuilder<BusinessVisit>} qb - Builder with alias `bv`.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional filter.
+   */
+  private appendCreationDateRange(
+    qb: SelectQueryBuilder<BusinessVisit>,
+    timePeriod?: ITimePeriodFilter,
+  ): void {
+    if (!timePeriod?.startDate || !timePeriod?.endDate) {
+      return;
+    }
+    const { start, end } = this.boundsToLocalCalendarInclusive(
+      timePeriod.startDate,
+      timePeriod.endDate,
+    );
+    qb.andWhere(
+      `${BV_CREATION} >= :bvRangeStart AND ${BV_CREATION} <= :bvRangeEnd`,
+      { bvRangeStart: start, bvRangeEnd: end },
+    );
   }
 
   /**
@@ -38,62 +92,81 @@ export class BusinessVisitsGettersService extends BasicService<BusinessVisit> {
       'bv.id_business = :idBusiness',
       { idBusiness },
     );
-    StatisticsQueryHelper.applyTimeFilter(qb, 'bv', timePeriod);
+    this.appendCreationDateRange(qb, timePeriod);
     return await qb.getCount();
   }
 
   /**
    * Get visit counts by auth type (anonymous vs identified).
-   * @param {number} idBusiness - The ID of the business.
-   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
-   * @returns {Promise<{ anonymous: number; identified: number }>} The visit counts by auth type.
+   * @param {number} idBusiness - The business ID.
+   * @param {string} startDate - Range start ISO.
+   * @param {string} endDate - Range end ISO.
+   * @returns {Promise<{ anonymous: number; identified: number }>} Counts.
    */
   async getCountByAuthType(
     idBusiness: number,
-    timePeriod?: ITimePeriodFilter,
+    startDate: string,
+    endDate: string,
   ): Promise<{ anonymous: number; identified: number }> {
-    const dateFilter = StatisticsQueryHelper.buildDateFilter('bv', timePeriod);
-    const dateParams = StatisticsQueryHelper.getDateParams(timePeriod);
     const baseWhere = 'bv.id_business = :idBusiness';
+    const withDate = (qb: SelectQueryBuilder<BusinessVisit>) => {
+      if (startDate && endDate) {
+        const { start, end } = this.boundsToLocalCalendarInclusive(
+          startDate,
+          endDate,
+        );
+        return qb.andWhere(
+          `${BV_CREATION} >= :bvRangeStart AND ${BV_CREATION} <= :bvRangeEnd`,
+          { bvRangeStart: start, bvRangeEnd: end },
+        );
+      }
+      return qb;
+    };
     const [anonymous, identified] = await Promise.all([
-      this.createQueryBuilder('bv')
-        .where(baseWhere, { idBusiness })
-        .andWhere('bv.id_creation_user IS NULL')
-        .andWhere(dateFilter, dateParams)
-        .getCount(),
-      this.createQueryBuilder('bv')
-        .where(baseWhere, { idBusiness })
-        .andWhere('bv.id_creation_user IS NOT NULL')
-        .andWhere(dateFilter, dateParams)
-        .getCount(),
+      withDate(
+        this.createQueryBuilder('bv')
+          .where(baseWhere, { idBusiness })
+          .andWhere('bv.idCreationUser IS NULL'),
+      ).getCount(),
+      withDate(
+        this.createQueryBuilder('bv')
+          .where(baseWhere, { idBusiness })
+          .andWhere('bv.idCreationUser IS NOT NULL'),
+      ).getCount(),
     ]);
     return { anonymous, identified };
   }
 
   /**
-   * Get time-series data for business visits.
-   * @param {number} idBusiness - The ID of the business.
-   * @param {ITimePeriodFilter} timePeriod - The time period filter.
-   * @returns {Promise<ITimeSeriesDataPoint[]>} The time-series data.
+   * Count visits for one business in `[startDate, endDate]` (local calendar inclusive).
+   * @param {number} idBusiness - Business ID.
+   * @param {string} startDate - Start ISO.
+   * @param {string} endDate - End ISO.
+   * @returns {Promise<number>} Count.
    */
   async getTimeSeriesByBusiness(
     idBusiness: number,
-    timePeriod: ITimePeriodFilter,
-  ): Promise<ITimeSeriesDataPoint[]> {
-    const qb = this.createQueryBuilder('bv')
+    startDate: string,
+    endDate: string,
+  ): Promise<number> {
+    const { start, end } = this.boundsToLocalCalendarInclusive(
+      startDate,
+      endDate,
+    );
+    return this.createQueryBuilder('bv')
       .where('bv.id_business = :idBusiness', { idBusiness })
       .andWhere(
-        StatisticsQueryHelper.buildDateFilter('bv', timePeriod),
-        StatisticsQueryHelper.getDateParams(timePeriod),
-      );
-    return StatisticsQueryHelper.getTimeSeriesFromQuery(qb, 'bv', timePeriod);
+        `${BV_CREATION} >= :bvRangeStart AND ${BV_CREATION} <= :bvRangeEnd`,
+        { bvRangeStart: start, bvRangeEnd: end },
+      )
+      .getCount();
   }
 
   /**
-   * Get base query builder for business visits (for statistics composition).
-   * @param {number} idBusiness - The ID of the business.
-   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
-   * @returns {SelectQueryBuilder<BusinessVisit>} The base query builder.
+   * Base QB for one business, optional `creation_date` range.
+   * @param {number} idBusiness - Business ID.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional filter.
+   * @returns {SelectQueryBuilder<BusinessVisit>} Builder.
    */
   createBaseQueryBuilder(
     idBusiness: number,
@@ -103,23 +176,30 @@ export class BusinessVisitsGettersService extends BasicService<BusinessVisit> {
       'bv.id_business = :idBusiness',
       { idBusiness },
     );
-    StatisticsQueryHelper.applyTimeFilter(qb, 'bv', timePeriod);
+    this.appendCreationDateRange(qb, timePeriod);
     return qb;
   }
 
   /**
-   * All business visits on the platform (admin statistics).
-   * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
-   * @returns {Promise<IAdminTimeSeriesStats>} Visit totals and optional series.
+   * All platform visits (admin), optional range on `creation_date`.
+   * @param {ITimePeriodFilter} [timePeriod] - Optional bounds.
+   * @returns {Promise<IAdminTimeSeriesStats>} Total count.
    */
   async getGlobalVisitStatsForAdminStatistics(
     timePeriod?: ITimePeriodFilter,
   ): Promise<IAdminTimeSeriesStats> {
-    const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
-      () => this.createQueryBuilder('bv'),
-      'bv',
-      timePeriod,
-    );
-    return { total: raw.total, data: raw.data };
+    const qb = this.createQueryBuilder('bv');
+    if (timePeriod?.startDate && timePeriod?.endDate) {
+      const { start, end } = this.boundsToLocalCalendarInclusive(
+        timePeriod.startDate,
+        timePeriod.endDate,
+      );
+      qb.andWhere(
+        `${BV_CREATION} >= :bvRangeStart AND ${BV_CREATION} <= :bvRangeEnd`,
+        { bvRangeStart: start, bvRangeEnd: end },
+      );
+    }
+    const total = await qb.getCount();
+    return { total };
   }
 }

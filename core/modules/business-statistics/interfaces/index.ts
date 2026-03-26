@@ -6,6 +6,7 @@ export * from './stat-item-with-rating.interface';
 export * from './stat-item-with-likes.interface';
 export * from './product-visits-data.interface';
 export * from './catalog-stats.interface';
+export * from './discount-stats-date-range.interface';
 export * from './discount-stats.interface';
 export * from './inventory-stats.interface';
 export * from './product-stats.interface';

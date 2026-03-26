@@ -41,7 +41,7 @@ export class StatisticsResolver {
   @Response(businessesResponses.list)
   async businessEngagementStats(
     @BusinessDec() businessReq: IBusinessReq,
-    @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
+    @Args('timePeriod') timePeriod: TimePeriodInput,
   ) {
     return await this.businessStatisticsGettersService.getEngagementStats(
       businessReq.businessId,
@@ -55,13 +55,11 @@ export class StatisticsResolver {
   @Response(businessesResponses.list)
   async productStats(
     @BusinessDec() businessReq: IBusinessReq,
-    @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('timePeriod') timePeriod: TimePeriodInput,
   ) {
     return await this.businessStatisticsGettersService.getProductStats(
       businessReq.businessId,
       timePeriod,
-      limit,
     );
   }
 
@@ -71,13 +69,11 @@ export class StatisticsResolver {
   @Response(businessesResponses.list)
   async catalogStats(
     @BusinessDec() businessReq: IBusinessReq,
-    @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('timePeriod') timePeriod: TimePeriodInput,
   ) {
     return await this.businessStatisticsGettersService.getCatalogStats(
       businessReq.businessId,
       timePeriod,
-      limit,
     );
   }
 
@@ -87,11 +83,11 @@ export class StatisticsResolver {
   @Response(businessesResponses.list)
   async discountStats(
     @BusinessDec() businessReq: IBusinessReq,
-    @Args('days', { type: () => Int, nullable: true }) days?: number,
+    @Args('timePeriod') timePeriod: TimePeriodInput,
   ) {
     return await this.businessStatisticsGettersService.getDiscountStats(
       businessReq.businessId,
-      days,
+      timePeriod,
     );
   }
 
@@ -101,15 +97,13 @@ export class StatisticsResolver {
   @Response(businessesResponses.list)
   async inventoryStats(
     @BusinessDec() businessReq: IBusinessReq,
-    @Args('timePeriod', { nullable: true }) timePeriod?: TimePeriodInput,
+    @Args('timePeriod') timePeriod: TimePeriodInput,
     @Args('threshold', { type: () => Int, nullable: true }) threshold?: number,
-    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
   ) {
     return await this.businessStatisticsGettersService.getInventoryStats(
       businessReq.businessId,
       timePeriod,
       threshold,
-      limit,
     );
   }
 }

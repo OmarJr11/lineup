@@ -27,15 +27,14 @@ import { DiscountsGettersService } from '../discounts/discounts-getters.service'
 import { ProductSkusGettersService } from '../product-skus/product-skus-getters.service';
 import { StockMovementsGettersService } from '../stock-movements/stock-movements-getters.service';
 import { IStockMovementStatItem } from '../stock-movements/interfaces/stock-movement-stat-item.interface';
+import { TimePeriodGranularityEnum } from '../../common/enums';
+import { ITimePeriodFilter } from '../../common/interfaces';
 
 /** Default limit for top-N queries. */
 const DEFAULT_TOP_LIMIT = 10;
 
 /** Default low-stock threshold. */
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
-
-/** Default days for "expiring soon" discounts. */
-const DEFAULT_EXPIRING_DAYS = 7;
 
 /**
  * Service that provides business dashboard statistics.
@@ -61,26 +60,21 @@ export class BusinessStatisticsGettersService {
    * Get business visits: total or time-series by period.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<ITimeSeriesStats>} The business visits stats.
    */
   async getBusinessVisits(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    startDate: string,
+    endDate: string,
   ): Promise<ITimeSeriesStats> {
-    if (StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      const data =
-        await this.businessVisitsGettersService.getTimeSeriesByBusiness(
-          idBusiness,
-          timePeriod,
-        );
-      const total = data.reduce((sum, d) => sum + d.value, 0);
-      return { total, data };
-    }
-    const total = await this.businessVisitsGettersService.getCountByBusiness(
-      idBusiness,
-      timePeriod,
-    );
+    const total =
+      await this.businessVisitsGettersService.getTimeSeriesByBusiness(
+        idBusiness,
+        startDate,
+        endDate,
+      );
     return { total };
   }
 
@@ -88,108 +82,117 @@ export class BusinessStatisticsGettersService {
    * Get visits split by anonymous vs identified users.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<IVisitsByAuthType>} The business visits by auth type.
    */
   async getBusinessVisitsByAuthType(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    startDate: string,
+    endDate: string,
   ): Promise<IVisitsByAuthType> {
     const { anonymous, identified } =
       await this.businessVisitsGettersService.getCountByAuthType(
         idBusiness,
-        timePeriod,
+        startDate,
+        endDate,
       );
-    let data: ITimeSeriesDataPoint[] | undefined;
-    if (StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      data = await this.businessVisitsGettersService.getTimeSeriesByBusiness(
-        idBusiness,
-        timePeriod,
-      );
-    }
-    return { anonymous, identified, data };
+    return { anonymous, identified };
   }
 
   /**
    * Get combined business visits stats: total visits and breakdown by auth type.
-   * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
+   * @param {number} idBusiness - The business ID..
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<IBusinessVisitsStats>} The business visits stats.
    */
   async getBusinessVisitsStats(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    startDate: string,
+    endDate: string,
   ): Promise<IBusinessVisitsStats> {
     const [visits, visitsByAuthType] = await Promise.all([
-      this.getBusinessVisits(idBusiness, timePeriod),
-      this.getBusinessVisitsByAuthType(idBusiness, timePeriod),
+      this.getBusinessVisits(idBusiness, startDate, endDate),
+      this.getBusinessVisitsByAuthType(idBusiness, startDate, endDate),
     ]);
     return { visits, visitsByAuthType };
   }
 
   /**
+   * Resolves dashboard time period to concrete ISO bounds (preset vs RANGE).
+   * @param {TimePeriodInput} timePeriod - Client input.
+   * @returns {{ startDate: string; endDate: string }} Inclusive range.
+   */
+  private resolveStatisticsTimeRange(timePeriod: TimePeriodInput): {
+    startDate: string;
+    endDate: string;
+  } {
+    const granularity = timePeriod.granularity ?? TimePeriodGranularityEnum.ALL;
+    if (granularity !== TimePeriodGranularityEnum.RANGE) {
+      return StatisticsQueryHelper.calculateTimePeriodRange(granularity);
+    }
+    return {
+      startDate: timePeriod.startDate,
+      endDate: timePeriod.endDate,
+    };
+  }
+
+  /**
    * Get combined engagement stats: visits and new followers.
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
+   * @param {TimePeriodInput} timePeriod - Preset granularity or RANGE with explicit bounds.
    * @returns {Promise<IEngagementStats>} The engagement stats.
    */
   async getEngagementStats(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    timePeriod: TimePeriodInput,
   ): Promise<IEngagementStats> {
+    const range = this.resolveStatisticsTimeRange(timePeriod);
     const [visits, newFollowers] = await Promise.all([
-      this.getBusinessVisitsStats(idBusiness, timePeriod),
-      this.getNewFollowers(idBusiness, timePeriod),
+      this.getBusinessVisitsStats(idBusiness, range.startDate, range.endDate),
+      this.getNewFollowers(idBusiness, range.startDate, range.endDate),
     ]);
     return { visits, newFollowers };
   }
 
   /**
-   * Get new followers: total or time-series by period.
+   * Get new followers count in the given date range.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @returns {Promise<ITimeSeriesStats>} The new followers stats.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
+   * @returns {Promise<ITimeSeriesStats>} Total new followers in range.
    */
   async getNewFollowers(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    startDate: string,
+    endDate: string,
   ): Promise<ITimeSeriesStats> {
-    if (StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      const data =
-        await this.businessFollowersGettersService.getTimeSeriesForStatistics(
-          idBusiness,
-          timePeriod,
-        );
-      const total = data.reduce((sum, d) => sum + d.value, 0);
-      return { total, data };
-    }
     const total =
-      await this.businessFollowersGettersService.getCountForStatistics(
+      await this.businessFollowersGettersService.getTimeSeriesForStatistics(
         idBusiness,
-        timePeriod,
+        startDate,
+        endDate,
       );
     return { total };
   }
 
   /**
-   * Get top products by visits (with optional period filter).
+   * Get products by visits (with optional period filter), ordered by visits descending.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @param {number} limit - The limit of the top products.
-   * @returns {Promise<IStatItemWithVisits[]>} The top products by visits.
+   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
+   * @returns {Promise<IStatItemWithVisits[]>} Products with visit stats.
    */
   async getTopProductsByVisits(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
-    limit: number = DEFAULT_TOP_LIMIT,
+    timePeriod?: ITimePeriodFilter,
   ): Promise<IStatItemWithVisits[]> {
     const visitData =
       await this.productVisitsGettersService.getTopProductsByVisits(
         idBusiness,
         timePeriod,
-        limit,
       );
     return await this.productsGettersService.getTopByVisitsForStatistics({
       visitData,
@@ -258,12 +261,12 @@ export class BusinessStatisticsGettersService {
    * Get visit-to-like ratio (aggregate for business products).
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
+   * @param {ITimePeriodFilter} [timePeriod] - The time period filter.
    * @returns {Promise<IVisitToLikeRatio>} The visit-to-like ratio.
    */
   async getVisitToLikeRatio(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    timePeriod?: ITimePeriodFilter,
   ): Promise<IVisitToLikeRatio> {
     const products =
       await this.productsGettersService.getProductIdsAndLikesForStatistics(
@@ -287,15 +290,18 @@ export class BusinessStatisticsGettersService {
   /**
    * Get combined product statistics.
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @param {number} [limit] - The limit for top-N lists.
+   * @param {TimePeriodInput} timePeriod - Preset granularity or RANGE with explicit bounds (same as engagement).
    * @returns {Promise<IProductStats>} The product stats.
    */
   async getProductStats(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
-    limit: number = DEFAULT_TOP_LIMIT,
+    timePeriod: TimePeriodInput,
   ): Promise<IProductStats> {
+    const range = this.resolveStatisticsTimeRange(timePeriod);
+    const visitPeriod: ITimePeriodFilter = {
+      startDate: range.startDate,
+      endDate: range.endDate,
+    };
     const [
       topByVisits,
       topByRating,
@@ -304,12 +310,12 @@ export class BusinessStatisticsGettersService {
       withoutRatingsCount,
       visitToLikeRatio,
     ] = await Promise.all([
-      this.getTopProductsByVisits(idBusiness, timePeriod, limit),
-      this.getTopProductsByRating(idBusiness, limit),
-      this.getTopProductsByLikes(idBusiness, limit),
+      this.getTopProductsByVisits(idBusiness, visitPeriod),
+      this.getTopProductsByRating(idBusiness),
+      this.getTopProductsByLikes(idBusiness),
       this.getProductsWithoutVisitsCount(idBusiness),
       this.getProductsWithoutRatingsCount(idBusiness),
-      this.getVisitToLikeRatio(idBusiness, timePeriod),
+      this.getVisitToLikeRatio(idBusiness, visitPeriod),
     ]);
     return {
       topByVisits,
@@ -322,16 +328,15 @@ export class BusinessStatisticsGettersService {
   }
 
   /**
-   * Get top catalogs by visits.
+   * Get catalogs by visits (ordered by visit count descending).
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @param {number} limit - The limit of the top catalogs.
-   * @returns {Promise<IStatItemWithVisits[]>} The top catalogs by visits.
+   * @param {ITimePeriodFilter} [timePeriod] - Resolved date range (+ optional granularity for downstream).
+   * @returns {Promise<IStatItemWithVisits[]>} Catalogs with visit stats.
    */
   async getTopCatalogsByVisits(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    timePeriod: ITimePeriodFilter,
     limit: number = DEFAULT_TOP_LIMIT,
   ): Promise<IStatItemWithVisits[]> {
     return this.catalogVisitsGettersService.getTopByVisits(
@@ -356,25 +361,16 @@ export class BusinessStatisticsGettersService {
   }
 
   /**
-   * Get catalog visits over time (time-series).
+   * Get total catalog visits in the resolved date range (no bucketing).
    *
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @returns {Promise<ITimeSeriesStats>} The catalog visits over time.
+   * @param {ITimePeriodFilter} timePeriod - Resolved range (`granularity` ignored).
+   * @returns {Promise<ITimeSeriesStats>} Total visits in range.
    */
   async getCatalogVisitsOverTime(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    timePeriod: ITimePeriodFilter,
   ): Promise<ITimeSeriesStats> {
-    if (StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      const data =
-        await this.catalogVisitsGettersService.getTimeSeriesByBusiness(
-          idBusiness,
-          timePeriod,
-        );
-      const total = data.reduce((sum, d) => sum + d.value, 0);
-      return { total, data };
-    }
     const total = await this.catalogVisitsGettersService.getCountByBusiness(
       idBusiness,
       timePeriod,
@@ -385,20 +381,24 @@ export class BusinessStatisticsGettersService {
   /**
    * Get combined catalog statistics.
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter.
-   * @param {number} [limit] - The limit for top-N lists.
+   * @param {TimePeriodInput} timePeriod - Preset granularity or RANGE (same as engagement / product stats).
    * @returns {Promise<ICatalogStats>} The catalog stats.
    */
   async getCatalogStats(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
-    limit: number = DEFAULT_TOP_LIMIT,
+    timePeriod: TimePeriodInput,
   ): Promise<ICatalogStats> {
+    const range = this.resolveStatisticsTimeRange(timePeriod);
+    const visitPeriod: ITimePeriodFilter = {
+      startDate: range.startDate,
+      endDate: range.endDate,
+      granularity: timePeriod.granularity,
+    };
     const [topByVisits, productsPerCatalog, catalogVisitsOverTime] =
       await Promise.all([
-        this.getTopCatalogsByVisits(idBusiness, timePeriod, limit),
+        this.getTopCatalogsByVisits(idBusiness, visitPeriod),
         this.getProductsPerCatalog(idBusiness),
-        this.getCatalogVisitsOverTime(idBusiness, timePeriod),
+        this.getCatalogVisitsOverTime(idBusiness, visitPeriod),
       ]);
     return { topByVisits, productsPerCatalog, catalogVisitsOverTime };
   }
@@ -407,57 +407,89 @@ export class BusinessStatisticsGettersService {
    * Get discounts by status (active, pending, expired).
    *
    * @param {number} idBusiness - The business ID.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<IFrequencyDataPoint[]>} The discounts by status.
    */
   async getDiscountsByStatus(
     idBusiness: number,
+    startDate: string,
+    endDate: string,
   ): Promise<IFrequencyDataPoint[]> {
-    return this.discountsGettersService.getByStatusForStatistics(idBusiness);
+    return this.discountsGettersService.getByStatusForStatistics(
+      idBusiness,
+      startDate,
+      endDate,
+    );
   }
 
   /**
    * Get discounts by type (percentage vs fixed).
    *
    * @param {number} idBusiness - The business ID.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
    * @returns {Promise<IFrequencyDataPoint[]>} The discounts by type.
    */
-  async getDiscountsByType(idBusiness: number): Promise<IFrequencyDataPoint[]> {
-    return this.discountsGettersService.getByTypeForStatistics(idBusiness);
+  async getDiscountsByType(
+    idBusiness: number,
+    startDate: string,
+    endDate: string,
+  ): Promise<IFrequencyDataPoint[]> {
+    return this.discountsGettersService.getByTypeForStatistics(
+      idBusiness,
+      startDate,
+      endDate,
+    );
   }
 
   /**
-   * Count discounts expiring within the given days.
+   * Discounts **created** in `[startDate, endDate]` whose `end_date` also lies in that window.
    *
    * @param {number} idBusiness - The business ID.
-   * @param {number} days - The number of days.
-   * @returns {Promise<number>} The count of discounts expiring within the given days.
+   * @param {string} startDate - The start date of the time period.
+   * @param {string} endDate - The end date of the time period.
+   * @returns {Promise<ITimeSeriesStats>} Total and optional expiry time-series.
    */
-  async getDiscountsExpiringSoonCount(
+  async getDiscountsExpiringSoonStats(
     idBusiness: number,
-    days: number = DEFAULT_EXPIRING_DAYS,
-  ): Promise<number> {
-    return this.discountsGettersService.getExpiringSoonCountForStatistics(
+    startDate: string,
+    endDate: string,
+  ): Promise<ITimeSeriesStats> {
+    return this.discountsGettersService.getExpiringSoonStatsForStatistics(
       idBusiness,
-      days,
+      startDate,
+      endDate,
     );
   }
 
   /**
    * Get combined discount statistics.
    * @param {number} idBusiness - The business ID.
-   * @param {number} [days] - The number of days for expiring soon count.
+   * @param {TimePeriodInput} [timePeriod] - Range for status/type overlap and discount expiry window.
    * @returns {Promise<IDiscountStats>} The discount stats.
    */
   async getDiscountStats(
     idBusiness: number,
-    days: number = DEFAULT_EXPIRING_DAYS,
+    timePeriod: TimePeriodInput,
   ): Promise<IDiscountStats> {
-    const [byStatus, byType, expiringSoonCount] = await Promise.all([
-      this.getDiscountsByStatus(idBusiness),
-      this.getDiscountsByType(idBusiness),
-      this.getDiscountsExpiringSoonCount(idBusiness, days),
+    const granularity =
+      timePeriod?.granularity ?? TimePeriodGranularityEnum.ALL;
+    const range =
+      granularity !== TimePeriodGranularityEnum.RANGE
+        ? StatisticsQueryHelper.calculateTimePeriodRange(granularity)
+        : { startDate: timePeriod?.startDate, endDate: timePeriod?.endDate };
+    const [byStatus, byType, expiringSoon] = await Promise.all([
+      this.getDiscountsByStatus(idBusiness, range.startDate, range.endDate),
+      this.getDiscountsByType(idBusiness, range.startDate, range.endDate),
+      this.getDiscountsExpiringSoonStats(
+        idBusiness,
+        range.startDate,
+        range.endDate,
+      ),
     ]);
-    return { byStatus, byType, expiringSoonCount };
+
+    return { byStatus, byType, expiringSoon };
   }
 
   /**
@@ -496,11 +528,14 @@ export class BusinessStatisticsGettersService {
 
   /**
    * Get sales count (SALE type movements): total or time-series.
+   * @param {number} idBusiness - The business ID.
+   * @param {ITimePeriodFilter} timePeriod - Resolved range and optional grouping granularity.
+   * @returns {Promise<{ total: number; data?: ITimeSeriesDataPoint[] }>} Sales stats.
    */
   async getSalesCount(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
-  ): Promise<{ total: number; data?: ITimeSeriesDataPoint[] }> {
+    timePeriod: ITimePeriodFilter,
+  ): Promise<ITimeSeriesStats> {
     return this.stockMovementsGettersService.getSalesCountForStatistics(
       idBusiness,
       timePeriod,
@@ -509,6 +544,8 @@ export class BusinessStatisticsGettersService {
 
   /**
    * Count products with no stock defined (quantity IS NULL on all SKUs).
+   * @param {number} idBusiness - The business ID.
+   * @returns {Promise<number>} The count of products with no stock.
    */
   async getProductsWithoutStockCount(idBusiness: number): Promise<number> {
     return this.productsGettersService.getWithoutStockCountForStatistics(
@@ -519,19 +556,22 @@ export class BusinessStatisticsGettersService {
   /**
    * Get combined inventory/stock statistics.
    * @param {number} idBusiness - The business ID.
-   * @param {TimePeriodInput} [timePeriod] - The time period filter for sales.
-   * @param {number} [threshold] - The threshold for low/out-of-stock SKUs.
-   * @param {number} [limit] - The limit for recent stock movements.
+   * @param {TimePeriodInput} timePeriod - Preset granularity or RANGE (same as other dashboard stats).
+   * @param {number} threshold - The threshold for low or out-of-stock quantity.
    * @returns {Promise<IInventoryStats>} The inventory stats.
    */
   async getInventoryStats(
     idBusiness: number,
-    timePeriod?: TimePeriodInput,
+    timePeriod: TimePeriodInput,
     threshold?: number,
-    limit?: number,
   ): Promise<IInventoryStats> {
+    const range = this.resolveStatisticsTimeRange(timePeriod);
     const effectiveThreshold = threshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
-    const effectiveLimit = limit ?? 20;
+    const movementPeriod: ITimePeriodFilter = {
+      startDate: range.startDate,
+      endDate: range.endDate,
+      granularity: timePeriod.granularity,
+    };
     const [
       skusLowOrOutOfStockCount,
       recentStockMovements,
@@ -539,8 +579,8 @@ export class BusinessStatisticsGettersService {
       productsWithoutStockCount,
     ] = await Promise.all([
       this.getSkusLowOrOutOfStockCount(idBusiness, effectiveThreshold),
-      this.getRecentStockMovements(idBusiness, effectiveLimit),
-      this.getSalesCount(idBusiness, timePeriod),
+      this.getRecentStockMovements(idBusiness, 20),
+      this.getSalesCount(idBusiness, movementPeriod),
       this.getProductsWithoutStockCount(idBusiness),
     ]);
     return {

@@ -1,6 +1,7 @@
 import type { SelectQueryBuilder } from 'typeorm';
 import { TimePeriodGranularityEnum } from '../enums/time-period-granularity.enum';
 import type { ITimePeriodFilter } from '../interfaces/time-period-filter.interface';
+import { NotAcceptableException } from '@nestjs/common';
 
 /**
  * Data point for time-series charts.
@@ -15,7 +16,7 @@ export interface ITimeSeriesDataPoint {
  */
 export class StatisticsQueryHelper {
   /**
-   * Whether the time period has all fields needed for time-series grouping.
+   * True when range and granularity are all set (time-series queries).
    */
   static shouldGroupByTime(timePeriod?: ITimePeriodFilter): boolean {
     return !!(
@@ -26,55 +27,57 @@ export class StatisticsQueryHelper {
   }
 
   /**
-   * Builds SQL date filter clause for the given alias.
+   * Predicate on `creationDate` with named params `:startDate`, `:endDate`.
    */
-  static buildDateFilter(
-    alias: string,
-    timePeriod?: ITimePeriodFilter,
-  ): string {
-    if (!timePeriod?.startDate || !timePeriod?.endDate) return '1=1';
-    return `${alias}.creation_date >= :startDate AND ${alias}.creation_date <= :endDate`;
+  static buildDateFilter(alias: string): string {
+    return `${alias}.creationDate >= :startDate AND ${alias}.creationDate <= :endDate`;
   }
 
   /**
-   * Returns params for date filter.
-   */
-  static getDateParams(timePeriod?: ITimePeriodFilter): Record<string, string> {
-    if (!timePeriod?.startDate || !timePeriod?.endDate) return {};
-    return {
-      startDate: timePeriod.startDate,
-      endDate: timePeriod.endDate,
-    };
-  }
-
-  /**
-   * Applies time filter to query builder.
+   * Adds date-range filter when both bounds exist.
    */
   static applyTimeFilter(
     qb: { andWhere: (clause: string, params?: object) => unknown },
     alias: string,
     timePeriod?: ITimePeriodFilter,
   ): void {
-    const clause = StatisticsQueryHelper.buildDateFilter(alias, timePeriod);
-    if (clause !== '1=1') {
-      qb.andWhere(clause, StatisticsQueryHelper.getDateParams(timePeriod));
+    if (!timePeriod?.startDate || !timePeriod?.endDate) {
+      return;
     }
+    qb.andWhere(StatisticsQueryHelper.buildDateFilter(alias), {
+      startDate: timePeriod.startDate,
+      endDate: timePeriod.endDate,
+    });
   }
 
   /**
-   * Executes time-series grouped query and returns data points.
+   * PostgreSQL `DATE_TRUNC` unit for time-series (month for last year, otherwise day).
+   */
+  static getPostgresTruncUnitForTimeSeries(
+    granularity?: TimePeriodGranularityEnum,
+  ): 'day' | 'week' | 'month' {
+    if (granularity === TimePeriodGranularityEnum.LAST_YEAR) {
+      return 'month';
+    }
+    return 'day';
+  }
+
+  /**
+   * Grouped counts by calendar bucket on `creation_date` (UTC).
    */
   static async getTimeSeriesFromQuery(
     qb: SelectQueryBuilder<unknown>,
     alias: string,
     timePeriod: ITimePeriodFilter,
   ): Promise<ITimeSeriesDataPoint[]> {
-    const granularity = timePeriod.granularity ?? TimePeriodGranularityEnum.DAY;
-    const truncExpr = `DATE_TRUNC('${granularity}', ${alias}.creation_date AT TIME ZONE 'UTC')`;
+    const truncUnit = StatisticsQueryHelper.getPostgresTruncUnitForTimeSeries(
+      timePeriod.granularity,
+    );
+    const truncExpr = `DATE_TRUNC('${truncUnit}', ${alias}.creation_date AT TIME ZONE 'UTC')`;
     const formatExpr =
-      granularity === TimePeriodGranularityEnum.DAY
+      truncUnit === 'day'
         ? `TO_CHAR(${truncExpr}, 'YYYY-MM-DD')`
-        : granularity === TimePeriodGranularityEnum.WEEK
+        : truncUnit === 'week'
           ? `TO_CHAR(${truncExpr}, 'IYYY-"W"IW')`
           : `TO_CHAR(${truncExpr}, 'YYYY-MM')`;
     const rawQb = qb
@@ -90,34 +93,114 @@ export class StatisticsQueryHelper {
   }
 
   /**
-   * Total count with optional time-series for any entity query (admin / dashboard use).
-   * @param {() => SelectQueryBuilder<unknown>} buildQb - Factory returning a fresh QB with alias `alias`.
-   * @param {string} alias - Root alias (must map to creation_date).
-   * @param {ITimePeriodFilter} [timePeriod] - Optional range and granularity.
-   * @returns {Promise<{ total: number; data?: ITimeSeriesDataPoint[] }>} Aggregated stats.
+   * Inclusive bounds for dashboard presets using the **server local** calendar
+   * (Node `TZ`), so “today” aligns with that zone—not only the UTC calendar day.
+   * @param {TimePeriodGranularityEnum} timePeriod - Preset (not RANGE).
+   * @returns {{ startDate: string; endDate: string }} Bounds as ISO strings.
    */
-  static async computeAggregatedTimeSeries(
-    buildQb: () => SelectQueryBuilder<unknown>,
-    alias: string,
-    timePeriod?: ITimePeriodFilter,
-  ): Promise<{ total: number; data?: ITimeSeriesDataPoint[] }> {
-    if (!timePeriod?.startDate || !timePeriod?.endDate) {
-      const total = await buildQb().getCount();
-      return { total };
+  static calculateTimePeriodRange(timePeriod: TimePeriodGranularityEnum): {
+    startDate: string;
+    endDate: string;
+  } {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+    let start: Date;
+    let end: Date;
+    switch (timePeriod) {
+      case TimePeriodGranularityEnum.TODAY: {
+        start = new Date(y, m, d, 0, 0, 0, 0);
+        end = new Date(y, m, d, 23, 59, 59, 999);
+        break;
+      }
+      case TimePeriodGranularityEnum.YESTERDAY: {
+        const prev = new Date(y, m, d - 1);
+        const py = prev.getFullYear();
+        const pm = prev.getMonth();
+        const pd = prev.getDate();
+        start = new Date(py, pm, pd, 0, 0, 0, 0);
+        end = new Date(py, pm, pd, 23, 59, 59, 999);
+        break;
+      }
+      case TimePeriodGranularityEnum.LAST_WEEK: {
+        const lastWeek = StatisticsQueryHelper.getLastWeek(now);
+        start = lastWeek.start;
+        end = lastWeek.end;
+        break;
+      }
+      case TimePeriodGranularityEnum.LAST_MONTH: {
+        const lastMonth = StatisticsQueryHelper.getLastMonth(now);
+        start = lastMonth.start;
+        end = lastMonth.end;
+        break;
+      }
+      case TimePeriodGranularityEnum.LAST_YEAR: {
+        const lastYear = StatisticsQueryHelper.getLastYear(now);
+        start = lastYear.start;
+        end = lastYear.end;
+        break;
+      }
+      case TimePeriodGranularityEnum.ALL: {
+        start = new Date(0);
+        end = new Date(y, m, d, 23, 59, 59, 999);
+        break;
+      }
+      default:
+        throw new NotAcceptableException();
     }
-    const filtered = buildQb();
-    StatisticsQueryHelper.applyTimeFilter(filtered, alias, timePeriod);
-    const total = await filtered.getCount();
-    if (!StatisticsQueryHelper.shouldGroupByTime(timePeriod)) {
-      return { total };
-    }
-    const forSeries = buildQb();
-    StatisticsQueryHelper.applyTimeFilter(forSeries, alias, timePeriod);
-    const data = await StatisticsQueryHelper.getTimeSeriesFromQuery(
-      forSeries,
-      alias,
-      timePeriod,
+    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  }
+
+  /**
+   * Previous ISO week Mon–Sun in the **local** calendar of `date`.
+   * @param {Date} date - Reference instant.
+   * @returns {{ start: Date; end: Date }} Local midnight to local end of Sunday.
+   */
+  static getLastWeek(date: Date): { start: Date; end: Date } {
+    const day = date.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const thisMonday = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate() + mondayOffset,
+      0,
+      0,
+      0,
+      0,
     );
-    return { total, data };
+    const prevMonday = new Date(thisMonday);
+    prevMonday.setDate(thisMonday.getDate() - 7);
+    const prevSunday = new Date(prevMonday);
+    prevSunday.setDate(prevMonday.getDate() + 6);
+    prevSunday.setHours(23, 59, 59, 999);
+    return { start: prevMonday, end: prevSunday };
+  }
+
+  /**
+   * Previous calendar month in local time (1st 00:00 through last day 23:59:59.999).
+   * @param {Date} date - Reference instant.
+   * @returns {{ start: Date; end: Date }} Month bounds.
+   */
+  static getLastMonth(date: Date): { start: Date; end: Date } {
+    const y = date.getFullYear();
+    const m = date.getMonth();
+    return {
+      start: new Date(y, m - 1, 1, 0, 0, 0, 0),
+      end: new Date(y, m, 0, 23, 59, 59, 999),
+    };
+  }
+
+  /**
+   * Previous calendar year in local time.
+   * @param {Date} date - Reference instant.
+   * @returns {{ start: Date; end: Date }} 1 Jan through 31 Dec local.
+   */
+  static getLastYear(date: Date): { start: Date; end: Date } {
+    const year = date.getFullYear() - 1;
+    return {
+      start: new Date(year, 0, 1, 0, 0, 0, 0),
+      end: new Date(year, 11, 31, 23, 59, 59, 999),
+    };
   }
 }

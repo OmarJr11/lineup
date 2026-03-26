@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
-import { StatisticsQueryHelper } from '../../common/helpers/statistics-query.helper';
 import { BasicService } from '../../common/services';
 import {
   IAdminStatusCount,
@@ -306,22 +305,31 @@ export class BusinessesGettersService extends BasicService<Business> {
   }
 
   /**
-   * New business registrations in a period, with optional granularity (admin statistics).
-   * @param {ITimePeriodFilter} timePeriod - Start, end, and optional granularity.
-   * @returns {Promise<IAdminTimeSeriesStats>} Totals and optional series.
+   * Count new business registrations (non-deleted) for admin statistics.
+   * With `startDate` and `endDate`, counts rows whose `creation_date` lies in that inclusive range; otherwise counts all such businesses.
+   * @param {ITimePeriodFilter} timePeriod - Optional date bounds.
+   * @returns {Promise<IAdminTimeSeriesStats>} Total only (`data` is never set).
    */
   async getNewBusinessesStatsForAdminStatistics(
     timePeriod: ITimePeriodFilter,
   ): Promise<IAdminTimeSeriesStats> {
-    const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
-      () =>
-        this.createQueryBuilder('b').where('b.status <> :businessStatus', {
-          businessStatus: StatusEnum.DELETED,
-        }),
-      'b',
-      timePeriod,
+    const qb = this.createQueryBuilder('b').where(
+      'b.status <> :businessStatus',
+      {
+        businessStatus: StatusEnum.DELETED,
+      },
     );
-    return { total: raw.total, data: raw.data };
+    if (timePeriod?.startDate && timePeriod?.endDate) {
+      qb.andWhere(
+        'b.creationDate >= :startDate AND b.creationDate <= :endDate',
+        {
+          startDate: timePeriod.startDate,
+          endDate: timePeriod.endDate,
+        },
+      );
+    }
+    const total = await qb.getCount();
+    return { total };
   }
 
   /**

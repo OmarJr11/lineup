@@ -6,11 +6,18 @@ import { registerEnumType } from '@nestjs/graphql';
  */
 export enum TimePeriodGranularityEnum {
   /** Group by day (e.g. 2025-03-18). */
-  DAY = 'day',
+  TODAY = 'today',
+  /** Group by yesterday (e.g. 2025-03-17). */
+  YESTERDAY = 'yesterday',
   /** Group by week (e.g. 2025-W12). */
-  WEEK = 'week',
+  LAST_WEEK = 'last_week',
   /** Group by month (e.g. 2025-03). */
-  MONTH = 'month',
+  LAST_MONTH = 'last_month',
+  /** Group by year (e.g. 2025). */
+  LAST_YEAR = 'last_year',
+  /** Range*/
+  RANGE = 'range',
+  ALL = 'all',
 }
 
 registerEnumType(TimePeriodGranularityEnum, {

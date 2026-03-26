@@ -227,7 +227,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
    * @returns {Promise<ProductSku>} The updated product SKU.
    */
   @Transactional()
-  async registerPurchase(
+  async registerSale(
     input: RegisterPurchaseInput,
     businessReq: IBusinessReq,
   ): Promise<ProductSku> {
@@ -241,7 +241,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
       LogWarn(
         this.logger,
         this.rRegisterPurchase.insufficientStock.message,
-        this.registerPurchase.name,
+        this.registerSale.name,
         businessReq,
       );
       throw new BadRequestException(this.rRegisterPurchase.insufficientStock);

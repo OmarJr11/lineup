@@ -125,15 +125,15 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
    */
   async getLowOrOutOfStockCountForStatistics(
     idBusiness: number,
-    threshold: number = 5,
+    threshold: number,
   ): Promise<number> {
-    return await this.createQueryBuilder('ps')
+    const qr = this.createQueryBuilder('ps')
       .where('ps.id_creation_business = :idBusiness', { idBusiness })
       .andWhere('ps.status <> :status', { status: StatusEnum.DELETED })
       .andWhere('(ps.quantity IS NULL OR ps.quantity <= :threshold)', {
         threshold,
-      })
-      .getCount();
+      });
+    return qr.getCount();
   }
 
   /**
