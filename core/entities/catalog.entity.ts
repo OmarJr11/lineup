@@ -33,6 +33,9 @@ export class Catalog extends BaseEntity {
   @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
   image?: File;
 
+  @Column({ type: 'varchar', name: 'hex_color', length: 7, nullable: true })
+  hexColor?: string;
+
   @Column({ type: 'varchar', length: 255, unique: true })
   path: string;
 

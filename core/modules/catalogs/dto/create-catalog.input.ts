@@ -6,7 +6,7 @@ import {
   MinLength,
   IsOptional,
   IsArray,
-  IsEmpty,
+  Matches,
 } from 'class-validator';
 
 @InputType()
@@ -22,6 +22,18 @@ export class CreateCatalogInput {
   @IsOptional()
   @IsString()
   imageCode?: string;
+
+  @Field({
+    nullable: true,
+    description:
+      'Optional accent color as #RRGGBB (six hex digits after #). Omit to leave unset.',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#([0-9A-Fa-f]{6})$/, {
+    message: 'hexColor must be # followed by exactly 6 hexadecimal digits',
+  })
+  hexColor?: string;
 
   @Field(() => [String], { nullable: true })
   @IsOptional()

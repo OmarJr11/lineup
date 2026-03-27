@@ -24,6 +24,12 @@ export class CatalogSchema {
   @Field(() => FileSchema, { nullable: true })
   image?: FileSchema;
 
+  @Field({
+    nullable: true,
+    description: 'Theme or accent color as hexadecimal (e.g. #RRGGBB)',
+  })
+  hexColor?: string;
+
   @Field()
   path: string;
 

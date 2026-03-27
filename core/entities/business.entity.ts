@@ -67,6 +67,9 @@ export class Business extends BaseEntity {
   @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
   image?: File;
 
+  @Column({ type: 'varchar', name: 'hex_color', length: 7, nullable: true })
+  hexColor?: string;
+
   @Column({ type: 'simple-array', nullable: true })
   tags?: string[];
 
