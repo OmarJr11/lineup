@@ -88,7 +88,7 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       });
       return updated;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, businessReq);
+      LogError(this.logger, error as Error, this.update.name, businessReq);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }

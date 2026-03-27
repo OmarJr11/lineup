@@ -49,6 +49,12 @@ export class BusinessSchema {
   @Field(() => FileSchema, { nullable: true })
   image?: FileSchema;
 
+  @Field({
+    nullable: true,
+    description: 'Theme or accent color as hexadecimal (e.g. #RRGGBB)',
+  })
+  hexColor?: string;
+
   @Field(() => [String], { nullable: true })
   tags?: string[];
 

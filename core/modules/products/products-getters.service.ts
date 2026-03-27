@@ -62,8 +62,8 @@ export class ProductsGettersService extends BasicService<Product> {
       return await this.findOneWithOptionsOrFail({
         where: { id, status: Not(StatusEnum.DELETED) },
       });
-    } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -83,8 +83,8 @@ export class ProductsGettersService extends BasicService<Product> {
           status: Not(StatusEnum.DELETED),
         },
       });
-    } catch (error) {
-      LogError(this.logger, error, this.findOneByBusinessId.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findOneByBusinessId.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -135,8 +135,8 @@ export class ProductsGettersService extends BasicService<Product> {
         .where('p.id = :id', { id })
         .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
         .getOneOrFail();
-    } catch (error) {
-      LogError(this.logger, error, this.findOneWithRelations.name);
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findOneWithRelations.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }

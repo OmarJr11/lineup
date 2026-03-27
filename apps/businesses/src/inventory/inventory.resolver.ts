@@ -15,7 +15,7 @@ import {
   Response,
 } from '../../../../core/common/decorators';
 import { inventoryResponses } from '../../../../core/common/responses';
-import { InventoryPermissionsEnum } from '../../../../core/common/enums';
+import { BusinessesPermissionsEnum, InventoryPermissionsEnum } from '../../../../core/common/enums';
 import { IBusinessReq } from '../../../../core/common/interfaces';
 import { ProductSkusService } from '../../../../core/modules/product-skus/product-skus.service';
 import { StockMovementsService } from '../../../../core/modules/stock-movements/stock-movements.service';
@@ -42,7 +42,8 @@ export class InventoryResolver {
 
   @Mutation(() => ProductSkuSchema, { name: 'adjustStock' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(InventoryPermissionsEnum.INVMGMT)
+  //@Permissions(InventoryPermissionsEnum.INVMGMT)
+  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   @Response(inventoryResponses.adjustStock)
   async adjustStock(
     @Args('data') data: AdjustStockInput,
@@ -54,7 +55,8 @@ export class InventoryResolver {
 
   @Mutation(() => ProductSkuSchema, { name: 'registerSale' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(InventoryPermissionsEnum.INVMGMT)
+  //@Permissions(InventoryPermissionsEnum.INVMGMT)
+  @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   @Response(inventoryResponses.registerPurchase)
   async registerSale(
     @Args('data') data: RegisterPurchaseInput,
@@ -66,7 +68,8 @@ export class InventoryResolver {
 
   @Mutation(() => Boolean, { name: 'removeProductSku' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(InventoryPermissionsEnum.INVMGMT)
+  //@Permissions(InventoryPermissionsEnum.INVMGMT)
+  @Permissions(BusinessesPermissionsEnum.BURDELOWN)
   @Response(inventoryResponses.removeSku)
   async removeProductSku(
     @Args('idProductSku', { type: () => Int }) idProductSku: number,
@@ -78,7 +81,8 @@ export class InventoryResolver {
 
   @Query(() => [ProductSkuSchema], { name: 'getStockByProduct' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(InventoryPermissionsEnum.INVMGMT)
+  //@Permissions(InventoryPermissionsEnum.INVMGMT)
+  @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(inventoryResponses.getStockHistory)
   async getStockByProduct(
     @Args('idProduct', { type: () => Int }) idProduct: number,
@@ -98,7 +102,8 @@ export class InventoryResolver {
 
   @Query(() => [StockMovementSchema], { name: 'getStockHistory' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
-  @Permissions(InventoryPermissionsEnum.INVMGMT)
+  //@Permissions(InventoryPermissionsEnum.INVMGMT)
+  @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(inventoryResponses.getStockHistory)
   async getStockHistory(
     @Args('idProductSku', { type: () => Int, nullable: true })

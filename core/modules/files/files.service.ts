@@ -142,8 +142,8 @@ export class FilesService extends BasicService<File> {
     const command = new GetObjectCommand({ Bucket: this.bucketName, Key: key });
     return await getSignedUrl(this.client, command, {
       expiresIn: 60 * 60 * 24,
-    }).catch((error) => {
-      LogError(this.logger, error, this.getPresignedSignedUrl.name);
+    }).catch((error: unknown) => {
+      LogError(this.logger, error as Error, this.getPresignedSignedUrl.name);
       throw new InternalServerErrorException(this.rUpload.error);
     });
   }
