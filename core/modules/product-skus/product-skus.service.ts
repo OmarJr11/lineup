@@ -231,34 +231,58 @@ export class ProductSkusService extends BasicService<ProductSku> {
     input: RegisterPurchaseInput,
     businessReq: IBusinessReq,
   ): Promise<ProductSku> {
-    const sku = await this.productSkusGettersService.findOneByBusinessId(
-      input.idProductSku,
-      businessReq.businessId,
-    );
-    const previousQuantity = sku.quantity ?? 0;
-    const newQuantity = previousQuantity - input.quantity;
-    if (newQuantity < 0) {
-      LogWarn(
-        this.logger,
-        this.rRegisterPurchase.insufficientStock.message,
-        this.registerSale.name,
+    const [updatedSku] = await this.registerSales([input], businessReq);
+    return updatedSku;
+  }
+
+  /**
+   * Register multiple purchases in one operation. Decreases stock and records each movement in history.
+   * @param {RegisterPurchaseInput[]} input - The list of sales.
+   * @param {IBusinessReq} businessReq - The business request object.
+   * @returns {Promise<ProductSku[]>} The updated product SKUs.
+   */
+  @Transactional()
+  async registerSales(
+    input: RegisterPurchaseInput[],
+    businessReq: IBusinessReq,
+  ): Promise<ProductSku[]> {
+    const updatedSkus: ProductSku[] = [];
+    for (const saleInput of input) {
+      const sku = await this.productSkusGettersService.findOneByBusinessId(
+        saleInput.idProductSku,
+        businessReq.businessId,
+      );
+      const previousQuantity = sku.quantity ?? 0;
+      const newQuantity = previousQuantity - saleInput.quantity;
+      if (newQuantity < 0) {
+        LogWarn(
+          this.logger,
+          this.rRegisterPurchase.insufficientStock.message,
+          this.registerSale.name,
+          businessReq,
+        );
+        throw new BadRequestException(this.rRegisterPurchase.insufficientStock);
+      }
+      await this.stockMovementsSettersService.create(
+        {
+          idProductSku: sku.id,
+          type: StockMovementTypeEnum.SALE,
+          quantityDelta: -saleInput.quantity,
+          previousQuantity,
+          newQuantity,
+          notes: saleInput.notes,
+        },
         businessReq,
       );
-      throw new BadRequestException(this.rRegisterPurchase.insufficientStock);
+      const data = { quantity: newQuantity };
+      const updatedSku = await this.productSkusSettersService.update(
+        sku,
+        data,
+        businessReq,
+      );
+      updatedSkus.push(updatedSku);
     }
-    await this.stockMovementsSettersService.create(
-      {
-        idProductSku: sku.id,
-        type: StockMovementTypeEnum.SALE,
-        quantityDelta: -input.quantity,
-        previousQuantity,
-        newQuantity,
-        notes: input.notes,
-      },
-      businessReq,
-    );
-    const data = { quantity: newQuantity };
-    return await this.productSkusSettersService.update(sku, data, businessReq);
+    return updatedSkus;
   }
 
   /**

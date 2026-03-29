@@ -6,6 +6,7 @@ export * from './permission.entity';
 export * from './role-permission.entity';
 export * from './file.entity';
 export * from './business.entity';
+export * from './business-hour.entity';
 export * from './business-role.entity';
 export * from './business-follower.entity';
 export * from './product.entity';

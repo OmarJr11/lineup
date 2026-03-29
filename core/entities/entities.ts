@@ -36,6 +36,7 @@ import {
   VerificationCode,
   ProductRating,
   StockMovement,
+  BusinessHour,
 } from '.';
 
 export const entities = [
@@ -76,4 +77,5 @@ export const entities = [
   DiscountProduct,
   EntityAudit,
   UserSearch,
+  BusinessHour,
 ];

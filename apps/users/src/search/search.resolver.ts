@@ -147,4 +147,26 @@ export class SearchResolver {
       limit: result.limit,
     };
   }
+
+  /**
+   * Returns recently added products ordered by creation date descending.
+   * @param pagination - InfinityScrollInput (page, limit)
+   * @returns Paginated products sorted by newest first
+   */
+  @UseGuards(OptionalJwtAuthGuard)
+  @Query(() => PaginatedProducts, { name: 'recentlyAddedProducts' })
+  async recentlyAddedProducts(
+    @Args('pagination', { type: () => InfinityScrollInput })
+    pagination: InfinityScrollInput,
+  ): Promise<PaginatedProducts> {
+    const result =
+      await this.searchService.getRecentlyAddedProducts(pagination);
+    const items = result.items.map((p) => toProductSchema(p));
+    return {
+      items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  }
 }

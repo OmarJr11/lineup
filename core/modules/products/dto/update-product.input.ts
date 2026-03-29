@@ -1,6 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
 import {
   IsArray,
+  IsBoolean,
   IsEmpty,
   IsNotEmpty,
   IsNumber,
@@ -10,9 +11,10 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
+import { TransformBoolean } from '../../../common/transforms';
 
 @InputType()
 export class UpdateProductInput {
@@ -64,6 +66,13 @@ export class UpdateProductInput {
   @ValidateNested({ each: true })
   @Type(() => ProductVariationInput)
   variations?: ProductVariationInput[];
+
+  @Field()
+  @IsOptional()
+  @IsNotEmpty()
+  @Transform(TransformBoolean)
+  @IsBoolean()
+  isPrimary?: boolean;
 
   @IsEmpty()
   hasVariations?: boolean;

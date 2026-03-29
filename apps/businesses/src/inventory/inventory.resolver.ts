@@ -15,7 +15,7 @@ import {
   Response,
 } from '../../../../core/common/decorators';
 import { inventoryResponses } from '../../../../core/common/responses';
-import { BusinessesPermissionsEnum, InventoryPermissionsEnum } from '../../../../core/common/enums';
+import { BusinessesPermissionsEnum } from '../../../../core/common/enums';
 import { IBusinessReq } from '../../../../core/common/interfaces';
 import { ProductSkusService } from '../../../../core/modules/product-skus/product-skus.service';
 import { StockMovementsService } from '../../../../core/modules/stock-movements/stock-movements.service';
@@ -53,17 +53,18 @@ export class InventoryResolver {
     return toProductSkuSchemaFromInventory(sku);
   }
 
-  @Mutation(() => ProductSkuSchema, { name: 'registerSale' })
+  @Mutation(() => [ProductSkuSchema], { name: 'registerSale' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   //@Permissions(InventoryPermissionsEnum.INVMGMT)
   @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   @Response(inventoryResponses.registerPurchase)
   async registerSale(
-    @Args('data') data: RegisterPurchaseInput,
+    @Args('data', { type: () => [RegisterPurchaseInput] })
+    data: RegisterPurchaseInput[],
     @BusinessDec() businessReq: IBusinessReq,
-  ) {
-    const sku = await this.productSkusService.registerSale(data, businessReq);
-    return toProductSkuSchemaFromInventory(sku);
+  ): Promise<ProductSkuSchema[]> {
+    const skus = await this.productSkusService.registerSales(data, businessReq);
+    return skus.map(toProductSkuSchemaFromInventory);
   }
 
   @Mutation(() => Boolean, { name: 'removeProductSku' })

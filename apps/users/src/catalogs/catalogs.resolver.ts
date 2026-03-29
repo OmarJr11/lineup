@@ -23,6 +23,11 @@ export class CatalogsResolver {
     return toCatalogSchema(await this.catalogsService.findOne(id));
   }
 
+  @Query(() => CatalogSchema, { name: 'findOneCatalogByPath' })
+  async findOneByPath(@Args('path', { type: () => String }) path: string) {
+    return toCatalogSchema(await this.catalogsService.findOneByPath(path));
+  }
+
   /**
    * Get catalogs of a business by its ID with infinite scroll pagination.
    * @param {number} idBusiness - The business ID.

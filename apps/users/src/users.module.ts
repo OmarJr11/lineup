@@ -21,6 +21,7 @@ import { SearchModule } from './search/search.module';
 import { CollectionsModule } from './collections/collections.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
 import { StatesModule } from './states/states.module';
+import { BusinessHoursModule } from './business-hours/business-hours.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { StatesModule } from './states/states.module';
     CollectionsModule,
     VerificationCodesModule,
     StatesModule,
+    BusinessHoursModule,
   ],
 })
 export class UsersModule implements NestModule {

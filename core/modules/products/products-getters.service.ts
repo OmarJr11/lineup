@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { Brackets, In, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { InfinityScrollInput } from '../../common/dtos';
 import { StatusEnum } from '../../common/enums';
@@ -142,12 +142,58 @@ export class ProductsGettersService extends BasicService<Product> {
   }
 
   /**
+   * Get all Products by Catalog
+   * @param {number} idCatalog - The ID of the catalog
+   * @param {string} search - search query
+   * @returns {Promise<Product[]>}
+   */
+  async getAllByCatalog(
+    idCatalog: number,
+    search?: string,
+  ): Promise<Product[]> {
+    const subQuery = this.createQueryBuilder('sub')
+      .select('sub.id')
+      .where('sub.status <> :status', { status: StatusEnum.DELETED })
+      .andWhere('sub.idCatalog = :idCatalog', { idCatalog });
+
+    const trimmedSearch = search?.trim();
+    if (trimmedSearch) {
+      const normalizedSearch = `%${trimmedSearch}%`;
+      subQuery.andWhere(
+        new Brackets((queryBuilder) => {
+          queryBuilder
+            .where(
+              `translate(lower(coalesce(sub.title, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.subtitle, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.description, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            );
+        }),
+      );
+    }
+
+    const queryBuilder = this.getQueryRelations(this.createQueryBuilder('p'))
+      .where(`p.id IN (${subQuery.getQuery()})`)
+      .setParameters(subQuery.getParameters());
+    if (!trimmedSearch) {
+      queryBuilder.orderBy('p.creationDate', 'DESC').addOrderBy('p.id', 'DESC');
+    }
+    return await queryBuilder.getMany();
+  }
+
+  /**
    * Get all Products by Catalog with pagination
    * @param {number} idCatalog - The ID of the catalog
    * @param {InfinityScrollInput} query - query parameters for pagination
    * @returns {Promise<Product[]>}
    */
-  async findAllByCatalog(
+  async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
   ): Promise<Product[]> {
@@ -156,13 +202,34 @@ export class ProductsGettersService extends BasicService<Product> {
     const skip = (page - 1) * limit;
     const order = query.order || 'DESC';
     const orderBy = query.orderBy || 'creation_date';
+    const search = query.search?.trim();
     const subQuery = this.createQueryBuilder('sub')
       .select('sub.id')
       .where('sub.status <> :status', { status: StatusEnum.DELETED })
-      .andWhere('sub.idCatalog = :idCatalog', { idCatalog })
-      .orderBy(`sub.${orderBy}`, order)
-      .limit(limit)
-      .offset(skip);
+      .andWhere('sub.idCatalog = :idCatalog', { idCatalog });
+
+    const trimmedSearch = search;
+    if (trimmedSearch) {
+      const normalizedSearch = `%${trimmedSearch}%`;
+      subQuery.andWhere(
+        new Brackets((queryBuilder) => {
+          queryBuilder
+            .where(
+              `translate(lower(coalesce(sub.title, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.subtitle, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.description, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            );
+        }),
+      );
+    }
+    subQuery.orderBy(`sub.${orderBy}`, order).limit(limit).offset(skip);
     return await this.getQueryRelations(this.createQueryBuilder('p'))
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())
@@ -196,6 +263,24 @@ export class ProductsGettersService extends BasicService<Product> {
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())
       .orderBy(`p.${orderBy}`, order)
+      .getMany();
+  }
+
+  /**
+   * Get products by business and primary flag.
+   * @param {number} idBusiness - The business ID.
+   * @param {boolean} isPrimary - Primary flag filter.
+   * @returns {Promise<Product[]>} Array of matching products.
+   */
+  async findAllByBusinessAndIsPrimary(
+    idBusiness: number,
+    isPrimary: boolean,
+  ): Promise<Product[]> {
+    return await this.getQueryRelations(this.createQueryBuilder('p'))
+      .where('p.idCreationBusiness = :idBusiness', { idBusiness })
+      .andWhere('p.isPrimary = :isPrimary', { isPrimary })
+      .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+      .orderBy('p.creationDate', 'DESC')
       .getMany();
   }
 

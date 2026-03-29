@@ -25,6 +25,11 @@ import { InfinityScrollInput } from '../../../../core/common/dtos';
 export class ProductsResolver {
   constructor(private readonly productsService: ProductsService) {}
 
+  /**
+   * Create a product.
+   * @param {CreateProductInput} data - The create data.
+   * @param {IBusinessReq} businessReq - The business request.
+   */
   @Mutation(() => ProductSchema, { name: 'createProduct' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(ProductsPermissionsEnum.PRODCRE)
@@ -37,6 +42,10 @@ export class ProductsResolver {
     return toProductSchema(product);
   }
 
+  /**
+   * Get all products.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
   @Query(() => PaginatedProducts, { name: 'findAllProducts' })
   async findAll(
     @Args('pagination', { type: () => InfinityScrollInput })
@@ -53,14 +62,52 @@ export class ProductsResolver {
     };
   }
 
-  @Query(() => PaginatedProducts, { name: 'getAllByCatalog' })
+  /**
+   * Get all primary products by business.
+   * @param {number} idBusiness - The ID of the business.
+   * @returns {Promise<ProductSchema[]>} Array of primary products.
+   */
+  @Query(() => [ProductSchema], { name: 'getAllPrimaryProductsByBusiness' })
+  async getAllPrimaryProductsByBusiness(
+    @Args('idBusiness', { type: () => Int }) idBusiness: number,
+  ): Promise<ProductSchema[]> {
+    const products = await this.productsService.findAllByBusinessAndIsPrimary(
+      idBusiness,
+      true,
+    );
+    return products.map((product) => toProductSchema(product));
+  }
+
+  /**
+   * Get all products by catalog.
+   * @param {number} idCatalog - The ID of the catalog.
+   * @param {string} search - The search query.
+   */
+  @Query(() => [ProductSchema], { name: 'getAllByCatalog' })
   async getAllByCatalog(
+    @Args('idCatalog', { type: () => Int }) idCatalog: number,
+    @Args('search', { type: () => String, nullable: true }) search?: string,
+  ) {
+    const items = await this.productsService.findAllByCatalog(
+      idCatalog,
+      search,
+    );
+    return items.map((product) => toProductSchema(product));
+  }
+
+  /**
+   * Get all products by catalog with pagination.
+   * @param {number} idCatalog - The ID of the catalog.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
+  @Query(() => PaginatedProducts, { name: 'getAllByCatalogPaginated' })
+  async getAllByCatalogPaginated(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
   ) {
     const items = (
-      await this.productsService.findAllByCatalog(idCatalog, pagination)
+      await this.productsService.getAllByCatalogPaginated(idCatalog, pagination)
     ).map((product) => toProductSchema(product));
     return {
       items,
@@ -70,6 +117,11 @@ export class ProductsResolver {
     };
   }
 
+  /**
+   * Get all products by business.
+   * @param {number} idBusiness - The ID of the business.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
   @Query(() => PaginatedProducts, { name: 'getAllByBusiness' })
   async getAllByBusiness(
     @Args('idBusiness', { type: () => Int }) idBusiness: number,
@@ -109,11 +161,20 @@ export class ProductsResolver {
     };
   }
 
+  /**
+   * Get one product by ID.
+   * @param {number} id - The ID of the product.
+   */
   @Query(() => ProductSchema, { name: 'findOneProduct' })
   async findOne(@Args('id', { type: () => Int }) id: number) {
     return toProductSchema(await this.productsService.findOne(id));
   }
 
+  /**
+   * Update a product.
+   * @param {UpdateProductInput} data - The update data.
+   * @param {IBusinessReq} businessReq - The business request.
+   */
   @Mutation(() => ProductSchema, { name: 'updateProduct' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(ProductsPermissionsEnum.PRODUPD)
@@ -127,6 +188,30 @@ export class ProductsResolver {
     );
   }
 
+  /**
+   * Toggle product primary flag.
+   * @param {number} idProduct - The ID of the product.
+   * @param {IBusinessReq} businessReq - The business request.
+   * @returns {Promise<ProductSchema>} The updated product.
+   */
+  @Mutation(() => ProductSchema, { name: 'toggleProductIsPrimary' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(ProductsPermissionsEnum.PRODUPD)
+  @Response(productsResponses.update)
+  async toggleProductIsPrimary(
+    @Args('idProduct', { type: () => Int }) idProduct: number,
+    @BusinessDec() businessReq: IBusinessReq,
+  ): Promise<ProductSchema> {
+    return toProductSchema(
+      await this.productsService.toggleIsPrimary(idProduct, businessReq),
+    );
+  }
+
+  /**
+   * Remove a product.
+   * @param {number} id - The ID of the product.
+   * @param {IBusinessReq} businessReq - The business request.
+   */
   @Mutation(() => Boolean, { name: 'removeProduct' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(ProductsPermissionsEnum.PRODDEL)

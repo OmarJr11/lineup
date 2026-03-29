@@ -29,6 +29,7 @@ import {
   EntityAudit,
   Tag,
 } from '.';
+import { BusinessHour } from './business-hour.entity';
 import { ProvidersEnum } from '../common/enums';
 
 @Entity({ name: 'businesses' })
@@ -159,6 +160,12 @@ export class Business extends BaseEntity {
 
   @OneToMany(() => BusinessVisit, (visit) => visit.business)
   businessVisits?: BusinessVisit[];
+
+  @OneToMany(
+    () => BusinessHour,
+    (businessHour: BusinessHour) => businessHour.business,
+  )
+  businessHours?: BusinessHour[];
 
   @OneToMany(() => BusinessSearchIndex, (index) => index.business)
   businessSearchIndexes?: BusinessSearchIndex[];

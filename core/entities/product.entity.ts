@@ -109,6 +109,10 @@ export class Product extends BaseEntity {
     if (this.skus?.length) this.skus.sort(PRODUCT_SKU_PRICE_ASC);
   }
 
+  /** Whether this product should be prioritized in business listings. */
+  @Column({ type: 'boolean', name: 'is_primary', default: false })
+  isPrimary: boolean;
+
   /** Whether this product has variations (e.g. Color, Size). */
   @Column({ type: 'boolean', name: 'has_variations', default: false })
   hasVariations: boolean;

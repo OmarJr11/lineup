@@ -126,16 +126,32 @@ export class ProductsService extends BasicService<Product> {
   }
 
   /**
+   * Get all Products by Catalog
+   * @param {number} idCatalog - The ID of the catalog
+   * @param {string} search - search query
+   * @returns {Promise<Product[]>}
+   */
+  async findAllByCatalog(
+    idCatalog: number,
+    search?: string,
+  ): Promise<Product[]> {
+    return await this.productsGettersService.getAllByCatalog(idCatalog, search);
+  }
+
+  /**
    * Get all Products by Catalog with pagination
    * @param {number} idCatalog - The ID of the catalog
    * @param {InfinityScrollInput} query - query parameters for pagination
    * @returns {Promise<Product[]>}
    */
-  async findAllByCatalog(
+  async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
   ): Promise<Product[]> {
-    return await this.productsGettersService.findAllByCatalog(idCatalog, query);
+    return await this.productsGettersService.getAllByCatalogPaginated(
+      idCatalog,
+      query,
+    );
   }
 
   /**
@@ -151,6 +167,22 @@ export class ProductsService extends BasicService<Product> {
     return await this.productsGettersService.findAllByBusiness(
       idBusiness,
       query,
+    );
+  }
+
+  /**
+   * Get products by business and primary flag.
+   * @param {number} idBusiness - The ID of the business.
+   * @param {boolean} isPrimary - Primary flag filter.
+   * @returns {Promise<Product[]>} Array of matching products.
+   */
+  async findAllByBusinessAndIsPrimary(
+    idBusiness: number,
+    isPrimary: boolean,
+  ): Promise<Product[]> {
+    return await this.productsGettersService.findAllByBusinessAndIsPrimary(
+      idBusiness,
+      isPrimary,
     );
   }
 
@@ -256,6 +288,30 @@ export class ProductsService extends BasicService<Product> {
     }
     await this.queueForIdProduct(product.id);
 
+    return await this.productsGettersService.findOneWithRelations(product.id);
+  }
+
+  /**
+   * Toggle the isPrimary flag of a product that belongs to the current business.
+   * @param {number} idProduct - The product ID.
+   * @param {IBusinessReq} businessReq - The business request object.
+   * @returns {Promise<Product>} The updated product with relations.
+   */
+  @Transactional()
+  async toggleIsPrimary(
+    idProduct: number,
+    businessReq: IBusinessReq,
+  ): Promise<Product> {
+    const product = await this.productsGettersService.findOneByBusinessId(
+      idProduct,
+      businessReq.businessId,
+    );
+    const data: UpdateProductInput = {
+      id: product.id,
+      isPrimary: !product.isPrimary,
+    };
+    await this.productsSettersService.update(product, data, businessReq);
+    await this.queueForIdProduct(product.id);
     return await this.productsGettersService.findOneWithRelations(product.id);
   }
 

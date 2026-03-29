@@ -10,3 +10,4 @@ export * from './currencies.function';
 export * from './states.function';
 export * from './inventory.function';
 export * from './discounts.function';
+export * from './business-hours.function';
