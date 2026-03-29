@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { StatusEnum } from '../../common/enums';
 import { BasicService } from '../../common/services';
 import {
@@ -43,15 +43,9 @@ export class BusinessesGettersService extends BasicService<Business> {
     const skip = (page - 1) * limit;
     const order = query.order || 'DESC';
     const orderBy = query.orderBy || 'creation_date';
-    const businesses = await this.createQueryBuilder('b')
-      .leftJoinAndSelect('b.image', 'image')
-      .leftJoinAndSelect(
-        'b.locations',
-        'locations',
-        'locations.status <> :locationStatus',
-        { locationStatus: StatusEnum.DELETED },
-      )
-      .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+    const businesses = await this.applyBusinessPublicRelations(
+      this.createQueryBuilder('b'),
+    )
       .where('b.status <> :status', { status: StatusEnum.DELETED })
       .limit(limit)
       .offset(skip)
@@ -67,21 +61,15 @@ export class BusinessesGettersService extends BasicService<Business> {
    */
   async findOne(id: number): Promise<Business> {
     try {
-      const business = await this.createQueryBuilder('b')
-        .leftJoinAndSelect('b.image', 'image')
-        .leftJoinAndSelect(
-          'b.locations',
-          'locations',
-          'locations.status <> :locationStatus',
-          { locationStatus: StatusEnum.DELETED },
-        )
-        .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+      const business = await this.applyBusinessPublicRelations(
+        this.createQueryBuilder('b'),
+      )
         .where('b.id = :id', { id })
         .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
         .getOneOrFail();
       return this.formatBusiness(business);
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotAcceptableException(this._uList.businessNotFound);
     }
   }
@@ -96,15 +84,9 @@ export class BusinessesGettersService extends BasicService<Business> {
       return [];
     }
     const uniqueIds = [...new Set(ids)];
-    const businesses = await this.createQueryBuilder('b')
-      .leftJoinAndSelect('b.image', 'image')
-      .leftJoinAndSelect(
-        'b.locations',
-        'locations',
-        'locations.status <> :locationStatus',
-        { locationStatus: StatusEnum.DELETED },
-      )
-      .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+    const businesses = await this.applyBusinessPublicRelations(
+      this.createQueryBuilder('b'),
+    )
       .where('b.id IN (:...ids)', { ids: uniqueIds })
       .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
       .getMany();
@@ -118,21 +100,15 @@ export class BusinessesGettersService extends BasicService<Business> {
    */
   async findOneByPath(path: string): Promise<Business> {
     try {
-      const business = await this.createQueryBuilder('b')
-        .leftJoinAndSelect('b.image', 'image')
-        .leftJoinAndSelect(
-          'b.locations',
-          'locations',
-          'locations.status <> :locationStatus',
-          { locationStatus: StatusEnum.DELETED },
-        )
-        .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+      const business = await this.applyBusinessPublicRelations(
+        this.createQueryBuilder('b'),
+      )
         .where('b.path = :path', { path: path.toLocaleLowerCase() })
         .andWhere('b.status <> :status', { status: StatusEnum.DELETED })
         .getOneOrFail();
       return this.formatBusiness(business);
     } catch (error) {
-      LogError(this.logger, error, this.findOneByPath.name);
+      LogError(this.logger, error as Error, this.findOneByPath.name);
       throw new NotAcceptableException(this._uList.businessNotFound);
     }
   }
@@ -175,7 +151,11 @@ export class BusinessesGettersService extends BasicService<Business> {
       .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
       .getOneOrFail()
       .catch((error) => {
-        LogError(this.logger, error, this.findOneByIdWithPassword.name);
+        LogError(
+          this.logger,
+          error as Error,
+          this.findOneByIdWithPassword.name,
+        );
         throw new NotAcceptableException(this._uList.businessNotFound);
       });
     return business;
@@ -237,7 +217,11 @@ export class BusinessesGettersService extends BasicService<Business> {
         .andWhere('business.status <> :status', { status: StatusEnum.DELETED })
         .getOneOrFail();
     } catch (error) {
-      LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+      LogError(
+        this.logger,
+        error as Error,
+        this.findOneByEmailWithPassword.name,
+      );
       throw new NotAcceptableException(this._uList.businessNotFound);
     }
   }
@@ -257,7 +241,11 @@ export class BusinessesGettersService extends BasicService<Business> {
     return await this.findOneWithOptionsOrFail({
       where: { id, email, status },
     }).catch((error) => {
-      LogError(this.logger, error, this.findOneByIdBusinessAndToken.name);
+      LogError(
+        this.logger,
+        error as Error,
+        this.findOneByIdBusinessAndToken.name,
+      );
       throw new UnauthorizedException(this._uToken.tokenNotValid);
     });
   }
@@ -354,5 +342,26 @@ export class BusinessesGettersService extends BasicService<Business> {
    */
   private formatBusinesses(businesses: Business[]): Business[] {
     return businesses.map((business) => this.formatBusiness(business));
+  }
+
+  /**
+   * Applies public business relations used in listing and detail queries.
+   * Includes image, non-deleted locations, and business followers.
+   * @param {SelectQueryBuilder<Business>} queryBuilder - Base business query.
+   * @returns {SelectQueryBuilder<Business>} Query with common relations.
+   */
+  private applyBusinessPublicRelations(
+    queryBuilder: SelectQueryBuilder<Business>,
+  ): SelectQueryBuilder<Business> {
+    return queryBuilder
+      .leftJoinAndSelect('b.image', 'image')
+      .leftJoinAndSelect(
+        'b.locations',
+        'locations',
+        'locations.status <> :locationStatus',
+        { locationStatus: StatusEnum.DELETED },
+      )
+      .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
+      .leftJoinAndSelect('b.businessHours', 'businessHours');
   }
 }

@@ -63,6 +63,22 @@ export class ProductsResolver {
   }
 
   /**
+   * Get all primary products by business.
+   * @param {number} idBusiness - The ID of the business.
+   * @returns {Promise<ProductSchema[]>} Array of primary products.
+   */
+  @Query(() => [ProductSchema], { name: 'getAllPrimaryProductsByBusiness' })
+  async getAllPrimaryProductsByBusiness(
+    @Args('idBusiness', { type: () => Int }) idBusiness: number,
+  ): Promise<ProductSchema[]> {
+    const products = await this.productsService.findAllByBusinessAndIsPrimary(
+      idBusiness,
+      true,
+    );
+    return products.map((product) => toProductSchema(product));
+  }
+
+  /**
    * Get all products by catalog.
    * @param {number} idCatalog - The ID of the catalog.
    * @param {string} search - The search query.
@@ -169,6 +185,25 @@ export class ProductsResolver {
   ) {
     return toProductSchema(
       await this.productsService.update(data, businessReq),
+    );
+  }
+
+  /**
+   * Toggle product primary flag.
+   * @param {number} idProduct - The ID of the product.
+   * @param {IBusinessReq} businessReq - The business request.
+   * @returns {Promise<ProductSchema>} The updated product.
+   */
+  @Mutation(() => ProductSchema, { name: 'toggleProductIsPrimary' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(ProductsPermissionsEnum.PRODUPD)
+  @Response(productsResponses.update)
+  async toggleProductIsPrimary(
+    @Args('idProduct', { type: () => Int }) idProduct: number,
+    @BusinessDec() businessReq: IBusinessReq,
+  ): Promise<ProductSchema> {
+    return toProductSchema(
+      await this.productsService.toggleIsPrimary(idProduct, businessReq),
     );
   }
 

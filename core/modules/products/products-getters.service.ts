@@ -267,6 +267,24 @@ export class ProductsGettersService extends BasicService<Product> {
   }
 
   /**
+   * Get products by business and primary flag.
+   * @param {number} idBusiness - The business ID.
+   * @param {boolean} isPrimary - Primary flag filter.
+   * @returns {Promise<Product[]>} Array of matching products.
+   */
+  async findAllByBusinessAndIsPrimary(
+    idBusiness: number,
+    isPrimary: boolean,
+  ): Promise<Product[]> {
+    return await this.getQueryRelations(this.createQueryBuilder('p'))
+      .where('p.idCreationBusiness = :idBusiness', { idBusiness })
+      .andWhere('p.isPrimary = :isPrimary', { isPrimary })
+      .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
+      .orderBy('p.creationDate', 'DESC')
+      .getMany();
+  }
+
+  /**
    * Get all product IDs by business (for discount assignment).
    * @param {number} idBusiness - The business ID.
    * @returns {Promise<number[]>} Array of product IDs.

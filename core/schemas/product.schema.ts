@@ -72,6 +72,9 @@ export class ProductSchema {
   @Field()
   hasVariations: boolean;
 
+  @Field()
+  isPrimary: boolean;
+
   @Field(() => [ProductVariationSchema], { nullable: true })
   variations?: ProductVariationSchema[];
 

@@ -113,6 +113,22 @@ export class ProductsResolver {
   }
 
   /**
+   * Get all primary products by business.
+   * @param {number} idBusiness - The ID of the business.
+   * @returns {Promise<ProductSchema[]>} Array of primary products.
+   */
+  @Query(() => [ProductSchema], { name: 'getAllPrimaryProductsByBusiness' })
+  async getAllPrimaryProductsByBusiness(
+    @Args('idBusiness', { type: () => Int }) idBusiness: number,
+  ): Promise<ProductSchema[]> {
+    const products = await this.productsService.findAllByBusinessAndIsPrimary(
+      idBusiness,
+      true,
+    );
+    return products.map((product) => toProductSchema(product));
+  }
+
+  /**
    * Get products filtered by tag name or slug.
    * @param {string} tagNameOrSlug - Tag name or slug (e.g. "pan" or "pan-artesanal").
    * @param {InfinityScrollInput} pagination - Pagination parameters.
