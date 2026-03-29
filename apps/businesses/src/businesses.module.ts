@@ -24,6 +24,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { BullModule } from '@nestjs/bullmq';
+import { BusinessHoursModule } from './business-hours/business-hours.module';
 
 @Module({
   imports: [
@@ -132,6 +133,7 @@ import { BullModule } from '@nestjs/bullmq';
     InventoryModule,
     DiscountsModule,
     StatisticsModule,
+    BusinessHoursModule,
   ],
 })
 export class BusinessesModule implements NestModule {

@@ -3,6 +3,7 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
 import {
+  BusinessHourSchema,
   BusinessFollowerSchema,
   BusinessRoleSchema,
   BusinessVisitSchema,
@@ -102,6 +103,9 @@ export class BusinessSchema {
 
   @Field(() => [BusinessVisitSchema], { nullable: true })
   businessVisits?: BusinessVisitSchema[];
+
+  @Field(() => [BusinessHourSchema], { nullable: true })
+  businessHours?: BusinessHourSchema[];
 
   @Field(() => [ProductSkuSchema], { nullable: true })
   productSkus?: ProductSkuSchema[];

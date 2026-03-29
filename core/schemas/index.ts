@@ -7,6 +7,7 @@ export * from './token.schema';
 export * from './role-permission.schema';
 export * from './permission.schema';
 export * from './business.schema';
+export * from './business-hour.schema';
 export * from './business-visit.schema';
 export * from './paginated.schema';
 export * from './business-role.schema';
