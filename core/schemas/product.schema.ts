@@ -11,7 +11,6 @@ import {
   ProductTagSchema,
   ProductVariationSchema,
   ProductVisitSchema,
-  TagSchema,
 } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
@@ -39,6 +38,10 @@ export class ProductSchema {
   @Field(() => Float)
   ratingAverage: number;
 
+  /** Lowest available SKU price for this product. */
+  @Field(() => Float, { nullable: true })
+  price?: number;
+
   @Field(() => Int)
   idCatalog: number;
 
@@ -59,6 +62,9 @@ export class ProductSchema {
 
   @Field(() => BusinessSchema, { nullable: true })
   modificationBusiness?: BusinessSchema;
+
+  @Field(() => Date)
+  creationDate: Date;
 
   @Field(() => [ProductFileSchema], { nullable: true })
   productFiles?: ProductFileSchema[];

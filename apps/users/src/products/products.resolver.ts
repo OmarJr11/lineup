@@ -31,6 +31,10 @@ export class ProductsResolver {
     private readonly tagsService: TagsService,
   ) {}
 
+  /**
+   * Get all products.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
   @Query(() => PaginatedProducts, { name: 'findAllProducts' })
   async findAll(
     @Args('pagination', { type: () => InfinityScrollInput })
@@ -47,14 +51,36 @@ export class ProductsResolver {
     };
   }
 
-  @Query(() => PaginatedProducts, { name: 'getAllByCatalog' })
+  /**
+   * Get all products by catalog.
+   * @param {number} idCatalog - The ID of the catalog.
+   * @param {string} search - The search query.
+   */
+  @Query(() => [ProductSchema], { name: 'getAllByCatalog' })
   async getAllByCatalog(
+    @Args('idCatalog', { type: () => Int }) idCatalog: number,
+    @Args('search', { type: () => String, nullable: true }) search?: string,
+  ) {
+    const items = await this.productsService.findAllByCatalog(
+      idCatalog,
+      search,
+    );
+    return items.map((product) => toProductSchema(product));
+  }
+
+  /**
+   * Get all products by catalog with pagination.
+   * @param {number} idCatalog - The ID of the catalog.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
+  @Query(() => PaginatedProducts, { name: 'getAllByCatalogPaginated' })
+  async getAllByCatalogPaginated(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
   ) {
     const items = (
-      await this.productsService.findAllByCatalog(idCatalog, pagination)
+      await this.productsService.getAllByCatalogPaginated(idCatalog, pagination)
     ).map((product) => toProductSchema(product));
     return {
       items,
@@ -64,6 +90,11 @@ export class ProductsResolver {
     };
   }
 
+  /**
+   * Get all products by business with pagination.
+   * @param {number} idBusiness - The ID of the business.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   */
   @Query(() => PaginatedProducts, { name: 'getAllByBusiness' })
   async getAllByBusiness(
     @Args('idBusiness', { type: () => Int }) idBusiness: number,

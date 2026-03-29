@@ -26,6 +26,11 @@ export function toProductSchema(product: Product): ProductSchema {
   const result = { ...product } as ProductSchema;
   if (product.skus?.length) {
     result.skus = product.skus.map(toProductSkuSchema);
+    const firstSkuWithPrice = product.skus.find((sku) => sku.price != null);
+    result.price =
+      firstSkuWithPrice != null ? Number(firstSkuWithPrice.price) : undefined;
+  } else {
+    result.price = null;
   }
   return result;
 }

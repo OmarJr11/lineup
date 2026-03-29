@@ -126,16 +126,32 @@ export class ProductsService extends BasicService<Product> {
   }
 
   /**
+   * Get all Products by Catalog
+   * @param {number} idCatalog - The ID of the catalog
+   * @param {string} search - search query
+   * @returns {Promise<Product[]>}
+   */
+  async findAllByCatalog(
+    idCatalog: number,
+    search?: string,
+  ): Promise<Product[]> {
+    return await this.productsGettersService.getAllByCatalog(idCatalog, search);
+  }
+
+  /**
    * Get all Products by Catalog with pagination
    * @param {number} idCatalog - The ID of the catalog
    * @param {InfinityScrollInput} query - query parameters for pagination
    * @returns {Promise<Product[]>}
    */
-  async findAllByCatalog(
+  async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
   ): Promise<Product[]> {
-    return await this.productsGettersService.findAllByCatalog(idCatalog, query);
+    return await this.productsGettersService.getAllByCatalogPaginated(
+      idCatalog,
+      query,
+    );
   }
 
   /**

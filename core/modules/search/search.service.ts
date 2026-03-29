@@ -271,6 +271,60 @@ export class SearchService {
   }
 
   /**
+   * Fetches recently added products ordered by creation date descending.
+   * This powers "recently added" sections in public catalogs.
+   * Only products created within the current month are included.
+   *
+   * @param pagination - InfinityScrollInput (page, limit).
+   * @returns Object with items (Product[]), total count, page, limit.
+   */
+  async getRecentlyAddedProducts(
+    pagination: InfinityScrollInput,
+  ): Promise<IPaginatedResult<Product>> {
+    const page = Number(pagination.page) || 1;
+    const limit = Math.min(Number(pagination.limit) || 10, 50);
+    const offset = (page - 1) * limit;
+    try {
+      const rows = await this.dataSource.query<{ id: number }[]>(
+        `SELECT p.id AS id
+                FROM products p
+                INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted'
+                    AND p.creation_date >= DATE_TRUNC('month', CURRENT_TIMESTAMP)
+                    AND p.creation_date < DATE_TRUNC('month', CURRENT_TIMESTAMP) + INTERVAL '1 month'
+                ORDER BY p.creation_date DESC, p.id DESC
+                LIMIT $1 OFFSET $2`,
+        [limit, offset],
+      );
+      const totalResult = await this.dataSource.query<{ total: number }[]>(
+        `SELECT COUNT(*)::int AS total
+                FROM products p
+                INNER JOIN catalogs c ON c.id = p.id_catalog AND c.status <> 'deleted'
+                INNER JOIN businesses b ON b.id = p.id_creation_business AND b.status <> 'deleted'
+                WHERE p.status <> 'deleted'
+                    AND p.creation_date >= DATE_TRUNC('month', CURRENT_TIMESTAMP)
+                    AND p.creation_date < DATE_TRUNC('month', CURRENT_TIMESTAMP) + INTERVAL '1 month'`,
+      );
+      const total = totalResult?.[0]?.total ?? 0;
+      const ids = Array.isArray(rows) ? rows.map((r) => r.id) : [];
+      const products =
+        ids.length > 0
+          ? await this.fetchProductsByIds(ids)
+          : new Map<number, Product>();
+      const items = ids
+        .map((id) => products.get(id))
+        .filter((p): p is Product => p != null);
+      return { items, total, page, limit };
+    } catch (error) {
+      this.logger.warn(
+        `Recently added products fetch failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return { items: [], total: 0, page, limit };
+    }
+  }
+
+  /**
    * Fetches random items when search term is empty.
    *
    * @param target - Scope: ALL, BUSINESSES, CATALOGS, or PRODUCTS.
