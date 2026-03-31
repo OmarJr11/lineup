@@ -190,13 +190,22 @@ export class ProductsService extends BasicService<Product> {
    * Get all Products by tag (name or slug) with pagination.
    * @param {string} tagNameOrSlug - Tag name or slug to filter by.
    * @param {InfinityScrollInput} query - Query parameters for pagination.
+   * @param {number} idBusiness - Optional business ID filter.
+   * @param {number[]} idProducts - Optional product IDs to exclude.
    * @returns {Promise<Product[]>} Array of products with the given tag.
    */
   async findAllByTag(
     tagNameOrSlug: string,
     query: InfinityScrollInput,
+    idBusiness?: number,
+    idProducts?: number[],
   ): Promise<Product[]> {
-    return await this.productsGettersService.findAllByTag(tagNameOrSlug, query);
+    return await this.productsGettersService.findAllByTag(
+      tagNameOrSlug,
+      query,
+      idBusiness,
+      idProducts,
+    );
   }
 
   /**
@@ -204,15 +213,21 @@ export class ProductsService extends BasicService<Product> {
    * Returns products that have at least one of the specified tags.
    * @param {string[]} tagNamesOrSlugs - Tag names or slugs to filter by.
    * @param {InfinityScrollInput} query - Query parameters for pagination.
+   * @param {number} idBusiness - Optional business ID filter.
+   * @param {number[]} idProducts - Optional product IDs to exclude.
    * @returns {Promise<Product[]>} Array of products matching any of the given tags.
    */
   async findAllByTags(
     tagNamesOrSlugs: string[],
     query: InfinityScrollInput,
+    idBusiness?: number,
+    idProducts?: number[],
   ): Promise<Product[]> {
     return await this.productsGettersService.findAllByTags(
       tagNamesOrSlugs,
       query,
+      idBusiness,
+      idProducts,
     );
   }
 

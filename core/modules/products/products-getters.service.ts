@@ -302,11 +302,15 @@ export class ProductsGettersService extends BasicService<Product> {
    * Get all Products by tag (name or slug) with pagination.
    * @param {string} tagNameOrSlug - Tag name or slug to filter by.
    * @param {InfinityScrollInput} query - Query parameters for pagination.
+   * @param {number} idBusiness - Optional business ID filter.
+   * @param {number[]} idProducts - Optional product IDs to exclude.
    * @returns {Promise<Product[]>} Array of products with the given tag.
    */
   async findAllByTag(
     tagNameOrSlug: string,
     query: InfinityScrollInput,
+    idBusiness?: number,
+    idProducts?: number[],
   ): Promise<Product[]> {
     const page = query.page || 1;
     const limit = query.limit || 10;
@@ -320,10 +324,14 @@ export class ProductsGettersService extends BasicService<Product> {
       .where('sub.status <> :status', { status: StatusEnum.DELETED })
       .andWhere('(tag.name = :tagNameOrSlug OR tag.slug = :tagNameOrSlug)', {
         tagNameOrSlug,
-      })
-      .orderBy(`sub.${orderBy}`, order)
-      .limit(limit)
-      .offset(skip);
+      });
+    if (idBusiness !== undefined && idBusiness !== null) {
+      subQuery.andWhere('sub.idCreationBusiness = :idBusiness', { idBusiness });
+    }
+    if (idProducts && idProducts.length > 0) {
+      subQuery.andWhere('sub.id NOT IN (:...idProducts)', { idProducts });
+    }
+    subQuery.orderBy(`sub.${orderBy}`, order).limit(limit).offset(skip);
     return await this.getQueryRelations(this.createQueryBuilder('p'))
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())
@@ -336,11 +344,15 @@ export class ProductsGettersService extends BasicService<Product> {
    * Returns products that have at least one of the specified tags.
    * @param {string[]} tagNamesOrSlugs - Tag names or slugs to filter by.
    * @param {InfinityScrollInput} query - Query parameters for pagination.
+   * @param {number} idBusiness - Optional business ID filter.
+   * @param {number[]} idProducts - Optional product IDs to exclude.
    * @returns {Promise<Product[]>} Array of products matching any of the given tags.
    */
   async findAllByTags(
     tagNamesOrSlugs: string[],
     query: InfinityScrollInput,
+    idBusiness?: number,
+    idProducts?: number[],
   ): Promise<Product[]> {
     if (!tagNamesOrSlugs?.length) return [];
     const page = query.page || 1;
@@ -358,10 +370,14 @@ export class ProductsGettersService extends BasicService<Product> {
         {
           tagNamesOrSlugs,
         },
-      )
-      .orderBy(`sub.${orderBy}`, order)
-      .limit(limit)
-      .offset(skip);
+      );
+    if (idBusiness !== undefined && idBusiness !== null) {
+      subQuery.andWhere('sub.idCreationBusiness = :idBusiness', { idBusiness });
+    }
+    if (idProducts && idProducts.length > 0) {
+      subQuery.andWhere('sub.id NOT IN (:...idProducts)', { idProducts });
+    }
+    subQuery.orderBy(`sub.${orderBy}`, order).limit(limit).offset(skip);
     return await this.getQueryRelations(this.createQueryBuilder('p'))
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())

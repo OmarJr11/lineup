@@ -20,6 +20,8 @@ import {
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 import { ProductsService } from '../../../../core/modules/products/products.service';
 import { TagsService } from '../../../../core/modules/tags/tags.service';
+import { GetAllByTagArgs } from '../../../../core/modules/products/dto/get-all-by-tag.dto';
+import { GetAllByTagsArgs } from '../../../../core/modules/products/dto/get-all-by-tags.dto';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => ProductReactionSchema)
@@ -130,17 +132,23 @@ export class ProductsResolver {
 
   /**
    * Get products filtered by tag name or slug.
-   * @param {string} tagNameOrSlug - Tag name or slug (e.g. "pan" or "pan-artesanal").
+   * @param {GetAllByTagArgs} filters - Tag and filtering arguments.
    * @param {InfinityScrollInput} pagination - Pagination parameters.
    */
   @Query(() => PaginatedProducts, { name: 'getAllByTag' })
   async getAllByTag(
-    @Args('tagNameOrSlug', { type: () => String }) tagNameOrSlug: string,
+    @Args() filters: GetAllByTagArgs,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
   ) {
+    const { tagNameOrSlug, idBusiness, idProducts } = filters;
     const items = (
-      await this.productsService.findAllByTag(tagNameOrSlug, pagination)
+      await this.productsService.findAllByTag(
+        tagNameOrSlug,
+        pagination,
+        idBusiness,
+        idProducts,
+      )
     ).map((product) => toProductSchema(product));
     return {
       items,
@@ -153,18 +161,23 @@ export class ProductsResolver {
   /**
    * Get products filtered by multiple tag names or slugs.
    * Returns products that have at least one of the specified tags.
-   * @param {string[]} tagNamesOrSlugs - Tag names or slugs (e.g. ["pan", "integral", "sin-gluten"]).
+   * @param {GetAllByTagsArgs} filters - Tag and filtering arguments.
    * @param {InfinityScrollInput} pagination - Pagination parameters.
    */
   @Query(() => PaginatedProducts, { name: 'getAllByTags' })
   async getAllByTags(
-    @Args('tagNamesOrSlugs', { type: () => [String] })
-    tagNamesOrSlugs: string[],
+    @Args() filters: GetAllByTagsArgs,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
   ) {
+    const { tagNamesOrSlugs, idBusiness, idProducts } = filters;
     const items = (
-      await this.productsService.findAllByTags(tagNamesOrSlugs, pagination)
+      await this.productsService.findAllByTags(
+        tagNamesOrSlugs,
+        pagination,
+        idBusiness,
+        idProducts,
+      )
     ).map((product) => toProductSchema(product));
     return {
       items,
