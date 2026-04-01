@@ -17,6 +17,8 @@ import { UploadFileDto } from '../../../../core/modules/files/dto/upload-file.dt
 import { IFileInterface, IUserReq } from '../../../../core/common/interfaces';
 import { UserDec } from '../../../../core/common/decorators';
 
+const IMPORT_PRODUCTS_MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+
 @UsePipes(new ValidationPipe())
 @Controller('files')
 export class FilesController {
@@ -43,5 +45,20 @@ export class FilesController {
       ...this.rUpload.success,
       file: await this.filesService.uploadFile(file, data, user),
     };
+  }
+
+  @Post('upload-document')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: IMPORT_PRODUCTS_MAX_FILE_SIZE_BYTES,
+      },
+    }),
+  )
+  @Bind(UploadedFile())
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  async uploadDocument(file: IFileInterface) {
+    await this.filesService.uploadDocumentFile(file);
+    return this.rUpload.success;
   }
 }

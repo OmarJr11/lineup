@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotAcceptableException,
   Scope,
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
@@ -21,10 +20,16 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { InjectQueue } from '@nestjs/bullmq';
 import { IFileUploadInterface } from '../../common/interfaces/file.interface';
 import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DirectoriesEnum } from '../../common/enums';
+import { Queue } from 'bullmq';
+import {
+  FilesConsumerEnum,
+  QueueNamesEnum,
+} from '../../common/enums/consumers';
 
 /** Minimum confidence score (0-1) for Vision API labels to be included */
 const VISION_LABEL_MIN_CONFIDENCE = 0.7;
@@ -51,6 +56,8 @@ export class FilesService extends BasicService<File> {
     @InjectRepository(File)
     private readonly filesRepository: Repository<File>,
     private readonly configService: ConfigService,
+    @InjectQueue(QueueNamesEnum.files)
+    private readonly filesQueue: Queue<unknown, void, FilesConsumerEnum>,
   ) {
     super(filesRepository, userRequest);
     this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
@@ -95,10 +102,12 @@ export class FilesService extends BasicService<File> {
       },
     });
 
-    await this.client.send(command).catch((error) => {
-      this.logger.error(`Failed to upload file to S3: ${error.message}`);
-      throw new NotAcceptableException('File upload failed');
-    });
+    try {
+      await this.client.send(command);
+    } catch (error) {
+      LogError(this.logger, error as Error, this.uploadFile.name, user);
+      throw new InternalServerErrorException(this.rUpload.error);
+    }
 
     const url = this.validateDirectory(data.directory)
       ? this.getFileUrl(directory)
@@ -119,9 +128,26 @@ export class FilesService extends BasicService<File> {
     try {
       return await this.save(fileToSave, user);
     } catch (error) {
-      LogError(this.logger, error, this.uploadFile.name, user);
+      LogError(this.logger, error as Error, this.uploadFile.name, user);
       throw new InternalServerErrorException(this.rUpload.error);
     }
+  }
+
+  /**
+   * Extracts products from a document using Gemini.
+   * @param {IFileInterface} file The uploaded document file
+   */
+  async uploadDocumentFile(file: IFileInterface): Promise<void> {
+    const queueJobName: FilesConsumerEnum =
+      FilesConsumerEnum.UploadDocumentFile;
+    await this.filesQueue.add(queueJobName, {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      size: file.size,
+      bufferBase64: file.buffer.toString('base64'),
+    });
   }
 
   /**
@@ -209,7 +235,7 @@ export class FilesService extends BasicService<File> {
    * @param {string} directory The directory path to validate
    * @returns {boolean} True if the directory is valid, false otherwise
    */
-  private validateDirectory(directory: string): boolean {
+  private validateDirectory(_directory: string): boolean {
     return true;
   }
 

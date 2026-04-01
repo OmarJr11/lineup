@@ -1,5 +1,6 @@
 import {
   AfterLoad,
+  Check,
   Column,
   Entity,
   JoinColumn,
@@ -35,6 +36,7 @@ export const PRODUCT_SKU_PRICE_ASC = (a: ProductSku, b: ProductSku) => {
   return priceA - priceB;
 };
 
+@Check(`"id_catalog" IS NOT NULL OR "status" = 'pending'`)
 @Entity({ name: 'products' })
 export class Product extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int8' })
@@ -65,8 +67,8 @@ export class Product extends BaseEntity {
   })
   ratingAverage: number;
 
-  @Column('int8', { name: 'id_catalog' })
-  idCatalog: number;
+  @Column('int8', { name: 'id_catalog', nullable: true })
+  idCatalog?: number;
 
   @ManyToOne(() => Catalog, (catalog) => catalog.products)
   @JoinColumn([{ name: 'id_catalog', referencedColumnName: 'id' }])

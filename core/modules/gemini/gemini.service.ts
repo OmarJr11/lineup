@@ -81,7 +81,7 @@ export class GeminiService {
       const text = response.text ?? '';
       return { text, rawResponse: response };
     } catch (error) {
-      LogError(this.logger, error, this.generateContent.name);
+      LogError(this.logger, error as Error, this.generateContent.name);
       throw new InternalServerErrorException(this.rGenerateContent.error);
     }
   }
