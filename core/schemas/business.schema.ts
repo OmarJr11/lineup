@@ -3,6 +3,7 @@ import { StatusEnum } from '../common/enums/status.enum';
 import { FileSchema } from './file.schema';
 import { ProvidersEnum } from '../common/enums';
 import {
+  BusinessHourSchema,
   BusinessFollowerSchema,
   BusinessRoleSchema,
   BusinessVisitSchema,
@@ -14,7 +15,7 @@ import {
   ProductVariationSchema,
   DiscountSchema,
   DiscountProductSchema,
-  DiscountProductAuditSchema
+  EntityAuditSchema,
 } from '.';
 
 @ObjectType()
@@ -49,6 +50,12 @@ export class BusinessSchema {
   @Field(() => FileSchema, { nullable: true })
   image?: FileSchema;
 
+  @Field({
+    nullable: true,
+    description: 'Theme or accent color as hexadecimal (e.g. #RRGGBB)',
+  })
+  hexColor?: string;
+
   @Field(() => [String], { nullable: true })
   tags?: string[];
 
@@ -57,6 +64,9 @@ export class BusinessSchema {
 
   @Field(() => Int)
   visits: number;
+
+  @Field({ description: 'Whether the business operates online' })
+  isOnline: boolean;
 
   @Field(() => StatusEnum)
   status: StatusEnum;
@@ -94,6 +104,9 @@ export class BusinessSchema {
   @Field(() => [BusinessVisitSchema], { nullable: true })
   businessVisits?: BusinessVisitSchema[];
 
+  @Field(() => [BusinessHourSchema], { nullable: true })
+  businessHours?: BusinessHourSchema[];
+
   @Field(() => [ProductSkuSchema], { nullable: true })
   productSkus?: ProductSkuSchema[];
 
@@ -106,6 +119,6 @@ export class BusinessSchema {
   @Field(() => [DiscountProductSchema], { nullable: true })
   creationDiscountProducts?: DiscountProductSchema[];
 
-  @Field(() => [DiscountProductAuditSchema], { nullable: true })
-  creationDiscountProductAudits?: DiscountProductAuditSchema[];
+  @Field(() => [EntityAuditSchema], { nullable: true })
+  creationEntityAudits?: EntityAuditSchema[];
 }

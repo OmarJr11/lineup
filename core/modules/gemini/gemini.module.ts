@@ -7,9 +7,7 @@ import { GeminiService } from './gemini.service';
  * Exports GeminiService for use in other modules.
  */
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })],
   providers: [GeminiService],
   exports: [GeminiService],
 })

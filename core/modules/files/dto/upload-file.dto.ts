@@ -1,8 +1,8 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
+import { DirectoriesEnum } from '../../../../core/common/enums';
 
 export class UploadFileDto {
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(50)
-    directory: string;
+  @IsNotEmpty()
+  @IsEnum(DirectoriesEnum)
+  directory: DirectoriesEnum;
 }

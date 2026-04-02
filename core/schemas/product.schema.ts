@@ -1,94 +1,98 @@
 import { StatusEnum } from '../common/enums';
 import {
-    BusinessSchema,
-    CatalogSchema,
-    CurrencySchema,
-    DiscountProductSchema,
-    ProductFileSchema,
-    ProductRatingSchema,
-    ProductReactionSchema,
-    ProductSearchIndexSchema,
-    ProductSkuSchema,
-    ProductVariationSchema,
-    ProductVisitSchema
+  BusinessSchema,
+  CatalogSchema,
+  DiscountProductSchema,
+  ProductFileSchema,
+  ProductRatingSchema,
+  ProductReactionSchema,
+  ProductSearchIndexSchema,
+  ProductSkuSchema,
+  ProductTagSchema,
+  ProductVariationSchema,
+  ProductVisitSchema,
 } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class ProductSchema{
-    @Field(() => Int)
-    id: number;
+export class ProductSchema {
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field({ nullable: true })
-    subtitle?: string;
+  @Field({ nullable: true })
+  subtitle?: string;
 
-    @Field()
-    description: string;
+  @Field()
+  description: string;
 
-    @Field(() => Float, { nullable: true })
-    price?: number;
+  @Field(() => Int)
+  likes: number;
 
-    @Field(() => Int, { nullable: true })
-    idCurrency?: number;
+  @Field(() => Int)
+  visits: number;
 
-    @Field(() => CurrencySchema, { nullable: true })
-    currency?: CurrencySchema;
+  /** Average star rating computed from all active ratings. */
+  @Field(() => Float)
+  ratingAverage: number;
 
-    @Field(() => Int)
-    likes: number;
+  /** Lowest available SKU price for this product. */
+  @Field(() => Float, { nullable: true })
+  price?: number;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int, { nullable: true })
+  idCatalog?: number;
 
-    /** Average star rating computed from all active ratings. */
-    @Field(() => Float)
-    ratingAverage: number;
+  @Field(() => CatalogSchema, { nullable: true })
+  catalog?: CatalogSchema;
 
-    @Field(() => Int)
-    idCatalog: number;
+  @Field(() => [ProductTagSchema], { nullable: true })
+  productTags?: ProductTagSchema[];
 
-    @Field(() => CatalogSchema, { nullable: true })
-    catalog?: CatalogSchema;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => [String])
-    tags: string[];
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => BusinessSchema, { nullable: true })
+  modificationBusiness?: BusinessSchema;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => Date)
+  creationDate: Date;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    modificationBusiness?: BusinessSchema;
+  @Field(() => [ProductFileSchema], { nullable: true })
+  productFiles?: ProductFileSchema[];
 
-    @Field(() => [ProductFileSchema], { nullable: true })
-    productFiles?: ProductFileSchema[];
+  @Field()
+  hasVariations: boolean;
 
-    @Field(() => [ProductVariationSchema], { nullable: true })
-    variations?: ProductVariationSchema[];
+  @Field()
+  isPrimary: boolean;
 
-    @Field(() => [ProductSkuSchema], { nullable: true })
-    skus?: ProductSkuSchema[];
+  @Field(() => [ProductVariationSchema], { nullable: true })
+  variations?: ProductVariationSchema[];
 
-    @Field(() => [ProductReactionSchema], { nullable: true })
-    reactions?: ProductReactionSchema[];
+  @Field(() => [ProductSkuSchema], { nullable: true })
+  skus?: ProductSkuSchema[];
 
-    @Field(() => [ProductVisitSchema], { nullable: true })
-    productVisits?: ProductVisitSchema[];
+  @Field(() => [ProductReactionSchema], { nullable: true })
+  reactions?: ProductReactionSchema[];
 
-    @Field(() => [ProductSearchIndexSchema], { nullable: true })
-    productSearchIndexes?: ProductSearchIndexSchema[];
+  @Field(() => [ProductVisitSchema], { nullable: true })
+  productVisits?: ProductVisitSchema[];
 
-    @Field(() => [ProductRatingSchema], { nullable: true })
-    ratings?: ProductRatingSchema[];
+  @Field(() => [ProductSearchIndexSchema], { nullable: true })
+  productSearchIndexes?: ProductSearchIndexSchema[];
 
-    @Field(() => DiscountProductSchema, { nullable: true })
-    discountProduct?: DiscountProductSchema;
+  @Field(() => [ProductRatingSchema], { nullable: true })
+  ratings?: ProductRatingSchema[];
+
+  @Field(() => DiscountProductSchema, { nullable: true })
+  discountProduct?: DiscountProductSchema;
 }

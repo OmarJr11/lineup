@@ -4,21 +4,21 @@ import { UserSchema } from './';
 
 @ObjectType()
 export class CurrencySchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    name: string;
+  @Field()
+  name: string;
 
-    @Field()
-    code: string;
+  @Field()
+  code: string;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => Int)
-    idCreationUser: number;
+  @Field(() => Int)
+  idCreationUser: number;
 
-    @Field(() => UserSchema, { nullable: true })
-    creationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  creationUser?: UserSchema;
 }

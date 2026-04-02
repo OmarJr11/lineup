@@ -4,24 +4,24 @@ import { ProductSchema, UserSchema } from '.';
 
 @ObjectType()
 export class ProductReactionSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idProduct: number;
+  @Field(() => Int)
+  idProduct: number;
 
-    @Field(() => ProductSchema, { nullable: true })
-    product?: ProductSchema;
+  @Field(() => ProductSchema, { nullable: true })
+  product?: ProductSchema;
 
-    @Field(() => ReactionTypeEnum)
-    type: ReactionTypeEnum;
+  @Field(() => ReactionTypeEnum)
+  type: ReactionTypeEnum;
 
-    @Field(() => Int)
-    idCreationUser: number;
+  @Field(() => Int)
+  idCreationUser: number;
 
-    @Field(() => UserSchema, { nullable: true })
-    creationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  creationUser?: UserSchema;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 }

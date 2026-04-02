@@ -1,8 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class FixRolepPermissions1751770744943 implements MigrationInterface {
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             INSERT INTO system.permissions (code, description, status, id_creation_user) VALUES
             ('BURLISOWN', 'View information of the own Businesses.', 'active', 1),
             ('BURLISALL', 'View information for all Businesses.', 'active', 1),
@@ -13,8 +13,8 @@ export class FixRolepPermissions1751770744943 implements MigrationInterface {
             ('BURUPDOWN', 'Update own Businesses.', 'active', 1);
         `);
 
-        for (const roleId of [1, 4]) {
-            await queryRunner.query(`
+    for (const roleId of [1, 4]) {
+      await queryRunner.query(`
                 INSERT INTO system.role_permissions (id_role, id_permission, id_creation_user)
                 SELECT ${roleId}, id, 1 FROM system.permissions
                 WHERE code IN (
@@ -28,11 +28,11 @@ export class FixRolepPermissions1751770744943 implements MigrationInterface {
                 )
                 ON CONFLICT (id_role, id_permission) DO NOTHING;
             `);
-        }
     }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             DELETE FROM system.role_permissions
             WHERE id_permission IN (
                 SELECT id FROM system.permissions WHERE code IN (
@@ -46,7 +46,7 @@ export class FixRolepPermissions1751770744943 implements MigrationInterface {
                 )
             );
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DELETE FROM system.permissions WHERE code IN (
                 'BURLISOWN',
                 'BURLISALL',
@@ -57,5 +57,5 @@ export class FixRolepPermissions1751770744943 implements MigrationInterface {
                 'BURUPDOWN'
             );
         `);
-    }
+  }
 }

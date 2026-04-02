@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { QueueNamesEnum, MailsConsumerEnum, TemplatesEnum } from '../../common/enums';
+import {
+  QueueNamesEnum,
+  MailsConsumerEnum,
+  TemplatesEnum,
+} from '../../common/enums';
 import { ISendTemplateMailInput } from '../mail/interfaces';
 import { VerificationCode } from '../../entities/verification-code.entity';
 
@@ -40,6 +44,8 @@ export class VerificationCodesMailService {
       },
     };
     await this.mailsQueue.add(MailsConsumerEnum.SendTemplateMail, payload);
-    this.logger.log(`Verification code email enqueued for ${record.destination}`);
+    this.logger.log(
+      `Verification code email enqueued for ${record.destination}`,
+    );
   }
 }

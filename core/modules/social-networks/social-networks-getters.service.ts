@@ -14,7 +14,7 @@ export class SocialNetworksGettersService extends BasicService<SocialNetwork> {
 
   constructor(
     @InjectRepository(SocialNetwork)
-    private readonly repo: Repository<SocialNetwork>
+    private readonly repo: Repository<SocialNetwork>,
   ) {
     super(repo);
   }
@@ -27,11 +27,11 @@ export class SocialNetworksGettersService extends BasicService<SocialNetwork> {
   async findByCode(code: SocialMediasEnum): Promise<SocialNetwork> {
     try {
       return await this.findOneWithOptionsOrFail({
-        where: { code, status: Not(StatusEnum.DELETED) }
+        where: { code, status: Not(StatusEnum.DELETED) },
       });
     } catch (error) {
       LogError(this.logger, error, this.findByCode.name);
-      throw new NotFoundException(this.rList.notFound); 
+      throw new NotFoundException(this.rList.notFound);
     }
   }
 
@@ -40,15 +40,15 @@ export class SocialNetworksGettersService extends BasicService<SocialNetwork> {
    * @param {number} id - Social Network ID
    * @returns {Promise<SocialNetwork>} - Social Network entity
    */
-  async findById(id: number): Promise<SocialNetwork> {  
-      try {
-        return await this.findOneWithOptionsOrFail({
-          where: { id, status: Not(StatusEnum.DELETED) }
-        });
-      } catch (error) {
-        LogError(this.logger, error, this.findById.name);
-        throw new NotFoundException(this.rList.notFound);
-      }
+  async findById(id: number): Promise<SocialNetwork> {
+    try {
+      return await this.findOneWithOptionsOrFail({
+        where: { id, status: Not(StatusEnum.DELETED) },
+      });
+    } catch (error) {
+      LogError(this.logger, error, this.findById.name);
+      throw new NotFoundException(this.rList.notFound);
+    }
   }
 
   /** Find all Social Networks
@@ -56,9 +56,9 @@ export class SocialNetworksGettersService extends BasicService<SocialNetwork> {
    */
   async findAll(): Promise<SocialNetwork[]> {
     try {
-      return await this.find({ 
+      return await this.find({
         where: { status: Not(StatusEnum.DELETED) },
-        relations: ['image']
+        relations: ['image'],
       });
     } catch (error) {
       LogError(this.logger, error, this.findAll.name);

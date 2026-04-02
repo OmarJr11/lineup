@@ -4,10 +4,17 @@ import { BusinessFollowersModule } from '../../../../core/modules/business-follo
 import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { TokensModule } from '../../../../core/modules/token/token.module';
 import { AuthModule } from '../../../../core/modules/auth/auth.module';
+import { BusinessesModule as BusinessesModuleCore } from '../../../../core/modules/businesses/businesses.module';
 
 @Module({
   providers: [BusinessesResolver],
   exports: [BusinessesResolver],
-  imports: [BusinessFollowersModule, RolesModule, TokensModule, AuthModule],
+  imports: [
+    BusinessesModuleCore,
+    BusinessFollowersModule,
+    RolesModule,
+    TokensModule,
+    AuthModule,
+  ],
 })
 export class BusinessesModule {}

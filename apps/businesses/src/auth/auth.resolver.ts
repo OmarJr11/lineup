@@ -14,8 +14,9 @@ import { businessesResponses } from '../../../../core/common/responses';
 import { Request, Response } from 'express';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { BaseResponse } from '../../../../core/schemas/base-response.schema';
+import { CookiesPrefixEnum } from '../../../../core/common/enums';
 
-const cookiePrefix = 'lineup_businesses_';
+const cookiePrefix = CookiesPrefixEnum.BUSINESSES;
 
 /**
  * Resolver handling authentication and email verification mutations
@@ -26,7 +27,7 @@ export class AuthResolver {
   constructor(
     private readonly authService: AuthService,
     private readonly authMailService: AuthMailService,
-  ) { }
+  ) {}
 
   /**
    * Authenticates a business and sets session cookies.
@@ -46,8 +47,13 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService
-      .setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -69,8 +75,13 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService
-      .setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -92,8 +103,13 @@ export class AuthResolver {
     const refreshToken = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.authService
-      .setCookies(res, token, refreshToken, result, cookiePrefix);
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -103,13 +119,10 @@ export class AuthResolver {
    * @returns {Promise<LoginResponse>}
    */
   @Mutation(() => LoginResponse)
-  async refreshToken(
-    @Context() ctx: any,
-  ): Promise<LoginResponse> {
+  async refreshToken(@Context() ctx: any): Promise<LoginResponse> {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService
-      .refreshAndSetCookies(req, res, cookiePrefix);
+    return await this.authService.refreshAndSetCookies(req, res, cookiePrefix);
   }
 
   /**
@@ -127,8 +140,13 @@ export class AuthResolver {
   ): Promise<BaseResponse> {
     const req: Request = ctx.req;
     const res: Response = ctx.res;
-    return await this.authService
-      .logout(req, res, business, businessesResponses.logout, cookiePrefix);
+    return await this.authService.logout(
+      req,
+      res,
+      business,
+      businessesResponses.logout,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -154,9 +172,7 @@ export class AuthResolver {
    * @returns {Promise<BaseResponse>}
    */
   @Mutation(() => BaseResponse)
-  async verifyCode(
-    @Args('data') data: VerifyCodeInput,
-  ): Promise<BaseResponse> {
+  async verifyCode(@Args('data') data: VerifyCodeInput): Promise<BaseResponse> {
     await this.authMailService.verifyCode(data.email, data.code);
     return businessesResponses.verifyCode.success;
   }

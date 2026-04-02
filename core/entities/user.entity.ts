@@ -1,81 +1,118 @@
 import { StatusEnum } from '../common/enums/status.enum';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { ProvidersEnum } from '../common/enums';
-import { BusinessFollower, BusinessVisit, CatalogVisit, Currency, File, ProductRating, ProductReaction, ProductVisit, Role, Token, UserRole } from '.';
+import {
+  BusinessFollower,
+  BusinessVisit,
+  CatalogVisit,
+  Currency,
+  File,
+  ProductRating,
+  ProductReaction,
+  ProductVisit,
+  Role,
+  State,
+  Token,
+  UserRole,
+  UserSearch,
+} from '.';
 
 @Entity({ schema: 'system', name: 'users' })
 export class User extends BaseEntity {
-    @PrimaryGeneratedColumn({ type: 'int8' })
-    id: number;
+  @PrimaryGeneratedColumn({ type: 'int8' })
+  id: number;
 
-    @Column('character varying', { unique: true, length: 50 })
-    email: string;
+  @Column('character varying', { unique: true, length: 50 })
+  email: string;
 
-    @Column('boolean', { name: 'email_validated' })
-    emailValidated?: boolean;
+  @Column('boolean', { name: 'email_validated' })
+  emailValidated?: boolean;
 
-    @Column('character varying', { unique: true, length: 50 })
-    username: string;
+  @Column('character varying', { unique: true, length: 50 })
+  username: string;
 
-    @Column('character varying', { name: 'first_name', length: 255 })
-    firstName: string;
+  @Column('character varying', { name: 'first_name', length: 255 })
+  firstName: string;
 
-    @Column('character varying', { name: 'last_name', length: 255 })
-    lastName: string;
+  @Column('character varying', { name: 'last_name', length: 255 })
+  lastName: string;
 
-    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
-    status: StatusEnum;
+  @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
+  status: StatusEnum;
 
-    @Column({ type: 'enum', enum: ProvidersEnum })
-    provider: ProvidersEnum;
+  @Column({ type: 'enum', enum: ProvidersEnum })
+  provider: ProvidersEnum;
 
-    @Column('character varying', { length: 200, select: false })
-    password: string;
+  @Column('character varying', { length: 200, select: false })
+  password: string;
 
-    @Column({ type: 'varchar', name: 'image_code', length: 50, nullable: true })
-    imageCode?: string;
+  @Column({ type: 'varchar', name: 'image_code', length: 50, nullable: true })
+  imageCode?: string;
 
-    @OneToMany(() => Role, (role) => role.creationUser)
-    createdRoles?: Role[];
+  @Column('int8', { name: 'id_state', nullable: true })
+  idState?: number;
 
-    @OneToMany(() => Role, (role) => role.modificationUser)
-    modifiedRoles?: Role[];
+  @ManyToOne(() => State, (state) => state.users)
+  @JoinColumn([{ name: 'id_state', referencedColumnName: 'id' }])
+  state?: State;
 
-    @OneToMany(() => UserRole, (role) => role.creationUser)
-    createdUserRoles?: UserRole[];
+  @OneToMany(() => Role, (role) => role.creationUser)
+  createdRoles?: Role[];
 
-    @OneToMany(() => UserRole, (user) => user.user)
-    userRoles?: UserRole[];
+  @OneToMany(() => Role, (role) => role.modificationUser)
+  modifiedRoles?: Role[];
 
-    @OneToMany(() => Token, (token) => token.user)
-    tokens?: Token[];
+  @OneToMany(() => UserRole, (role) => role.creationUser)
+  createdUserRoles?: UserRole[];
 
-    @OneToMany(() => File, (file) => file.creationUser)
-    files?: File[];
+  @OneToMany(() => UserRole, (user) => user.user)
+  userRoles?: UserRole[];
 
-    @OneToMany(() => ProductReaction, (reaction) => reaction.creationUser)
-    productReactions?: ProductReaction[];
+  @OneToMany(() => Token, (token) => token.user)
+  tokens?: Token[];
 
-    @OneToMany(() => ProductRating, (rating) => rating.creationUser)
-    productRatings?: ProductRating[];
+  @OneToMany(() => File, (file) => file.creationUser)
+  files?: File[];
 
-    @OneToMany(() => BusinessFollower, (follower) => follower.creationUser)
-    businessFollowers?: BusinessFollower[];
+  @OneToMany(() => ProductReaction, (reaction) => reaction.creationUser)
+  productReactions?: ProductReaction[];
 
-    @OneToMany(() => Currency, (currency) => currency.creationUser)
-    createdCurrencies?: Currency[];
+  @OneToMany(() => ProductRating, (rating) => rating.creationUser)
+  productRatings?: ProductRating[];
 
-    @OneToMany(() => BusinessVisit, (visit) => visit.creationUser)
-    businessVisits?: BusinessVisit[];
+  @OneToMany(() => BusinessFollower, (follower) => follower.creationUser)
+  businessFollowers?: BusinessFollower[];
 
-    @OneToMany(() => ProductVisit, (visit) => visit.creationUser)
-    productVisits?: ProductVisit[];
+  @OneToMany(() => Currency, (currency) => currency.creationUser)
+  createdCurrencies?: Currency[];
 
-    @OneToMany(() => CatalogVisit, (visit) => visit.creationUser)
-    catalogVisits?: CatalogVisit[];
+  @OneToMany(() => State, (state) => state.creationUser)
+  createdStates?: State[];
 
-    @ManyToOne(() => File, (files) => files.userProfileImages)
-    @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
-    profileImage?: File;
+  @OneToMany(() => State, (state) => state.modificationUser)
+  modifiedStates?: State[];
+
+  @OneToMany(() => BusinessVisit, (visit) => visit.creationUser)
+  businessVisits?: BusinessVisit[];
+
+  @OneToMany(() => ProductVisit, (visit) => visit.creationUser)
+  productVisits?: ProductVisit[];
+
+  @OneToMany(() => CatalogVisit, (visit) => visit.creationUser)
+  catalogVisits?: CatalogVisit[];
+
+  @OneToMany(() => UserSearch, (search) => search.creationUser)
+  userSearches?: UserSearch[];
+
+  @ManyToOne(() => File, (files) => files.userProfileImages)
+  @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
+  profileImage?: File;
 }

@@ -4,20 +4,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductVariation } from '../../entities';
 import { ProductVariationsGettersService } from './product-variations-getters.service';
 import { ProductVariationsSettersService } from './product-variations-setters.service';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ProductVariation]),
-  ],
+  imports: [TypeOrmModule.forFeature([ProductVariation]), EntityAuditsModule],
   providers: [
     ProductVariationsService,
     ProductVariationsGettersService,
-    ProductVariationsSettersService
+    ProductVariationsSettersService,
   ],
   exports: [
     ProductVariationsService,
     ProductVariationsGettersService,
-    ProductVariationsSettersService
-  ]
+    ProductVariationsSettersService,
+  ],
 })
 export class ProductVariationsModule {}

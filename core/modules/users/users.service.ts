@@ -1,4 +1,11 @@
-import { ForbiddenException, Inject, Injectable, Logger, NotAcceptableException, Scope } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  Scope,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Request } from 'express';
@@ -10,6 +17,7 @@ import { User } from '../../entities';
 import { ChangePasswordInput } from '../../common/dtos';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
+import { UpdateUserEmailInput } from './dto/update-user-email.input';
 import { UsersSettersService } from './users.setters.service';
 import { UsersGettersService } from './users.getters.service';
 import { userResponses } from '../../common/responses';
@@ -20,6 +28,8 @@ import { LogError } from '../../common/helpers/logger.helper';
 import { RolesService } from '../roles/roles.service';
 import { UserRolesService } from '../user-roles/user-roles.service';
 import { InfinityScrollInput } from '../../common/dtos';
+import { StatesGettersService } from '../states/states-getters.service';
+import { FilesGettersService } from '../files/files-getters.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
@@ -37,72 +47,91 @@ export class UsersService extends BasicService<User> {
     private readonly usersSettersService: UsersSettersService,
     private readonly usersGettersService: UsersGettersService,
     private readonly rolesService: RolesService,
-    private readonly userRolesService: UserRolesService
+    private readonly userRolesService: UserRolesService,
+    private readonly statesGettersService: StatesGettersService,
+    private readonly filesGettersService: FilesGettersService,
   ) {
     super(userRepository, userRequest);
   }
 
   /**
    * Create User
-   * @param {CreateUserInput} data - The data to create a new user 
+   * @param {CreateUserInput} data - The data to create a new user
    * @param {ProvidersEnum} provider - The provider of the user (e.g., Google, Meta, Apple)
    * @param {boolean} isAdmin - Indicates if the user is an admin
-   * @returns {Promise<User>} 
+   * @returns {Promise<User>}
    */
   @Transactional()
   async create(
     data: CreateUserInput,
     provider: ProvidersEnum,
-    isAdmin?: boolean
+    isAdmin?: boolean,
   ): Promise<User> {
     if (
       isAdmin &&
-      (
-        data.role !== RolesCodesEnum.ADMIN &&
-        data.role !== RolesCodesEnum.MODERATOR
-      )
+      data.role !== RolesCodesEnum.ADMIN &&
+      data.role !== RolesCodesEnum.MODERATOR
     ) {
-      LogError(this.logger, this._uCreate.noPermission.message, this.create.name);
+      LogError(
+        this.logger,
+        this._uCreate.noPermission.message,
+        this.create.name,
+      );
       throw new NotAcceptableException(this._uCreate.noPermission);
     }
 
     if (!data.username) {
-      data.username = await this.generateUsername(data.firstName, data.lastName);
+      data.username = await this.generateUsername(
+        data.firstName,
+        data.lastName,
+      );
     }
 
     data.email = data.email.toLocaleLowerCase();
     data.username = data.username.toLocaleLowerCase();
 
-    if (data.username && data.username !== undefined && data.username.length > 2) {
-      const reg = new RegExp('^(?=.{2,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._-]+(?<![_.])$');
+    if (
+      data.username &&
+      data.username !== undefined &&
+      data.username.length > 2
+    ) {
+      const reg = new RegExp(
+        '^(?=.{2,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._-]+(?<![_.])$',
+      );
       if (!reg.test(data.username)) {
-        LogError(this.logger, this._uCreate.usernameNotValid.message, this.create.name);
+        LogError(
+          this.logger,
+          this._uCreate.usernameNotValid.message,
+          this.create.name,
+        );
         throw new ForbiddenException(this._uCreate.usernameNotValid);
       }
     }
 
     this.validateEqualUserEmail(
       { username: data.username, email: data.email },
-      this._uCreate.usernameNotValid
+      this._uCreate.usernameNotValid,
     );
-    await this.usersGettersService.validateUniqueFields(
-      { username: data.username, email: data.email }
-    );
+    await this.usersGettersService.validateUniqueFields({
+      username: data.username,
+      email: data.email,
+    });
 
     if (!data.password) data.password = generateRandomCodeByLength(20);
 
     //data.imgCode = await this.validateImage(data.imgCode);
     data.password = await this.hashPassword(data.password);
-    data.emailValidated = provider === ProvidersEnum.GOOGLE
-      || provider === ProvidersEnum.META
-      || provider === ProvidersEnum.APPLE;
+    data.emailValidated =
+      provider === ProvidersEnum.GOOGLE ||
+      provider === ProvidersEnum.META ||
+      provider === ProvidersEnum.APPLE;
     data.provider = provider;
 
     const user = await this.usersSettersService.create(data);
     delete user.password;
 
     const role = await this.rolesService.findByCode(data.role);
-    const userReq: IUserReq = { userId: user.id, username: user.username }
+    const userReq: IUserReq = { userId: user.id, username: user.username };
     await this.userRolesService.create(user.id, role.id, userReq);
 
     return user;
@@ -111,7 +140,7 @@ export class UsersService extends BasicService<User> {
   /**
    * Find all Users
    * @param {InfinityScrollDto} query - The query parameters for pagination and filtering
-   * @returns {Promise<User[]>} 
+   * @returns {Promise<User[]>}
    */
   async findAll(query: InfinityScrollInput): Promise<User[]> {
     return await this.usersGettersService.findAll(query);
@@ -120,10 +149,10 @@ export class UsersService extends BasicService<User> {
   /**
    * Find User by ID
    * @param {number} id - The ID of the user to find
-   * @returns {Promise<User>} 
+   * @returns {Promise<User>}
    */
   async findOne(id: number): Promise<User> {
-    if(!id) {
+    if (!id) {
       LogError(this.logger, this._uList.isNotAUser.message, this.findOne.name);
       throw new NotAcceptableException(this._uList.isNotAUser);
     }
@@ -134,22 +163,57 @@ export class UsersService extends BasicService<User> {
    * Update User
    * @param {UpdateUserInput} data - The data to update the user
    * @param {IUserReq} user - The user making the request
-   * @returns {Promise<User>} 
+   * @returns {Promise<User>}
    */
   async update(data: UpdateUserInput, user: IUserReq): Promise<User> {
-    const userToUpdate = await this.usersGettersService.findOne(data.id);
-    await this.validateUserId(data.id, user);
+    if (data.idState) {
+      await this.statesGettersService.findById(data.idState);
+    }
+    if (data.imageCode && data.imageCode !== '') {
+      await this.filesGettersService.getImageByName(data.imageCode);
+    }
+    const userToUpdate = await this.usersGettersService.findOne(user.userId);
     data.username = data.username?.toLowerCase();
     const exist = await this.usersGettersService.findByUsername(data.username);
     if (
       data.username &&
-      !!exist
+      !!exist &&
+      Number(exist.id) !== Number(userToUpdate.id)
     ) {
-      LogError(this.logger, this._uUpdate.usernameExists, this.update.name, user);
+      LogError(
+        this.logger,
+        this._uUpdate.usernameExists,
+        this.update.name,
+        user,
+      );
       throw new NotAcceptableException(this._uUpdate.usernameExists);
     }
     await this.usersSettersService.update(data, userToUpdate, user);
-    return await this.usersGettersService.findOne(data.id);
+    return await this.usersGettersService.findOne(user.userId);
+  }
+
+  /**
+   * Update user email
+   * @param {UpdateUserEmailInput} data - The new email
+   * @param {IUserReq} userReq - The user making the request
+   * @returns {Promise<User>}
+   */
+  async updateEmail(
+    data: UpdateUserEmailInput,
+    userReq: IUserReq,
+  ): Promise<User> {
+    const userToUpdate = await this.usersGettersService.findOne(userReq.userId);
+    await this.validateUserId(userReq.userId, userReq);
+    await this.usersGettersService.validateUniqueFields(
+      { username: userToUpdate.username, email: data.email },
+      userReq.userId,
+    );
+    await this.usersSettersService.updateEmail(
+      userToUpdate,
+      data.email,
+      userReq,
+    );
+    return await this.usersGettersService.findOne(userReq.userId);
   }
 
   /**
@@ -158,20 +222,41 @@ export class UsersService extends BasicService<User> {
    * @param {IUserReq} userReq - The user making the request
    * @returns {Promise<boolean>}
    */
-  async changePassword(data: ChangePasswordInput, userReq: IUserReq): Promise<boolean> {
-    const user = await this.usersGettersService.findOneByIdWithPassword(userReq.userId);
-    const isCurrentValid = await argon2.verify(user.password, data.currentPassword).catch(() => false);
+  async changePassword(
+    data: ChangePasswordInput,
+    userReq: IUserReq,
+  ): Promise<boolean> {
+    const user = await this.usersGettersService.findOneByIdWithPassword(
+      userReq.userId,
+    );
+    const isCurrentValid = await argon2
+      .verify(user.password, data.currentPassword)
+      .catch(() => false);
     if (!isCurrentValid) {
-      LogError(this.logger, this._uChangePassword.previousInvalid.message, this.changePassword.name);
+      LogError(
+        this.logger,
+        this._uChangePassword.previousInvalid.message,
+        this.changePassword.name,
+      );
       throw new ForbiddenException(this._uChangePassword.previousInvalid);
     }
-    const isSame = await argon2.verify(user.password, data.newPassword).catch(() => false);
+    const isSame = await argon2
+      .verify(user.password, data.newPassword)
+      .catch(() => false);
     if (isSame) {
-      LogError(this.logger, this._uChangePassword.equalToPrevious.message, this.changePassword.name);
+      LogError(
+        this.logger,
+        this._uChangePassword.equalToPrevious.message,
+        this.changePassword.name,
+      );
       throw new NotAcceptableException(this._uChangePassword.equalToPrevious);
     }
     const hashedPassword = await this.hashPassword(data.newPassword);
-    await this.usersSettersService.updatePassword(user, hashedPassword, userReq);
+    await this.usersSettersService.updatePassword(
+      user,
+      hashedPassword,
+      userReq,
+    );
     return true;
   }
 
@@ -182,7 +267,6 @@ export class UsersService extends BasicService<User> {
    */
   async remove(id: number, user: IUserReq) {
     const userToDelete = await this.usersGettersService.findOne(id);
-    await this.validateUserId(id, user);
     await this.usersSettersService.remove(userToDelete, user);
   }
 
@@ -193,8 +277,14 @@ export class UsersService extends BasicService<User> {
    * @param {string} [lastName] - User's last name
    * @returns {Promise<string>}
    */
-  async generateUsername(firstName: string, lastName?: string): Promise<string> {
-    const names = this.filterNames(firstName.toLowerCase(), lastName?.toLowerCase());
+  async generateUsername(
+    firstName: string,
+    lastName?: string,
+  ): Promise<string> {
+    const names = this.filterNames(
+      firstName.toLowerCase(),
+      lastName?.toLowerCase(),
+    );
     let username = names;
     const search = '%' + names + '%';
     const users = await this.usersGettersService.searchUsersByUsername(search);
@@ -258,7 +348,7 @@ export class UsersService extends BasicService<User> {
    */
   private validateEqualUserEmail(
     data: { username: string; email: string },
-    completeResponse: any
+    completeResponse: any,
   ): void {
     if (data.username.includes('@') && data.username !== data.email) {
       throw new NotAcceptableException(completeResponse);
@@ -272,7 +362,12 @@ export class UsersService extends BasicService<User> {
    */
   async validateUserId(id: number, user: IUserReq) {
     if (Number(id) !== Number(user.userId)) {
-      LogError(this.logger, this._uUpdate.noPermission.message, this.remove.name, user);
+      LogError(
+        this.logger,
+        this._uUpdate.noPermission.message,
+        this.remove.name,
+        user,
+      );
       throw new ForbiddenException(this._uUpdate.noPermission);
     }
   }

@@ -18,4 +18,4 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
   ],
   providers: [AuthResolver],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -1,5 +1,5 @@
 export enum BlogsPermission {
-    CREATE = 'BLOGCREATE',
-    UPDATE = 'BLOGUPDATE',
-    DELETE = 'BLOGDELETE',
+  CREATE = 'BLOGCREATE',
+  UPDATE = 'BLOGUPDATE',
+  DELETE = 'BLOGDELETE',
 }

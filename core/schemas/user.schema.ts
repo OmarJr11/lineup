@@ -2,6 +2,7 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { StatusEnum } from '../common/enums/status.enum';
 import { ProvidersEnum } from '../common/enums';
 import { FileSchema, RoleSchema, UserRoleSchema } from '.';
+import { StateSchema } from './state.schema';
 import { BaseSchema } from './base.schema';
 
 @ObjectType()
@@ -32,6 +33,12 @@ export class UserSchema extends BaseSchema {
 
   @Field({ nullable: true })
   imageCode?: string;
+
+  @Field(() => Int, { nullable: true })
+  idState?: number;
+
+  @Field(() => StateSchema, { nullable: true })
+  state?: StateSchema;
 
   @Field(() => FileSchema, { nullable: true })
   profileImage?: FileSchema;

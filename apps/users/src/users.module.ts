@@ -18,15 +18,18 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { VisitsModule } from './visits/visits.module';
 import { SearchModule } from './search/search.module';
+import { CollectionsModule } from './collections/collections.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
+import { StatesModule } from './states/states.module';
+import { BusinessHoursModule } from './business-hours/business-hours.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-        ignoreEnvFile: false,
-        isGlobal: true,
-        load: [configuration],
-        validationSchema: ValidatingEnv,
+      ignoreEnvFile: false,
+      isGlobal: true,
+      load: [configuration],
+      validationSchema: ValidatingEnv,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -53,7 +56,7 @@ import { VerificationCodesModule } from './verification-codes/verification-codes
       sortSchema: true,
       introspection: true,
       context: ({ req, res }) => ({ req, res }),
-      installSubscriptionHandlers: true,
+      installSubscriptionHandlers: false,
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
@@ -64,13 +67,17 @@ import { VerificationCodesModule } from './verification-codes/verification-codes
         } else if (extCode) {
           switch (String(extCode)) {
             case 'BAD_REQUEST':
-              code = 400; break;
+              code = 400;
+              break;
             case 'UNAUTHORIZED':
-              code = 401; break;
+              code = 401;
+              break;
             case 'FORBIDDEN':
-              code = 403; break;
+              code = 403;
+              break;
             case 'NOT_FOUND':
-              code = 404; break;
+              code = 404;
+              break;
             default:
               code = 500;
           }
@@ -94,7 +101,10 @@ import { VerificationCodesModule } from './verification-codes/verification-codes
     WishlistsModule,
     VisitsModule,
     SearchModule,
+    CollectionsModule,
     VerificationCodesModule,
+    StatesModule,
+    BusinessHoursModule,
   ],
 })
 export class UsersModule implements NestModule {

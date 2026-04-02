@@ -20,12 +20,12 @@ import { QueueNamesEnum } from '../../common/enums';
   providers: [
     BusinessFollowersService,
     BusinessFollowersGettersService,
-    BusinessFollowersSettersService
+    BusinessFollowersSettersService,
   ],
   exports: [
     BusinessFollowersService,
     BusinessFollowersGettersService,
-    BusinessFollowersSettersService
-  ]
+    BusinessFollowersSettersService,
+  ],
 })
 export class BusinessFollowersModule {}

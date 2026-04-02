@@ -1,8 +1,8 @@
 export interface ICoordinate {
-    latitude: number;
-    longitude: number;
+  latitude: number;
+  longitude: number;
 }
 export interface ICoordinatePoint {
-    x: number;
-    y: number;
+  x: number;
+  y: number;
 }

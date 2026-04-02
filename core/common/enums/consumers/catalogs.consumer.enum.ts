@@ -1,3 +1,3 @@
 export enum CatalogsConsumerEnum {
-    UpdateProductsCount = 'update-products-count',
+  UpdateProductsCount = 'update-products-count',
 }

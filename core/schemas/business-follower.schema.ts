@@ -4,21 +4,21 @@ import { BusinessSchema, UserSchema } from '.';
 
 @ObjectType()
 export class BusinessFollowerSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idBusiness: number;
+  @Field(() => Int)
+  idBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => Int)
-    idCreationUser: number;
+  @Field(() => Int)
+  idCreationUser: number;
 
-    @Field(() => UserSchema, { nullable: true })
-    creationUser?: UserSchema;
+  @Field(() => UserSchema, { nullable: true })
+  creationUser?: UserSchema;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 }

@@ -7,36 +7,36 @@ import { BusinessSchema, ProductSkuSchema } from '.';
  */
 @ObjectType()
 export class StockMovementSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idProductSku: number;
+  @Field(() => Int)
+  idProductSku: number;
 
-    @Field(() => ProductSkuSchema, { nullable: true })
-    productSku?: ProductSkuSchema;
+  @Field(() => ProductSkuSchema, { nullable: true })
+  productSku?: ProductSkuSchema;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => StockMovementTypeEnum)
-    type: StockMovementTypeEnum;
+  @Field(() => StockMovementTypeEnum)
+  type: StockMovementTypeEnum;
 
-    @Field(() => Int)
-    quantityDelta: number;
+  @Field(() => Int)
+  quantityDelta: number;
 
-    @Field(() => Int)
-    previousQuantity: number;
+  @Field(() => Int)
+  previousQuantity: number;
 
-    @Field(() => Int)
-    newQuantity: number;
+  @Field(() => Int)
+  newQuantity: number;
 
-    @Field({ nullable: true })
-    notes?: string;
+  @Field({ nullable: true })
+  notes?: string;
 
-    @Field()
-    creationDate: Date;
+  @Field()
+  creationDate: Date;
 }

@@ -1,29 +1,29 @@
-import { Discount, DiscountProduct, DiscountProductAudit } from '../../entities';
-import {
-    DiscountProductAuditSchema,
-    DiscountProductSchema,
-    DiscountSchema,
+import type { Discount, DiscountProduct, EntityAudit } from '../../entities';
+import type {
+  EntityAuditSchema,
+  DiscountProductSchema,
+  DiscountSchema,
 } from '../../schemas';
 
 /**
  * Maps Discount entity to DiscountSchema.
  */
 export function toDiscountSchema(discount: Discount): DiscountSchema {
-    return discount as unknown as DiscountSchema;
+  return discount as unknown as DiscountSchema;
 }
 
 /**
  * Maps DiscountProduct entity to DiscountProductSchema.
  */
-export function toDiscountProductSchema(discountProduct: DiscountProduct): DiscountProductSchema {
-    return discountProduct as unknown as DiscountProductSchema;
+export function toDiscountProductSchema(
+  discountProduct: DiscountProduct,
+): DiscountProductSchema {
+  return discountProduct as unknown as DiscountProductSchema;
 }
 
 /**
- * Maps DiscountProductAudit entity to DiscountProductAuditSchema.
+ * Maps EntityAudit entity to EntityAuditSchema.
  */
-export function toDiscountProductAuditSchema(
-    audit: DiscountProductAudit,
-): DiscountProductAuditSchema {
-    return audit as unknown as DiscountProductAuditSchema;
+export function toEntityAuditSchema(audit: EntityAudit): EntityAuditSchema {
+  return audit as unknown as EntityAuditSchema;
 }

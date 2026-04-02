@@ -17,14 +17,15 @@ import { ConsumersModule } from '../../../core/consumers';
 import { CronsModule } from '../../../core/crons';
 import { SeedModule } from './seed/seed.module';
 import { RolesAdminModule } from './roles-admin/roles-admin.module';
+import { AdminStatisticsModule } from './admin-statistics/admin-statistics.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-        ignoreEnvFile: false,
-        isGlobal: true,
-        load: [configuration],
-        validationSchema: ValidatingEnv,
+      ignoreEnvFile: false,
+      isGlobal: true,
+      load: [configuration],
+      validationSchema: ValidatingEnv,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -53,7 +54,7 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
       // Include both `req` and `res` in the GraphQL context so resolvers
       // can set cookies on the response (used by AuthService.setCookies).
       context: ({ req, res }) => ({ req, res }),
-      installSubscriptionHandlers: true,
+      installSubscriptionHandlers: false,
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
@@ -64,13 +65,17 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
         } else if (extCode) {
           switch (String(extCode)) {
             case 'BAD_REQUEST':
-              code = 400; break;
+              code = 400;
+              break;
             case 'UNAUTHORIZED':
-              code = 401; break;
+              code = 401;
+              break;
             case 'FORBIDDEN':
-              code = 403; break;
+              code = 403;
+              break;
             case 'NOT_FOUND':
-              code = 404; break;
+              code = 404;
+              break;
             default:
               code = 500;
           }
@@ -81,10 +86,10 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
     }),
     BullModule.forRoot({
       connection: {
-          host: process.env.REDIS_HOST,
-          port: Number(process.env.REDIS_PORT),
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
       },
-  }),
+    }),
     UsersModule,
     AuthModule,
     FilesModule,
@@ -93,6 +98,7 @@ import { RolesAdminModule } from './roles-admin/roles-admin.module';
     CronsModule,
     SeedModule,
     RolesAdminModule,
+    AdminStatisticsModule,
   ],
 })
 export class AdminModule implements NestModule {

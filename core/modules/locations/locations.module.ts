@@ -4,20 +4,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Location } from '../../entities';
 import { LocationsGettersService } from './locations-getters.service';
 import { LocationsSettersService } from './locations-setters.service';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Location]),
-  ],
+  imports: [TypeOrmModule.forFeature([Location]), EntityAuditsModule],
   providers: [
     LocationsService,
     LocationsGettersService,
     LocationsSettersService,
   ],
-  exports: [
-    LocationsService,
-    LocationsGettersService,
-    LocationsSettersService,
-  ],
+  exports: [LocationsService, LocationsGettersService, LocationsSettersService],
 })
 export class LocationsModule {}

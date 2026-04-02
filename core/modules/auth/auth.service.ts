@@ -2,7 +2,17 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { TokensService } from '../token/token.service';
-import { IBusinessReq, IGoogleLogin, ILoginResponse, ILogout, IResponse, IResponseWithData, IUserOrBusinessReq, IUserReq } from '../../common/interfaces';
+import {
+  IBusinessReq,
+  IGoogleLogin,
+  ILoginResponse,
+  ILogout,
+  IResponse,
+  IResponseWithData,
+  IUserOrBusinessReq,
+  IUserReq,
+  ITokenGenerate,
+} from '../../common/interfaces';
 import { UsersGettersService } from '../users/users.getters.service';
 import { UsersService } from '../users/users.service';
 import { Business, Role, User } from '../../entities';
@@ -10,13 +20,21 @@ import { LogError, LogWarn } from '../../common/helpers/logger.helper';
 import * as argon2 from 'argon2';
 import { userResponses } from '../../common/responses';
 import { businessesResponses } from '../../common/responses';
-import { AdminPermission, ProvidersEnum, RolesCodesEnum, StatusEnum } from '../../common/enums';
+import {
+  AdminPermissionsEnum,
+  ProvidersEnum,
+  RolesCodesEnum,
+  StatusEnum,
+} from '../../common/enums';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
 import { BusinessesService } from '../businesses/businesses.service';
 import { CreateBusinessInput } from '../businesses/dto/create-business.input';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { getAcceptableDomains, getRequestAgent } from '../../common/helpers/requests.helper';
+import {
+  getAcceptableDomains,
+  getRequestAgent,
+} from '../../common/helpers/requests.helper';
 import { LoginResponse } from '../../schemas';
 import { OAuth2Client } from 'google-auth-library';
 import { LoginGoogleInput } from './dto/login-google.input';
@@ -52,16 +70,18 @@ export class AuthService {
    * @param {User} user
    * @param {string} password
    */
-  async checkUserLogged(
-    user: User,
-    password: string
-  ) {
+  async checkUserLogged(user: User, password: string) {
     if (!user) {
-      LogWarn(this.logger, 'User not exist or wrong password', this.validateUser.name, user);
+      LogWarn(
+        this.logger,
+        'User not exist or wrong password',
+        this.validateUser.name,
+        user,
+      );
       throw new UnauthorizedException(this.rLogin.wrongData);
     }
-    await argon2.verify(user.password, password).catch((error) => {
-      LogWarn(this.logger, 'User not exist or wrong password', this.validateUser.name, user);
+    await argon2.verify(user.password, password).catch((error: Error) => {
+      LogWarn(this.logger, error, this.validateUser.name, user);
       throw new UnauthorizedException(this.rLogin.wrongData);
     });
   }
@@ -71,16 +91,18 @@ export class AuthService {
    * @param {Business} business
    * @param {string} password
    */
-  async checkBusinessLogged(
-    business: Business,
-    password: string
-  ) {
+  async checkBusinessLogged(business: Business, password: string) {
     if (!business) {
-      LogWarn(this.logger, 'Business not exist or wrong password', this.validateUser.name, business);
+      LogWarn(
+        this.logger,
+        'Business not exist or wrong password',
+        this.validateUser.name,
+        business,
+      );
       throw new UnauthorizedException(this.rLogin.wrongData);
     }
-    await argon2.verify(business.password, password).catch((error) => {
-      LogWarn(this.logger, 'Business not exist or wrong password', this.validateUser.name, business);
+    await argon2.verify(business.password, password).catch((error: Error) => {
+      LogWarn(this.logger, error, this.validateUser.name, business);
       throw new UnauthorizedException(this.rLogin.wrongData);
     });
   }
@@ -88,9 +110,9 @@ export class AuthService {
   /**
    * Check if the user is active, if not throws exception
    *
-   * @param {string} status - status property of a user
+   * @param {StatusEnum} status - status property of a user
    */
-  checkStatus(status: string) {
+  checkStatus(status: StatusEnum): void {
     if (status !== StatusEnum.ACTIVE) {
       LogWarn(this.logger, this.rList.userNotActive, this.checkStatus.name);
       throw new UnauthorizedException(this.rList.userNotActive);
@@ -111,23 +133,32 @@ export class AuthService {
     token: string,
   ): Promise<ILoginResponse> {
     if (!refreshToken) {
-      LogWarn(this.logger, this.rToken.notCookies.message, this.refreshToken.name);
+      LogWarn(
+        this.logger,
+        this.rToken.notCookies.message,
+        this.refreshToken.name,
+      );
       throw new UnauthorizedException(this.rToken.notCookies);
     }
 
-    const decodedToken = this.jwtService.decode(token);
+    const decodedToken = this.jwtService.decode<ITokenGenerate | null>(token);
     if (!decodedToken) {
-      LogWarn(this.logger, this.rToken.tokenNotValid.message, this.refreshToken.name);
+      LogWarn(
+        this.logger,
+        this.rToken.tokenNotValid.message,
+        this.refreshToken.name,
+      );
       throw new UnauthorizedException(this.rToken.tokenNotValid);
     }
 
-    if(decodedToken.isBusiness) {
+    if (decodedToken.isBusiness) {
       const business = await this.businessesGettersService
         .findOneByIdBusinessAndToken(
           decodedToken.idBusiness,
           decodedToken.email,
-          decodedToken.status
-        ).catch((error) => {
+          decodedToken.status,
+        )
+        .catch((error: Error) => {
           LogError(this.logger, error, this.refreshToken.name);
           throw new UnauthorizedException(this.rToken.tokenNotValid);
         });
@@ -135,7 +166,7 @@ export class AuthService {
         refreshToken,
         token,
         business,
-        this.rToken
+        this.rToken,
       );
       return { ...this.rToken.success, business, ...tokenDB };
     } else {
@@ -143,20 +174,20 @@ export class AuthService {
         .findOneByIdUserAndToken(
           decodedToken.idUser,
           decodedToken.email,
-          decodedToken.status
-        ).catch((error) => {
+          decodedToken.status,
+        )
+        .catch((error: Error) => {
           LogError(this.logger, error, this.refreshToken.name);
           throw new UnauthorizedException(this.rToken.tokenNotValid);
         });
-        const tokenDB = await this.tokenService.updateRefreshToken(
-          refreshToken,
-          token,
-          user,
-          this.rToken
-        );
-        return { ...this.rToken.success, user, ...tokenDB };
+      const tokenDB = await this.tokenService.updateRefreshToken(
+        refreshToken,
+        token,
+        user,
+        this.rToken,
+      );
+      return { ...this.rToken.success, user, ...tokenDB };
     }
-
   }
 
   /**
@@ -166,7 +197,9 @@ export class AuthService {
    * @returns {Promise<ILoginResponse>}
    */
   async validateUser(body: LoginDto): Promise<ILoginResponse> {
-    const user = await this.usersGettersService.findOneByEmailWithPassword(body.email);
+    const user = await this.usersGettersService.findOneByEmailWithPassword(
+      body.email,
+    );
     await this.checkUserLogged(user, body.password);
     // Check user status
     this.checkStatus(user.status);
@@ -182,7 +215,9 @@ export class AuthService {
    */
   async loginWithGoogle(data: LoginGoogleInput): Promise<ILoginResponse> {
     const profile = await this.setDataUserFromGoogle(data.token);
-    const user = await this.usersGettersService.findOneByEmailWithPassword(profile.email);
+    const user = await this.usersGettersService.findOneByEmailWithPassword(
+      profile.email,
+    );
     this.checkStatus(user.status);
     delete user?.password;
     return await this.generateToken(user);
@@ -195,17 +230,35 @@ export class AuthService {
    * @returns {Promise<ILoginResponse>}
    */
   async registerWithGoogle(data: RegisterGoogleInput): Promise<ILoginResponse> {
-    if (data.role !== RolesCodesEnum.USER && data.role !== RolesCodesEnum.BUSINESS) {
-      LogWarn(this.logger, this.rRegister.noPermission.message, this.registerWithGoogle.name);
+    if (
+      data.role !== RolesCodesEnum.USER &&
+      data.role !== RolesCodesEnum.BUSINESS
+    ) {
+      LogWarn(
+        this.logger,
+        this.rRegister.noPermission.message,
+        this.registerWithGoogle.name,
+      );
       throw new UnauthorizedException(this.rRegister.noPermission);
     }
     const profile = await this.setDataUserFromGoogle(data.token);
-    const userExists = await this.usersGettersService.checkUserExistByEmail(profile.email);
+    const userExists = await this.usersGettersService.checkUserExistByEmail(
+      profile.email,
+    );
     if (userExists) {
-      LogWarn(this.logger, this.rRegister.mailExists.message, this.registerWithGoogle.name);
+      LogWarn(
+        this.logger,
+        this.rRegister.mailExists.message,
+        this.registerWithGoogle.name,
+      );
       throw new UnauthorizedException(this.rRegister.mailExists);
     }
-    const username = profile.username ?? await this.usersService.generateUsername(profile.firstName, profile.lastName);
+    const username =
+      profile.username ??
+      (await this.usersService.generateUsername(
+        profile.firstName,
+        profile.lastName,
+      ));
     const createData: CreateUserInput = {
       email: profile.email,
       firstName: profile.firstName,
@@ -214,7 +267,10 @@ export class AuthService {
       role: data.role,
       password: '',
     };
-    const user = await this.usersService.create(createData, ProvidersEnum.GOOGLE);
+    const user = await this.usersService.create(
+      createData,
+      ProvidersEnum.GOOGLE,
+    );
     this.checkStatus(user.status);
     delete user?.password;
     return await this.generateToken(user);
@@ -226,9 +282,14 @@ export class AuthService {
    * @param {LoginGoogleInput} data - Input containing the Google ID token
    * @returns {Promise<ILoginResponse>}
    */
-  async loginWithGoogleBusiness(data: LoginGoogleInput): Promise<ILoginResponse> {
+  async loginWithGoogleBusiness(
+    data: LoginGoogleInput,
+  ): Promise<ILoginResponse> {
     const profile = await this.setDataUserFromGoogle(data.token);
-    const business = await this.businessesGettersService.findOneByEmailWithPassword(profile.email);
+    const business =
+      await this.businessesGettersService.findOneByEmailWithPassword(
+        profile.email,
+      );
     this.checkStatus(business.status);
     delete business?.password;
     return await this.generateToken(business);
@@ -240,21 +301,35 @@ export class AuthService {
    * @param {RegisterGoogleBusinessInput} data - Input containing the Google ID token
    * @returns {Promise<ILoginResponse>}
    */
-  async registerWithGoogleBusiness(data: RegisterGoogleBusinessInput): Promise<ILoginResponse> {
+  async registerWithGoogleBusiness(
+    data: RegisterGoogleBusinessInput,
+  ): Promise<ILoginResponse> {
     const profile = await this.setDataUserFromGoogle(data.token);
-    const businessExists = await this.businessesGettersService.checkBusinessExistByEmail(profile.email);
+    const businessExists =
+      await this.businessesGettersService.checkBusinessExistByEmail(
+        profile.email,
+      );
     if (businessExists) {
-      LogWarn(this.logger, businessesResponses.create.mailExists.message, this.registerWithGoogleBusiness.name);
+      LogWarn(
+        this.logger,
+        businessesResponses.create.mailExists.message,
+        this.registerWithGoogleBusiness.name,
+      );
       throw new UnauthorizedException(businessesResponses.create.mailExists);
     }
-    const businessName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
+    const businessName =
+      [profile.firstName, profile.lastName].filter(Boolean).join(' ') ||
+      profile.email;
     const createData: CreateBusinessInput = {
       email: profile.email,
       name: businessName,
       role: RolesCodesEnum.BUSINESS,
       password: '',
     };
-    const business = await this.businessesService.create(createData, ProvidersEnum.GOOGLE);
+    const business = await this.businessesService.create(
+      createData,
+      ProvidersEnum.GOOGLE,
+    );
     this.checkStatus(business.status);
     delete business?.password;
     return await this.generateToken(business);
@@ -286,7 +361,7 @@ export class AuthService {
    * @returns {Promise<IGoogleLogin>}
    */
   private async googleVerify(tokenGoogle: string): Promise<IGoogleLogin> {
-    return await this.verifyGoogleToken(tokenGoogle).catch((err) => {
+    return await this.verifyGoogleToken(tokenGoogle).catch((err: Error) => {
       LogError(this.logger, err, this.googleVerify.name);
       throw new UnauthorizedException(this.rLogin.loginTypeInvalid);
     });
@@ -320,7 +395,10 @@ export class AuthService {
    * @returns {Promise<ILoginResponse>}
    */
   async validateBusiness(body: LoginDto): Promise<ILoginResponse> {
-    const business = await this.businessesGettersService.findOneByEmailWithPassword(body.email);
+    const business =
+      await this.businessesGettersService.findOneByEmailWithPassword(
+        body.email,
+      );
     await this.checkBusinessLogged(business, body.password);
     // Check user status
     this.checkStatus(business.status);
@@ -335,16 +413,24 @@ export class AuthService {
    * @returns {Promise<ILoginResponse>}
    */
   async validateUserAdmin(body: LoginDto): Promise<ILoginResponse> {
-    const user = await this.usersGettersService.findOneByEmailWithPassword(body.email);
-    const roles = (user.userRoles.filter(
-      (ur) => (
-        ur.role.code === RolesCodesEnum.ADMIN ||
-        ur.role.code === RolesCodesEnum.MODERATOR
+    const user = await this.usersGettersService.findOneByEmailWithPassword(
+      body.email,
+    );
+    const roles = user.userRoles
+      .filter(
+        (ur) =>
+          ur.role.code === RolesCodesEnum.ADMIN ||
+          ur.role.code === RolesCodesEnum.MODERATOR,
       )
-    )).map((ur) => ur.role);
+      .map((ur) => ur.role);
 
     if (!this.isAdmin(roles)) {
-      LogWarn(this.logger, this.rLogin.notAdmin.message, this.validateUserAdmin.name, user);
+      LogWarn(
+        this.logger,
+        this.rLogin.notAdmin.message,
+        this.validateUserAdmin.name,
+        user,
+      );
       throw new UnauthorizedException(this.rLogin.notAdmin);
     }
     await this.checkUserLogged(user, body.password);
@@ -370,7 +456,7 @@ export class AuthService {
     result: ILoginResponse,
     cookiePrefix: string,
   ): Promise<LoginResponse> {
-    const sameSite = ('none' as 'none');
+    const sameSite = 'none' as const;
     const tokenName = `${cookiePrefix}token`;
     const refreshTokenName = `${cookiePrefix}refreshToken`;
     const cookieOptions = {
@@ -396,28 +482,53 @@ export class AuthService {
     res: Response,
     cookiePrefix: string,
   ): Promise<LoginResponse> {
-    const token = req.cookies[`${cookiePrefix}token`] || req.cookies.token;
-    const refreshToken = req.cookies[`${cookiePrefix}refreshToken`] || req.cookies.refreshToken;
+    const prefixedAccess: unknown = req.cookies[`${cookiePrefix}token`];
+    const fallbackAccess: unknown = req.cookies.token;
+    const token =
+      typeof prefixedAccess === 'string' && prefixedAccess.length > 0
+        ? prefixedAccess
+        : typeof fallbackAccess === 'string'
+          ? fallbackAccess
+          : '';
+    const prefixedRefresh: unknown = req.cookies[`${cookiePrefix}refreshToken`];
+    const fallbackRefresh: unknown = req.cookies.refreshToken;
+    const refreshToken =
+      typeof prefixedRefresh === 'string' && prefixedRefresh.length > 0
+        ? prefixedRefresh
+        : typeof fallbackRefresh === 'string'
+          ? fallbackRefresh
+          : '';
 
     if (!refreshToken) {
-      LogWarn(this.logger, this.rToken.notCookies.message, this.refreshAndSetCookies.name);
+      LogWarn(
+        this.logger,
+        this.rToken.notCookies.message,
+        this.refreshAndSetCookies.name,
+      );
       throw new UnauthorizedException(this.rToken.notCookies);
     }
 
-    const decoded = this.jwtService.decode(token);
-    if (!decoded) {
-      LogWarn(this.logger, this.rToken.tokenNotValid.message, this.refreshAndSetCookies.name);
+    if (!this.jwtService.decode<ITokenGenerate | null>(token)) {
+      LogWarn(
+        this.logger,
+        this.rToken.tokenNotValid.message,
+        this.refreshAndSetCookies.name,
+      );
       throw new UnauthorizedException(this.rToken.tokenNotValid);
     }
-
-    const idUser = Number((decoded as any).sub);
 
     const result = await this.refreshToken(refreshToken, token);
     const newToken = result.token;
     const newRefresh = result.refreshToken;
     delete result.token;
     delete result.refreshToken;
-    return await this.setCookies(res, newToken, newRefresh, result, cookiePrefix);
+    return await this.setCookies(
+      res,
+      newToken,
+      newRefresh,
+      result,
+      cookiePrefix,
+    );
   }
 
   /**
@@ -429,64 +540,71 @@ export class AuthService {
    * @returns {Promise<IResponse>}
    */
   async logout(
-      req: Request,
-      res: Response,
-      userOrBusiness: IUserOrBusinessReq,
-      response: IResponseWithData,
-      cookiePrefix: string,
+    req: Request,
+    res: Response,
+    userOrBusiness: IUserOrBusinessReq,
+    response: IResponseWithData,
+    cookiePrefix: string,
   ): Promise<IResponse> {
-      const domains = getAcceptableDomains();
-      const agent = getRequestAgent(req, domains);
-      const tokenName = `${cookiePrefix}token`;
-      const refreshName = `${cookiePrefix}refreshToken`;
-      const dataToken: ILogout = {
-          token: req.cookies.token,
-          refreshToken: req.cookies.refreshToken,
-          domain: agent,
-          secure: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
-          httpOnly: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
-      };
+    const domains = getAcceptableDomains();
+    const agent = getRequestAgent(req, domains);
+    const tokenName = `${cookiePrefix}token`;
+    const refreshName = `${cookiePrefix}refreshToken`;
+    const pickCookie = (primary: unknown, fallback: unknown): string =>
+      typeof primary === 'string' && primary.length > 0
+        ? primary
+        : typeof fallback === 'string'
+          ? fallback
+          : '';
+    const dataToken: ILogout = {
+      token: pickCookie(req.cookies[tokenName], req.cookies.token),
+      refreshToken: pickCookie(
+        req.cookies[refreshName],
+        req.cookies.refreshToken,
+      ),
+      domain: agent,
+      secure: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
+      httpOnly: agent.includes(this.configService.get<string>('MAIN_DOMAIN')),
+    };
 
-      LogWarn(this.logger, 'Logout', this.logout.name, userOrBusiness);
-      this.logger.log(agent);
+    LogWarn(this.logger, 'Logout', this.logout.name, userOrBusiness);
+    this.logger.log(agent);
 
-      if(userOrBusiness['businessId']) {
-        const business = userOrBusiness as IBusinessReq;
-        await this.tokenService.removeTokenBusiness(
-          dataToken.refreshToken, dataToken.token, business
-        );
-      } else {
-        const user = userOrBusiness as IUserReq;
-        await this.tokenService.removeTokenUser(
-          dataToken.refreshToken, dataToken.token, user
-        );
-      }
+    if (userOrBusiness['businessId']) {
+      const business = userOrBusiness as IBusinessReq;
+      await this.tokenService.removeTokenBusiness(
+        dataToken.refreshToken,
+        dataToken.token,
+        business,
+      );
+    } else {
+      const user = userOrBusiness as IUserReq;
+      await this.tokenService.removeTokenUser(
+        dataToken.refreshToken,
+        dataToken.token,
+        user,
+      );
+    }
 
-      const domain = dataToken.domain;
-      const hasValidDomain =
-        typeof domain === 'string' && domain.length > 0 && domain !== 'localhost' && domain.includes('.');
+    // Cookie options must match EXACTLY those used in setCookies.
+    // setCookies does NOT set domain (host-only cookie), so we must not add it here.
+    // Adding domain causes clearCookie to fail in production (e.g. API at api.example.com,
+    // frontend at app.example.com - cookie is for api.example.com, not app.example.com).
+    const cookieOptions = {
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none' as const,
+    };
 
-      const cookieOptions: {
-        path: string;
-        domain?: string;
-        secure?: boolean;
-        httpOnly?: boolean;
-      } = {
-        path: '/',
-        secure: dataToken.secure,
-        httpOnly: dataToken.httpOnly,
-      };
-
-      if (hasValidDomain) cookieOptions.domain = domain;
-      
-      // Clear both prefixed and default cookie names to be safe
-      res.clearCookie(tokenName, cookieOptions);
-      res.clearCookie(refreshName, cookieOptions);
-      if (tokenName !== 'token') {
-        res.clearCookie('token', cookieOptions);
-        res.clearCookie('refreshToken', cookieOptions);
-      }
-      return response.success;
+    // Clear both prefixed and default cookie names to be safe
+    res.clearCookie(tokenName, cookieOptions);
+    res.clearCookie(refreshName, cookieOptions);
+    if (tokenName !== 'token') {
+      res.clearCookie('token', cookieOptions);
+      res.clearCookie('refreshToken', cookieOptions);
+    }
+    return response.success;
   }
 
   /**
@@ -498,8 +616,8 @@ export class AuthService {
     // Generate token
     const tokenDB = await this.tokenService.generateTokens(user);
     const isBusiness = user['username'] ? false : true;
-    const business = isBusiness ? user as Business : null;
-    const userResponse = isBusiness ? null : user as User;
+    const business = isBusiness ? (user as Business) : null;
+    const userResponse = isBusiness ? null : (user as User);
     return isBusiness
       ? { ...this.rToken.success, ...tokenDB, business }
       : { ...this.rToken.success, ...tokenDB, user: userResponse };
@@ -514,7 +632,8 @@ export class AuthService {
     let havePermission = false;
     for (const role of roles) {
       role.rolePermissions.map((p) => {
-        if (p.permission.code === AdminPermission.LOGIN) {
+        const permissionCode = p.permission.code as AdminPermissionsEnum;
+        if (permissionCode === AdminPermissionsEnum.LOGIN) {
           havePermission = true;
         }
       });

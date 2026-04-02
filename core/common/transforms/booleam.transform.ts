@@ -1,17 +1,19 @@
-import { TransformFnParams } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 
-export const TransformBoolean = ({ value }: TransformFnParams) => {
-    switch (typeof value) {
-        case 'boolean':
-            return value;
-        case 'string':
-            return value === 'true' || value == 'false'
-                ? new Map([
-                      ['true', true],
-                      ['false', false],
-                  ]).get(value)
-                : value;
-        default:
-            return value;
-    }
+export const TransformBoolean = ({ value }: TransformFnParams): unknown => {
+  const v: unknown = value;
+  switch (typeof v) {
+    case 'boolean':
+      return v;
+    case 'string':
+      if (v === 'true') {
+        return true;
+      }
+      if (v === 'false') {
+        return false;
+      }
+      return v;
+    default:
+      return v;
+  }
 };

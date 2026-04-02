@@ -1,11 +1,11 @@
-import { registerEnumType } from "@nestjs/graphql";
+import { registerEnumType } from '@nestjs/graphql';
 
 export enum ActionsEnum {
-    Increment = 'increment',
-    Decrement = 'decrement',
+  Increment = 'increment',
+  Decrement = 'decrement',
 }
 
 registerEnumType(ActionsEnum, {
-    name: 'ActionsEnum',
-    description: 'Actions enum',
+  name: 'ActionsEnum',
+  description: 'Actions enum',
 });

@@ -1,61 +1,79 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Business, CatalogSearchIndex, CatalogVisit, Discount, File, Product, ProductSearchIndex } from '.';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import {
+  Business,
+  CatalogSearchIndex,
+  CatalogVisit,
+  Discount,
+  File,
+  Product,
+  ProductSearchIndex,
+} from '.';
 import { StatusEnum } from '../common/enums';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'catalogs' })
 export class Catalog extends BaseEntity {
-    @PrimaryGeneratedColumn({ type: 'int8' })
-    id: number;
-    
-    @Column({ type: 'varchar', length: 150 })
-    title: string;
+  @PrimaryGeneratedColumn({ type: 'int8' })
+  id: number;
 
-    @Column({ type: 'varchar', name: 'image_code', length: 255, nullable: true })
-    imageCode?: string;
+  @Column({ type: 'varchar', length: 150 })
+  title: string;
 
-    @ManyToOne(() => File, (files) => files.catalogFiles)
-    @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
-    image?: File;
-    
-    @Column({ type: 'varchar', length: 255, unique: true })
-    path: string;
-    
-    @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
-    status: StatusEnum;
+  @Column({ type: 'varchar', name: 'image_code', length: 255, nullable: true })
+  imageCode?: string;
 
-    @Column('int8', { name: 'id_creation_business' })
-    idCreationBusiness: number;
+  @ManyToOne(() => File, (files) => files.catalogFiles)
+  @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
+  image?: File;
 
-    @Column('int8', { default: 0 })
-    visits: number;
+  @Column({ type: 'varchar', name: 'hex_color', length: 7, nullable: true })
+  hexColor?: string;
 
-    @Column('text', { array: true, nullable: true })
-    tags?: string[];
+  @Column({ type: 'varchar', length: 255, unique: true })
+  path: string;
 
-    @Column('int8', { name: 'products_count', default: 0 })
-    productsCount: number;
+  @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
+  status: StatusEnum;
 
-    @ManyToOne(() => Business, (business) => business.catalogs)
-    @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
-    business?: Business;
+  @Column('int8', { name: 'id_creation_business' })
+  idCreationBusiness: number;
 
-    @ManyToOne(() => Business, (business) => business.modifiedCatalogs)
-    @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
-    modificationBusiness?: Business;
+  @Column('int8', { default: 0 })
+  visits: number;
 
-    @OneToMany(() => Product, (product) => product.catalog)
-    products?: Product[];
+  @Column('text', { array: true, nullable: true })
+  tags?: string[];
 
-    @OneToMany(() => CatalogVisit, (visit) => visit.catalog)
-    catalogVisits?: CatalogVisit[];
+  @Column('int8', { name: 'products_count', default: 0 })
+  productsCount: number;
 
-    @OneToMany(() => CatalogSearchIndex, (index) => index.catalog)
-    catalogSearchIndexes?: CatalogSearchIndex[];
+  @ManyToOne(() => Business, (business) => business.catalogs)
+  @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
+  business?: Business;
 
-    @OneToMany(() => ProductSearchIndex, (index) => index.catalog)
-    productSearchIndexes?: ProductSearchIndex[];
+  @ManyToOne(() => Business, (business) => business.modifiedCatalogs)
+  @JoinColumn([{ name: 'modification_business', referencedColumnName: 'id' }])
+  modificationBusiness?: Business;
 
-    @OneToMany(() => Discount, (discount) => discount.catalog)
-    discounts?: Discount[];
+  @OneToMany(() => Product, (product) => product.catalog)
+  products?: Product[];
+
+  @OneToMany(() => CatalogVisit, (visit) => visit.catalog)
+  catalogVisits?: CatalogVisit[];
+
+  @OneToMany(() => CatalogSearchIndex, (index) => index.catalog)
+  catalogSearchIndexes?: CatalogSearchIndex[];
+
+  @OneToMany(() => ProductSearchIndex, (index) => index.catalog)
+  productSearchIndexes?: ProductSearchIndex[];
+
+  @OneToMany(() => Discount, (discount) => discount.catalog)
+  discounts?: Discount[];
 }

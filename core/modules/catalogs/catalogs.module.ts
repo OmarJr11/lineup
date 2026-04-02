@@ -6,26 +6,24 @@ import { CatalogsSettersService } from './catalogs-setters.service';
 import { CatalogsGettersService } from './catalogs-getters.service';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Catalog]),
-    BullModule.registerQueue({
-      name: QueueNamesEnum.searchData,
-      defaultJobOptions: {
-        removeOnComplete: true,
-      }
-    }),
+    EntityAuditsModule,
+    BullModule.registerQueue(
+      {
+        name: QueueNamesEnum.catalogs,
+        defaultJobOptions: { removeOnComplete: true },
+      },
+      {
+        name: QueueNamesEnum.searchData,
+        defaultJobOptions: { removeOnComplete: true },
+      },
+    ),
   ],
-  providers: [
-    CatalogsService,
-    CatalogsSettersService,
-    CatalogsGettersService
-  ],
-  exports: [
-    CatalogsService,
-    CatalogsSettersService,
-    CatalogsGettersService
-  ],
+  providers: [CatalogsService, CatalogsSettersService, CatalogsGettersService],
+  exports: [CatalogsService, CatalogsSettersService, CatalogsGettersService],
 })
 export class CatalogsModule {}

@@ -7,6 +7,7 @@ import { BusinessesSettersService } from './businesses-setters.service';
 import { BusinessRolesModule } from '../business-roles/business-roles.module';
 import { RolesModule } from '../roles/roles.module';
 import { LocationsModule } from '../locations/locations.module';
+import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
 
@@ -14,24 +15,25 @@ import { QueueNamesEnum } from '../../common/enums';
   imports: [
     TypeOrmModule.forFeature([Business]),
     BusinessRolesModule,
+    EntityAuditsModule,
     RolesModule,
     LocationsModule,
     BullModule.registerQueue({
       name: QueueNamesEnum.searchData,
       defaultJobOptions: {
         removeOnComplete: true,
-      }
+      },
     }),
   ],
   providers: [
     BusinessesService,
     BusinessesGettersService,
-    BusinessesSettersService
+    BusinessesSettersService,
   ],
   exports: [
     BusinessesService,
     BusinessesGettersService,
-    BusinessesSettersService
+    BusinessesSettersService,
   ],
 })
 export class BusinessesModule {}

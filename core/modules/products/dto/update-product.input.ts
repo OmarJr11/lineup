@@ -1,9 +1,21 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEmpty,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ProductImageInput } from './product-image.input';
 import { ProductVariationInput } from './product-variation.input';
-import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
+import { TransformBoolean } from '../../../common/transforms';
+import { StatusEnum } from '../../../common/enums';
 
 @InputType()
 export class UpdateProductInput {
@@ -13,7 +25,7 @@ export class UpdateProductInput {
   @IsNumber()
   id: number;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   @IsNotEmpty()
   @MinLength(3)
@@ -21,7 +33,7 @@ export class UpdateProductInput {
   @IsString()
   title?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   @IsNotEmpty()
   @MinLength(3)
@@ -29,27 +41,13 @@ export class UpdateProductInput {
   @IsString()
   subtitle?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   @IsNotEmpty()
   @IsString()
   description?: string;
 
   @Field({ nullable: true })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Validate(PriceCurrencyPairValidator)
-  price?: number;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Validate(PriceCurrencyPairValidator)
-  idCurrency?: number;
-
-  @Field()
   @IsOptional()
   @IsNotEmpty()
   @Type(() => Number)
@@ -63,17 +61,23 @@ export class UpdateProductInput {
   @Type(() => ProductImageInput)
   images?: ProductImageInput[];
 
-  @Field(() => [String])
-  @IsOptional()
-  @IsNotEmpty()
-  @IsArray()
-  @IsString({ each: true })
-  tags: string[];
-
   @Field(() => [ProductVariationInput], { nullable: true })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductVariationInput)
   variations?: ProductVariationInput[];
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsNotEmpty()
+  @Transform(TransformBoolean)
+  @IsBoolean()
+  isPrimary?: boolean;
+
+  @IsEmpty()
+  hasVariations?: boolean;
+
+  @IsEmpty()
+  status?: StatusEnum;
 }

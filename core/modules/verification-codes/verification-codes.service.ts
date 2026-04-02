@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, Logger, Scope } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Scope,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,20 +64,28 @@ export class VerificationCodesService extends BasicService<VerificationCode> {
     const idBusiness = isUser ? null : user.businessId;
     if (isUser) {
       const owner = await this.usersService.findOne(idUser);
-      input.destination = input.channel === VerificationCodeChannelEnum.EMAIL
-        ? owner.email : null;
+      input.destination =
+        input.channel === VerificationCodeChannelEnum.EMAIL
+          ? owner.email
+          : null;
       input.idUser = idUser;
       const existing = await this.checkExistingCode(idUser, true);
       if (existing && !this.isExpired(existing.expiresAt)) return;
     } else {
       const owner = await this.businessesService.findOne(idBusiness);
-      input.destination = input.channel === VerificationCodeChannelEnum.EMAIL
-        ? owner.email : owner.telephone;
+      input.destination =
+        input.channel === VerificationCodeChannelEnum.EMAIL
+          ? owner.email
+          : owner.telephone;
       input.idBusiness = idBusiness;
       const existing = await this.checkExistingCode(idBusiness, false);
       if (existing && !this.isExpired(existing.expiresAt)) return;
     }
-    const record = await this.verificationCodesSettersService.createVerificationCode(input, user);
+    const record =
+      await this.verificationCodesSettersService.createVerificationCode(
+        input,
+        user,
+      );
     if (input.channel === VerificationCodeChannelEnum.EMAIL) {
       await this.verificationCodesMailService.sendVerificationCodeEmail(record);
     }
@@ -94,14 +108,16 @@ export class VerificationCodesService extends BasicService<VerificationCode> {
     isUser: boolean,
   ): Promise<VerificationCode> {
     const { code } = data;
-    const record = await this.verificationCodesGettersService
-      .findActiveByDestinationAndCode(code);
+    const record =
+      await this.verificationCodesGettersService.findActiveByDestinationAndCode(
+        code,
+      );
 
-    if(isUser) {
+    if (isUser) {
       const owner = await this.usersService.findOne(user.userId);
-      switch(record.channel) {
+      switch (record.channel) {
         case VerificationCodeChannelEnum.EMAIL:
-          if(owner.email !== record.destination) {
+          if (owner.email !== record.destination) {
             LogError(this.logger, 'Invalid destination', this.verifyCode.name);
             throw new BadRequestException(userResponses.verificationCode.error);
           }
@@ -113,29 +129,34 @@ export class VerificationCodesService extends BasicService<VerificationCode> {
       }
     } else {
       const business = await this.businessesService.findOne(user.businessId);
-      switch(record.channel) {
+      switch (record.channel) {
         case VerificationCodeChannelEnum.EMAIL:
-          if(business.email !== record.destination) {
+          if (business.email !== record.destination) {
             LogError(this.logger, 'Invalid destination', this.verifyCode.name);
-            throw new BadRequestException(businessesResponses.verificationCode.error);
+            throw new BadRequestException(
+              businessesResponses.verificationCode.error,
+            );
           }
           break;
         case VerificationCodeChannelEnum.PHONE:
-          if(business.telephone !== record.destination) {
+          if (business.telephone !== record.destination) {
             LogError(this.logger, 'Invalid destination', this.verifyCode.name);
-            throw new BadRequestException(businessesResponses.verificationCode.error);
+            throw new BadRequestException(
+              businessesResponses.verificationCode.error,
+            );
           }
           break;
         default:
           LogError(this.logger, 'Invalid channel', this.verifyCode.name);
-          throw new BadRequestException(businessesResponses.verificationCode.error);
+          throw new BadRequestException(
+            businessesResponses.verificationCode.error,
+          );
       }
     }
-    
+
     return await this.verificationCodesSettersService.verifyCode(record, user);
   }
 
-  
   /**
    * Checks whether a verification code expiry date has passed.
    *
@@ -153,7 +174,10 @@ export class VerificationCodesService extends BasicService<VerificationCode> {
    * @param {boolean} isUser - Whether the owner is a user or a business
    * @returns {Promise<VerificationCode>} The existing code or undefined
    */
-  private async checkExistingCode(id: number, isUser: boolean): Promise<VerificationCode> {
+  private async checkExistingCode(
+    id: number,
+    isUser: boolean,
+  ): Promise<VerificationCode> {
     const data = isUser ? { idUser: id } : { idBusiness: id };
     return await this.verificationCodesGettersService.findActiveByOwner(data);
   }

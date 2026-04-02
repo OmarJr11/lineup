@@ -1,20 +1,43 @@
 import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql';
-import { ProvidersEnum, UsersPermissionsEnum } from '../../../../core/common/enums';
+import {
+  CookiesPrefixEnum,
+  ProvidersEnum,
+  UsersPermissionsEnum,
+} from '../../../../core/common/enums';
 import { toUserSchema } from '../../../../core/common/functions';
 import { CreateUserInput } from '../../../../core/modules/users/dto/create-user.input';
 import { UsersService } from '../../../../core/modules/users/users.service';
 import { UserSchema } from '../../../../core/schemas';
-import { UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard, PermissionsGuard, TokenGuard } from '../../../../core/common/guards';
+import {
+  UseGuards,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import {
+  JwtAuthGuard,
+  PermissionsGuard,
+  TokenGuard,
+} from '../../../../core/common/guards';
 import { UpdateUserInput } from '../../../../core/modules/users/dto/update-user.input';
-import { ICookieInterceptor, IUserReq } from '../../../../core/common/interfaces';
+import { UpdateUserEmailInput } from '../../../../core/modules/users/dto/update-user-email.input';
+import {
+  ICookieInterceptor,
+  IUserReq,
+} from '../../../../core/common/interfaces';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
 import { userResponses } from '../../../../core/common/responses';
 import { LoginResponse } from '../../../../core/schemas/login-response.schema';
 import { ChangePasswordInput } from '../../../../core/common/dtos';
-import { Permissions, Response, UserDec } from '../../../../core/common/decorators';
+import {
+  Permissions,
+  Response,
+  UserDec,
+} from '../../../../core/common/decorators';
 import { Response as ResponseExpress } from 'express';
+
+const cookiePrefix = CookiesPrefixEnum.USERS;
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => UserSchema)
@@ -28,7 +51,7 @@ export class UsersResolver {
   ) {}
 
   @UseInterceptors(ICookieInterceptor)
-  @Mutation(() => LoginResponse )
+  @Mutation(() => LoginResponse)
   async createUser(
     @Args('data') data: CreateUserInput,
     @Context() ctx: any,
@@ -36,14 +59,20 @@ export class UsersResolver {
     const res: ResponseExpress = ctx.res;
     const user = await this.usersService.create(data, ProvidersEnum.LineUp);
     const { token, refreshToken } =
-    await this.tokensService.generateTokens(user);
+      await this.tokensService.generateTokens(user);
     const result = { ...this._uCreate.success, user };
-    return await this.authService.setCookies(res, token, refreshToken, result, 'lineup_');
+    return await this.authService.setCookies(
+      res,
+      token,
+      refreshToken,
+      result,
+      cookiePrefix,
+    );
   }
 
   @Query(() => UserSchema, { name: 'userById' })
   async userById(
-    @Args('id', { type: () => Int }) id: number
+    @Args('id', { type: () => Int }) id: number,
   ): Promise<UserSchema> {
     const user = await this.usersService.findOne(id);
     return toUserSchema(user);
@@ -52,9 +81,7 @@ export class UsersResolver {
   @Query(() => UserSchema, { name: 'me' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRLISOWN)
-  async me(
-    @UserDec() user: IUserReq
-  ): Promise<UserSchema> {
+  async me(@UserDec() user: IUserReq): Promise<UserSchema> {
     const found = await this.usersService.findOne(user.userId);
     return toUserSchema(found);
   }
@@ -64,9 +91,26 @@ export class UsersResolver {
   @Permissions(UsersPermissionsEnum.USRUPDOWN)
   async updateUser(
     @Args('data') data: UpdateUserInput,
-    @UserDec() user: IUserReq
+    @UserDec() user: IUserReq,
   ): Promise<UserSchema> {
     const updatedUser = await this.usersService.update(data, user);
+    return toUserSchema(updatedUser);
+  }
+
+  /**
+   * Updates the email of the authenticated user.
+   * @param data - The new email
+   * @param user - Authenticated user from JWT
+   * @returns The updated user schema
+   */
+  @Mutation(() => UserSchema, { name: 'updateUserEmail' })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(UsersPermissionsEnum.USRUPDOWN)
+  async updateUserEmail(
+    @Args('data') data: UpdateUserEmailInput,
+    @UserDec() user: IUserReq,
+  ): Promise<UserSchema> {
+    const updatedUser = await this.usersService.updateEmail(data, user);
     return toUserSchema(updatedUser);
   }
 
@@ -76,7 +120,7 @@ export class UsersResolver {
   @Response(userResponses.changePassword)
   async changePassword(
     @Args('data') data: ChangePasswordInput,
-    @UserDec() userReq: IUserReq
+    @UserDec() userReq: IUserReq,
   ): Promise<boolean> {
     return await this.usersService.changePassword(data, userReq);
   }
@@ -84,11 +128,8 @@ export class UsersResolver {
   @Mutation(() => Boolean, { name: 'removeUser' })
   @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
   @Permissions(UsersPermissionsEnum.USRDELOWN)
-  async removeUser(
-    @Args('id', { type: () => Int }) id: number,
-    @UserDec() user: IUserReq
-  ): Promise<boolean> {
-    await this.usersService.remove(id, user);
+  async removeUser(@UserDec() user: IUserReq): Promise<boolean> {
+    await this.usersService.remove(user.userId, user);
     return true;
   }
 }

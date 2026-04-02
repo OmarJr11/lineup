@@ -8,30 +8,33 @@ import { CatalogSchema } from './catalog.schema';
  */
 @ObjectType()
 export class CatalogSearchIndexSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idCatalog: number;
+  @Field(() => Int)
+  idCatalog: number;
 
-    @Field(() => CatalogSchema, { nullable: true })
-    catalog?: CatalogSchema;
+  @Field(() => CatalogSchema, { nullable: true })
+  catalog?: CatalogSchema;
 
-    @Field(() => Int)
-    idBusiness: number;
+  @Field(() => Int)
+  idBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field({ nullable: true, description: 'Full-text search vector (internal use)' })
-    searchVector?: string;
+  @Field({
+    nullable: true,
+    description: 'Full-text search vector (internal use)',
+  })
+  searchVector?: string;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  visits: number;
 
-    @Field(() => Int)
-    productLikesTotal: number;
+  @Field(() => Int)
+  productLikesTotal: number;
 
-    @Field(() => Int)
-    productVisitsTotal: number;
+  @Field(() => Int)
+  productVisitsTotal: number;
 }

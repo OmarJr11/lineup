@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
@@ -14,36 +18,36 @@ import { CreateStockMovementInput } from './dto/create-stock-movement.input';
  */
 @Injectable()
 export class StockMovementsSettersService extends BasicService<StockMovement> {
-    private readonly logger = new Logger(StockMovementsSettersService.name);
-    private readonly rCreate = stockMovementsResponses.create;
+  private readonly logger = new Logger(StockMovementsSettersService.name);
+  private readonly rCreate = stockMovementsResponses.create;
 
-    constructor(
-        @InjectRepository(StockMovement)
-        private readonly stockMovementRepository: Repository<StockMovement>,
-    ) {
-        super(stockMovementRepository);
-    }
+  constructor(
+    @InjectRepository(StockMovement)
+    private readonly stockMovementRepository: Repository<StockMovement>,
+  ) {
+    super(stockMovementRepository);
+  }
 
-    /**
-     * Create a new stock movement record.
-     * @param {CreateStockMovementInput} data - The movement data.
-     * @param {IBusinessReq} businessReq - The business request object.
-     * @returns {Promise<StockMovement>} The created stock movement.
-     */
-    @Transactional()
-    async create(
-        data: CreateStockMovementInput,
-        businessReq: IBusinessReq,
-    ): Promise<StockMovement> {
-        try {
-            const payload = {
-                ...data,
-                idCreationBusiness: businessReq.businessId,
-            };
-            return await this.save(payload, businessReq);
-        } catch (error) {
-            LogError(this.logger, error, this.create.name, businessReq);
-            throw new InternalServerErrorException(this.rCreate.error);
-        }
+  /**
+   * Create a new stock movement record.
+   * @param {CreateStockMovementInput} data - The movement data.
+   * @param {IBusinessReq} businessReq - The business request object.
+   * @returns {Promise<StockMovement>} The created stock movement.
+   */
+  @Transactional()
+  async create(
+    data: CreateStockMovementInput,
+    businessReq: IBusinessReq,
+  ): Promise<StockMovement> {
+    try {
+      const payload = {
+        ...data,
+        idCreationBusiness: businessReq.businessId,
+      };
+      return await this.save(payload, businessReq);
+    } catch (error) {
+      LogError(this.logger, error, this.create.name, businessReq);
+      throw new InternalServerErrorException(this.rCreate.error);
     }
+  }
 }

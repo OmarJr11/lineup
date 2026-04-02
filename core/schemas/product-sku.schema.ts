@@ -1,47 +1,56 @@
 import GraphQLJSON from 'graphql-type-json';
+import { VariationOptions } from '../common/types';
 import { StatusEnum } from '../common/enums';
-import { BusinessSchema, ProductSchema } from '.';
+import { BusinessSchema, CurrencySchema, ProductSchema } from '.';
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 /**
  * GraphQL schema for ProductSku.
- * variationOptions uses JSON scalar to expose Record<string, string> (e.g. {"Color":"Amarillo","Talla":"M"}).
+ * variationOptions uses JSON scalar to expose VariationOptions (e.g. {"Color":"Amarillo","Talla":"M"}).
  */
 @ObjectType()
 export class ProductSkuSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idProduct: number;
+  @Field(() => Int)
+  idProduct: number;
 
-    @Field(() => ProductSchema, { nullable: true })
-    product?: ProductSchema;
+  @Field(() => ProductSchema, { nullable: true })
+  product?: ProductSchema;
 
-    @Field()
-    skuCode: string;
+  @Field()
+  skuCode: string;
 
-    /**
-     * Variation options as key-value object, e.g. {"Color":"Amarillo","Talla":"M"}.
-     */
-    @Field(() => GraphQLJSON, { description: 'Variation options as key-value object' })
-    variationOptions: Record<string, string>;
+  /**
+   * Variation options as key-value object, e.g. {"Color":"Amarillo","Talla":"M"}.
+   */
+  @Field(() => GraphQLJSON, {
+    description: 'Variation options as key-value object',
+  })
+  variationOptions: VariationOptions;
 
-    @Field(() => Int)
-    quantity: number;
+  @Field(() => Int, { nullable: true })
+  quantity?: number | null;
 
-    @Field(() => Float, { nullable: true })
-    price?: number;
+  @Field(() => Float, { nullable: true })
+  price?: number;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field(() => Int, { nullable: true })
+  idCurrency?: number;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => CurrencySchema, { nullable: true })
+  currency?: CurrencySchema;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    modificationBusiness?: BusinessSchema;
+  @Field(() => Int)
+  idCreationBusiness: number;
+
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
+
+  @Field(() => BusinessSchema, { nullable: true })
+  modificationBusiness?: BusinessSchema;
 }

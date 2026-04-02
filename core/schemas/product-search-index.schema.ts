@@ -6,39 +6,55 @@ import { ProductSchema } from './product.schema';
 /**
  * GraphQL schema for ProductSearchIndex entity.
  * Used for full-text search over products with denormalized metrics.
+ * search_vector contains: title, subtitle, description, status, variations, skus.
  */
 @ObjectType()
 export class ProductSearchIndexSchema {
-    @Field(() => Int)
-    id: number;
+  @Field(() => Int)
+  id: number;
 
-    @Field(() => Int)
-    idProduct: number;
+  @Field(() => Int)
+  idProduct: number;
 
-    @Field(() => ProductSchema, { nullable: true })
-    product?: ProductSchema;
+  @Field(() => ProductSchema, { nullable: true })
+  product?: ProductSchema;
 
-    @Field(() => Int)
-    idBusiness: number;
+  @Field(() => Int)
+  idBusiness: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => Int)
-    idCatalog: number;
+  @Field(() => Int)
+  idCatalog: number;
 
-    @Field(() => CatalogSchema, { nullable: true })
-    catalog?: CatalogSchema;
+  @Field(() => CatalogSchema, { nullable: true })
+  catalog?: CatalogSchema;
 
-    @Field({ nullable: true, description: 'Full-text search vector (internal use)' })
-    searchVector?: string;
+  @Field({
+    nullable: true,
+    description: 'Full-text search vector (internal use)',
+  })
+  searchVector?: string;
 
-    @Field(() => Int)
-    likes: number;
+  @Field(() => Int)
+  likes: number;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  visits: number;
 
-    @Field(() => Float, { description: 'Average rating (0.00–5.00)' })
-    ratingAverage: number;
+  @Field(() => Float, { description: 'Average rating (0.00–5.00)' })
+  ratingAverage: number;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Denormalized price for filtering by price range',
+  })
+  price?: number;
+
+  @Field({
+    nullable: true,
+    description: 'Denormalized business locations for filtering by location',
+  })
+  locationsText?: string;
 }

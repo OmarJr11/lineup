@@ -5,11 +5,7 @@ import { RolesModule } from '../../../../core/modules/roles/roles.module';
 import { CatalogsModule as CatalogsModuleCore } from '../../../../core/modules/catalogs/catalogs.module';
 
 @Module({
-  imports: [
-    CatalogsModuleCore,
-    RolesModule,
-    TokensModule
-  ],  
+  imports: [CatalogsModuleCore, RolesModule, TokensModule],
   providers: [CatalogsResolver],
 })
 export class CatalogsModule {}

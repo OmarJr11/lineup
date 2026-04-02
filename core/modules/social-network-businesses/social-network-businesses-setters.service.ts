@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSocialNetworkBusinessInput } from './dto/create-social-network-business.input';
 import { UpdateSocialNetworkBusinessInput } from './dto/update-social-network-business.input';
@@ -9,84 +13,120 @@ import { IBusinessReq } from '../../common/interfaces';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { LogError } from '../../common/helpers/logger.helper';
 import { socialNetworkBusinessesResponses } from '../../common/responses';
+import {
+  AuditOperationEnum,
+  AuditableEntityNameEnum,
+} from '../../common/enums';
+import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
+import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
 
 @Injectable()
 export class SocialNetworkBusinessesSettersService extends BasicService<SocialNetworkBusiness> {
-    private logger = new Logger(SocialNetworkBusinessesSettersService.name);
-    private readonly rCreate = socialNetworkBusinessesResponses.create;
-    private readonly rUpdate = socialNetworkBusinessesResponses.update;
-    private readonly rDelete = socialNetworkBusinessesResponses.delete;
+  private logger = new Logger(SocialNetworkBusinessesSettersService.name);
+  private readonly rCreate = socialNetworkBusinessesResponses.create;
+  private readonly rUpdate = socialNetworkBusinessesResponses.update;
+  private readonly rDelete = socialNetworkBusinessesResponses.delete;
 
-    constructor(
-        @InjectRepository(SocialNetworkBusiness)
-        private readonly repo: Repository<SocialNetworkBusiness>,
-    ) {
-        super(repo);
-    }
+  constructor(
+    @InjectRepository(SocialNetworkBusiness)
+    private readonly repo: Repository<SocialNetworkBusiness>,
+    private readonly entityAuditsQueueService: EntityAuditsQueueService,
+  ) {
+    super(repo);
+  }
 
-    /**
-     * Creates a new social network business
-     * @param {CreateSocialNetworkBusinessInput} data - The data for the new social network business
-     * @param {IBusinessReq} businessReq - The business request object
-     * @returns {Promise<SocialNetworkBusiness>} The created social network business
-     */
-    @Transactional()
-    async create(
-        data: CreateSocialNetworkBusinessInput,
-        businessReq: IBusinessReq
-    ): Promise<SocialNetworkBusiness> {
-        try {
-            const { url, phone } = data.contact;
-            data.url = url;
-            data.phone = phone;
-            return await this.save(data, businessReq);
-        } catch (error) {
-            LogError(this.logger, error, this.create.name, businessReq);
-            throw new InternalServerErrorException(this.rCreate.error);
-        }
+  /**
+   * Creates a new social network business
+   * @param {CreateSocialNetworkBusinessInput} data - The data for the new social network business
+   * @param {IBusinessReq} businessReq - The business request object
+   * @returns {Promise<SocialNetworkBusiness>} The created social network business
+   */
+  @Transactional()
+  async create(
+    data: CreateSocialNetworkBusinessInput,
+    businessReq: IBusinessReq,
+  ): Promise<SocialNetworkBusiness> {
+    try {
+      const { url, phone } = data.contact;
+      data.url = url;
+      data.phone = phone;
+      const snb = await this.save(data, businessReq);
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+        entityId: snb.id,
+        operation: AuditOperationEnum.INSERT,
+        newValues: toEntityAuditValues(snb),
+        userOrBusinessReq: businessReq,
+      });
+      return snb;
+    } catch (error) {
+      LogError(this.logger, error, this.create.name, businessReq);
+      throw new InternalServerErrorException(this.rCreate.error);
     }
+  }
 
-    /**
-     * Update a social network business
-     * @param {UpdateSocialNetworkBusinessInput} data - The data for updating the social network business
-     * @param {SocialNetworkBusiness} socialNetworkBusiness - The social network business to update
-     * @param {IBusinessReq} businessReq - The business request object
-     * @returns {Promise<SocialNetworkBusiness>} The updated social network business
-     */
-    @Transactional()
-    async update(
-        data: UpdateSocialNetworkBusinessInput,
-        socialNetworkBusiness: SocialNetworkBusiness,
-        businessReq: IBusinessReq
-    ): Promise<SocialNetworkBusiness> {
-        try {
-            const { url, phone } = data.contact;
-            data.url = url;
-            data.phone = phone;
-            return await this.updateEntity(data, socialNetworkBusiness, businessReq);
-        } catch (error) {
-            LogError(this.logger, error, this.update.name, businessReq);
-            throw new InternalServerErrorException(this.rUpdate.error);
-        }
+  /**
+   * Update a social network business
+   * @param {UpdateSocialNetworkBusinessInput} data - The data for updating the social network business
+   * @param {SocialNetworkBusiness} socialNetworkBusiness - The social network business to update
+   * @param {IBusinessReq} businessReq - The business request object
+   * @returns {Promise<SocialNetworkBusiness>} The updated social network business
+   */
+  @Transactional()
+  async update(
+    data: UpdateSocialNetworkBusinessInput,
+    socialNetworkBusiness: SocialNetworkBusiness,
+    businessReq: IBusinessReq,
+  ): Promise<SocialNetworkBusiness> {
+    try {
+      const { url, phone } = data.contact;
+      data.url = url;
+      data.phone = phone;
+      const oldValues = toEntityAuditValues(socialNetworkBusiness);
+      const updated = await this.updateEntity(
+        data,
+        socialNetworkBusiness,
+        businessReq,
+      );
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+        entityId: socialNetworkBusiness.id,
+        operation: AuditOperationEnum.UPDATE,
+        oldValues,
+        newValues: toEntityAuditValues(updated),
+        userOrBusinessReq: businessReq,
+      });
+      return updated;
+    } catch (error) {
+      LogError(this.logger, error, this.update.name, businessReq);
+      throw new InternalServerErrorException(this.rUpdate.error);
     }
+  }
 
-    /**
-     * Remove a social network business
-     * @param {SocialNetworkBusiness} socialNetworkBusiness - The social network business to remove
-     * @param {IBusinessReq} businessReq - The business request object
-     * @return {Promise<boolean>} True if the social network business was removed successfully
-     */
-    @Transactional()
-    async remove(
-        socialNetworkBusiness: SocialNetworkBusiness,
-        businessReq: IBusinessReq
-    ): Promise<boolean> {
-        try {
-            await this.deleteEntityByStatus(socialNetworkBusiness, businessReq);
-            return true;
-        } catch (error) {
-            LogError(this.logger, error, this.remove.name, businessReq);
-            throw new InternalServerErrorException(this.rDelete.error);
-        }
+  /**
+   * Remove a social network business
+   * @param {SocialNetworkBusiness} socialNetworkBusiness - The social network business to remove
+   * @param {IBusinessReq} businessReq - The business request object
+   * @return {Promise<boolean>} True if the social network business was removed successfully
+   */
+  @Transactional()
+  async remove(
+    socialNetworkBusiness: SocialNetworkBusiness,
+    businessReq: IBusinessReq,
+  ): Promise<boolean> {
+    try {
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
+        entityId: socialNetworkBusiness.id,
+        operation: AuditOperationEnum.DELETE,
+        oldValues: toEntityAuditValues(socialNetworkBusiness),
+        userOrBusinessReq: businessReq,
+      });
+      await this.deleteEntityByStatus(socialNetworkBusiness, businessReq);
+      return true;
+    } catch (error) {
+      LogError(this.logger, error, this.remove.name, businessReq);
+      throw new InternalServerErrorException(this.rDelete.error);
     }
+  }
 }

@@ -29,7 +29,7 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
     private readonly userRequest: Request,
     @InjectRepository(BusinessRole)
     private readonly businessRoleRepository: Repository<BusinessRole>,
-    private readonly businessRolesGettersService: BusinessRolesGettersService
+    private readonly businessRolesGettersService: BusinessRolesGettersService,
   ) {
     super(businessRoleRepository, userRequest);
   }
@@ -38,14 +38,21 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
    * Create a business role
    * @param {number} idBusiness - The ID of the business
    * @param {number} idRole - The ID of the role
-    * @param {IUserOrBusinessReq} user - The user request object.
-    */
+   * @param {IUserOrBusinessReq} user - The user request object.
+   */
   @Transactional()
   async create(idBusiness: number, idRole: number, user: IUserOrBusinessReq) {
-    const existing = await this.businessRolesGettersService
-      .findOne(idBusiness, idRole);
+    const existing = await this.businessRolesGettersService.findOne(
+      idBusiness,
+      idRole,
+    );
     if (existing) {
-      LogError(this.logger, this.rCreate.alreadyExists.message, this.create.name, user);
+      LogError(
+        this.logger,
+        this.rCreate.alreadyExists.message,
+        this.create.name,
+        user,
+      );
       throw new BadRequestException(this.rCreate.alreadyExists);
     }
     try {
@@ -64,11 +71,17 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
    * @param {IUserOrBusinessReq} user - The user request object.
    */
   @Transactional()
-  async removeBusinessRole(idBusiness: number, idRole: number, user: IUserOrBusinessReq) {
-    const businessRole = await this.businessRolesGettersService
-      .findOneOrFail(idBusiness, idRole);
+  async removeBusinessRole(
+    idBusiness: number,
+    idRole: number,
+    user: IUserOrBusinessReq,
+  ) {
+    const businessRole = await this.businessRolesGettersService.findOneOrFail(
+      idBusiness,
+      idRole,
+    );
     try {
-      await this.deleteEntity(businessRole, { data: user});
+      await this.deleteEntity(businessRole, { data: user });
     } catch (error) {
       LogError(this.logger, error, this.rDelete.error.message, user);
       throw new InternalServerErrorException(this.rDelete.error);
@@ -81,6 +94,8 @@ export class BusinessRolesService extends BasicService<BusinessRole> {
    * @returns {Promise<BusinessRole[]>} Business roles with role relation.
    */
   async findAllByBusinessId(idBusiness: number): Promise<BusinessRole[]> {
-    return await this.businessRolesGettersService.findAllByBusinessId(idBusiness);
+    return await this.businessRolesGettersService.findAllByBusinessId(
+      idBusiness,
+    );
   }
 }

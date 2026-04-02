@@ -1,68 +1,75 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, MinLength, Validate, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEmpty,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { ProductImageInput } from './product-image.input';
-import { ProductVariationInput } from './product-variation.input';
-import { PriceCurrencyPairValidator } from '../../../common/validators/price-currency-pair.validator';
+import { CreateProductVariationInput } from './create-product-variation.input';
+import { TransformBoolean } from '../../../common/transforms';
+import { StatusEnum } from '../../../common/enums';
 
 @InputType()
 export class CreateProductInput {
-    @Field()
-    @IsNotEmpty()
-    @MinLength(3)
-    @MaxLength(255)
-    @IsString()
-    title: string;
+  @Field()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(255)
+  @IsString()
+  title: string;
 
-    @Field()
-    @IsNotEmpty()
-    @MinLength(3)
-    @MaxLength(255)
-    @IsString()
-    subtitle: string;
+  @Field()
+  @IsOptional()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(255)
+  @IsString()
+  subtitle: string;
 
-    @Field()
-    @IsNotEmpty()
-    @IsString()
-    description: string;
+  @Field()
+  @IsNotEmpty()
+  @IsString()
+  description: string;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    price?: number;
+  @Field()
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  idCatalog: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber()
-    @Validate(PriceCurrencyPairValidator)
-    idCurrency?: number;
+  @Field(() => [ProductImageInput])
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductImageInput)
+  images: ProductImageInput[];
 
-    @Field()
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    idCatalog: number;
+  /** Variations with options (value). Stock is not applied on create; use update to set initial stock per option. */
+  @Field(() => [CreateProductVariationInput], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductVariationInput)
+  variations?: CreateProductVariationInput[];
 
-    @Field(() => [ProductImageInput])
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ProductImageInput)
-    images: ProductImageInput[];
+  @Field()
+  @IsOptional()
+  @IsNotEmpty()
+  @Transform(TransformBoolean)
+  @IsBoolean()
+  isPrimary?: boolean;
 
-    @Field(() => [String])
-    @IsNotEmpty()
-    @IsArray()
-    @IsString({ each: true })
-    tags: string[];
+  @IsEmpty()
+  hasVariations?: boolean;
 
-    @Field(() => [ProductVariationInput], { nullable: true })
-    @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ProductVariationInput)
-    variations?: ProductVariationInput[];
+  @IsEmpty()
+  status?: StatusEnum;
 }

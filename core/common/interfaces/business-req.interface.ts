@@ -1,4 +1,4 @@
 export interface IBusinessReq {
-    path: string;
-    businessId: number;
+  path: string;
+  businessId: number;
 }

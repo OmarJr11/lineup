@@ -8,14 +8,14 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class ProductFilesService extends BasicService<ProductFile> {
-    private logger = new Logger(ProductFilesService.name);
+  private logger = new Logger(ProductFilesService.name);
 
-    constructor(
-      @Inject(REQUEST)
-      private readonly businessRequest: Request,
-      @InjectRepository(ProductFile)
-      private readonly productFileRepository: Repository<ProductFile>,
-    ) {
-      super(productFileRepository, businessRequest);
-    }
+  constructor(
+    @Inject(REQUEST)
+    private readonly businessRequest: Request,
+    @InjectRepository(ProductFile)
+    private readonly productFileRepository: Repository<ProductFile>,
+  ) {
+    super(productFileRepository, businessRequest);
+  }
 }

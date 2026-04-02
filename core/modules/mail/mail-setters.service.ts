@@ -94,8 +94,13 @@ export class MailSettersService implements OnModuleInit {
    * @throws {BadRequestException} When required fields are missing or invalid
    * @throws {InternalServerErrorException} When rendering or sending fails
    */
-  async sendTemplateMail(input: ISendTemplateMailInput): Promise<ISendMailOutput> {
-    const htmlBody = this.mailTemplatesService.renderTemplate(input.template, input.context);
+  async sendTemplateMail(
+    input: ISendTemplateMailInput,
+  ): Promise<ISendMailOutput> {
+    const htmlBody = this.mailTemplatesService.renderTemplate(
+      input.template,
+      input.context,
+    );
     return this.sendMail({ ...input, htmlBody });
   }
 
@@ -107,18 +112,32 @@ export class MailSettersService implements OnModuleInit {
    */
   private loadJsonCredentials(): IGoogleOAuthCredentials {
     if (!existsSync(OAUTH_CREDENTIALS_PATH)) {
-      LogError(this.logger, this.rConfig.credentialsFileNotFound.message, this.onModuleInit.name);
-      throw new InternalServerErrorException(this.rConfig.credentialsFileNotFound);
+      LogError(
+        this.logger,
+        this.rConfig.credentialsFileNotFound.message,
+        this.onModuleInit.name,
+      );
+      throw new InternalServerErrorException(
+        this.rConfig.credentialsFileNotFound,
+      );
     }
     const raw = readFileSync(OAUTH_CREDENTIALS_PATH, 'utf-8');
     const parsed = JSON.parse(raw) as { web: IGoogleOAuthCredentials };
     const { client_id, client_secret } = parsed.web ?? {};
     if (!client_id) {
-      LogError(this.logger, this.rConfig.clientIdNotSet.message, this.onModuleInit.name);
+      LogError(
+        this.logger,
+        this.rConfig.clientIdNotSet.message,
+        this.onModuleInit.name,
+      );
       throw new InternalServerErrorException(this.rConfig.clientIdNotSet);
     }
     if (!client_secret) {
-      LogError(this.logger, this.rConfig.clientSecretNotSet.message, this.onModuleInit.name);
+      LogError(
+        this.logger,
+        this.rConfig.clientSecretNotSet.message,
+        this.onModuleInit.name,
+      );
       throw new InternalServerErrorException(this.rConfig.clientSecretNotSet);
     }
     return { client_id, client_secret };
@@ -130,13 +149,24 @@ export class MailSettersService implements OnModuleInit {
    * @param config - Object with refreshToken and senderEmail
    * @throws {InternalServerErrorException} When any value is missing
    */
-  private validateEnvCredentials(config: { refreshToken: string; senderEmail: string }): void {
+  private validateEnvCredentials(config: {
+    refreshToken: string;
+    senderEmail: string;
+  }): void {
     if (!config.refreshToken) {
-      LogError(this.logger, this.rConfig.refreshTokenNotSet.message, this.onModuleInit.name);
+      LogError(
+        this.logger,
+        this.rConfig.refreshTokenNotSet.message,
+        this.onModuleInit.name,
+      );
       throw new InternalServerErrorException(this.rConfig.refreshTokenNotSet);
     }
     if (!config.senderEmail) {
-      LogError(this.logger, this.rConfig.senderEmailNotSet.message, this.onModuleInit.name);
+      LogError(
+        this.logger,
+        this.rConfig.senderEmailNotSet.message,
+        this.onModuleInit.name,
+      );
       throw new InternalServerErrorException(this.rConfig.senderEmailNotSet);
     }
   }
@@ -149,17 +179,31 @@ export class MailSettersService implements OnModuleInit {
    */
   private validateSendMailInput(input: ISendMailInput): void {
     const recipients = Array.isArray(input.to) ? input.to : [input.to];
-    const hasValidRecipient = recipients.every(r => r?.email?.trim().length > 0);
+    const hasValidRecipient = recipients.every(
+      (r) => r?.email?.trim().length > 0,
+    );
     if (!hasValidRecipient) {
-      LogError(this.logger, this.rSendMail.invalidRecipient.message, this.sendMail.name);
+      LogError(
+        this.logger,
+        this.rSendMail.invalidRecipient.message,
+        this.sendMail.name,
+      );
       throw new BadRequestException(this.rSendMail.invalidRecipient);
     }
     if (!input.subject?.trim()) {
-      LogError(this.logger, this.rSendMail.invalidSubject.message, this.sendMail.name);
+      LogError(
+        this.logger,
+        this.rSendMail.invalidSubject.message,
+        this.sendMail.name,
+      );
       throw new BadRequestException(this.rSendMail.invalidSubject);
     }
     if (!input.htmlBody?.trim()) {
-      LogError(this.logger, this.rSendMail.invalidBody.message, this.sendMail.name);
+      LogError(
+        this.logger,
+        this.rSendMail.invalidBody.message,
+        this.sendMail.name,
+      );
       throw new BadRequestException(this.rSendMail.invalidBody);
     }
   }
@@ -203,7 +247,9 @@ export class MailSettersService implements OnModuleInit {
     if (cc) lines.push(`Cc: ${this.formatRecipients(cc)}`);
     if (bcc) lines.push(`Bcc: ${this.formatRecipients(bcc)}`);
     if (replyTo) lines.push(`Reply-To: ${replyTo}`);
-    lines.push(`Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`);
+    lines.push(
+      `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
+    );
     lines.push('MIME-Version: 1.0');
     if (textBody) {
       const boundary = `boundary_${Date.now()}`;
@@ -232,10 +278,12 @@ export class MailSettersService implements OnModuleInit {
    * @param {IMailRecipient | IMailRecipient[]} recipients - Recipient(s) to format
    * @returns {string} Formatted address string (e.g. `"John Doe <john@example.com>"`)
    */
-  private formatRecipients(recipients: IMailRecipient | IMailRecipient[]): string {
+  private formatRecipients(
+    recipients: IMailRecipient | IMailRecipient[],
+  ): string {
     const list = Array.isArray(recipients) ? recipients : [recipients];
     return list
-      .map(r => (r.name ? `${r.name} <${r.email}>` : r.email))
+      .map((r) => (r.name ? `${r.name} <${r.email}>` : r.email))
       .join(', ');
   }
 }

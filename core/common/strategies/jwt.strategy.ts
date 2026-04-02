@@ -6,30 +6,28 @@ import { IUserOrBusinessReq } from '../interfaces';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
-        super({
-            jwtFromRequest: cookieOrHeaderExtractor,
-            ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET,
-        });
-    }
+  constructor() {
+    super({
+      jwtFromRequest: cookieOrHeaderExtractor,
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
 
-    async validate(
-        payload: { 
-            isBusiness: boolean;
-            sub: string | number | Date;
-            username: string,
-            path: string
+  async validate(payload: {
+    isBusiness: boolean;
+    sub: string | number | Date;
+    username: string;
+    path: string;
+  }): Promise<IUserOrBusinessReq> {
+    return payload.isBusiness
+      ? {
+          businessId: Number(payload.sub),
+          path: payload.path,
         }
-    ): Promise<IUserOrBusinessReq> {
-        return payload.isBusiness 
-            ? {
-                businessId: Number(payload.sub),
-                path: payload.path,
-              } 
-            : {
-                userId: Number(payload.sub),
-                username: payload.username,
-             };
-    }
+      : {
+          userId: Number(payload.sub),
+          username: payload.username,
+        };
+  }
 }

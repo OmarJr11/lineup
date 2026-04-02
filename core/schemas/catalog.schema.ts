@@ -1,57 +1,71 @@
 import { StatusEnum } from '../common/enums';
-import { BusinessSchema, CatalogSearchIndexSchema, CatalogVisitSchema, DiscountSchema, FileSchema, ProductSchema, ProductSearchIndexSchema } from '.';
+import {
+  BusinessSchema,
+  CatalogSearchIndexSchema,
+  CatalogVisitSchema,
+  DiscountSchema,
+  FileSchema,
+  ProductSchema,
+  ProductSearchIndexSchema,
+} from '.';
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class CatalogSchema{
-    @Field(() => Int)
-    id: number;
+export class CatalogSchema {
+  @Field(() => Int)
+  id: number;
 
-    @Field()
-    title: string;
+  @Field()
+  title: string;
 
-    @Field({ nullable: true })
-    imageCode?: string;
+  @Field({ nullable: true })
+  imageCode?: string;
 
-    @Field(() => FileSchema, { nullable: true })
-    image?: FileSchema;
+  @Field(() => FileSchema, { nullable: true })
+  image?: FileSchema;
 
-    @Field()
-    path: string;
+  @Field({
+    nullable: true,
+    description: 'Theme or accent color as hexadecimal (e.g. #RRGGBB)',
+  })
+  hexColor?: string;
 
-    @Field(() => StatusEnum)
-    status: StatusEnum;
+  @Field()
+  path: string;
 
-    @Field(() => Int)
-    idCreationBusiness: number;
+  @Field(() => StatusEnum)
+  status: StatusEnum;
 
-    @Field(() => Int)
-    visits: number;
+  @Field(() => Int)
+  idCreationBusiness: number;
 
-    @Field(() => [String], { nullable: true })
-    tags?: string[];
+  @Field(() => Int)
+  visits: number;
 
-    @Field(() => Int)
-    productsCount: number;
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
 
-    @Field(() => BusinessSchema, { nullable: true })
-    business?: BusinessSchema;
+  @Field(() => Int)
+  productsCount: number;
 
-    @Field(() => BusinessSchema, { nullable: true })
-    modificationBusiness?: BusinessSchema;
+  @Field(() => BusinessSchema, { nullable: true })
+  business?: BusinessSchema;
 
-    @Field(() => [ProductSchema], { nullable: true })
-    products?: ProductSchema[];
+  @Field(() => BusinessSchema, { nullable: true })
+  modificationBusiness?: BusinessSchema;
 
-    @Field(() => [CatalogVisitSchema], { nullable: true })
-    catalogVisits?: CatalogVisitSchema[];
+  @Field(() => [ProductSchema], { nullable: true })
+  products?: ProductSchema[];
 
-    @Field(() => [CatalogSearchIndexSchema], { nullable: true })
-    catalogSearchIndexes?: CatalogSearchIndexSchema[];
+  @Field(() => [CatalogVisitSchema], { nullable: true })
+  catalogVisits?: CatalogVisitSchema[];
 
-    @Field(() => [ProductSearchIndexSchema], { nullable: true })
-    productSearchIndexes?: ProductSearchIndexSchema[];
+  @Field(() => [CatalogSearchIndexSchema], { nullable: true })
+  catalogSearchIndexes?: CatalogSearchIndexSchema[];
 
-    @Field(() => [DiscountSchema], { nullable: true })
-    discounts?: DiscountSchema[];
+  @Field(() => [ProductSearchIndexSchema], { nullable: true })
+  productSearchIndexes?: ProductSearchIndexSchema[];
+
+  @Field(() => [DiscountSchema], { nullable: true })
+  discounts?: DiscountSchema[];
 }

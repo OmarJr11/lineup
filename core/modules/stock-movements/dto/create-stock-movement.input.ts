@@ -1,13 +1,13 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
-    IsEnum,
-    IsInt,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
 } from 'class-validator';
 import { StockMovementTypeEnum } from '../../../common/enums';
 
@@ -16,38 +16,38 @@ import { StockMovementTypeEnum } from '../../../common/enums';
  */
 @InputType()
 export class CreateStockMovementInput {
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    idProductSku: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  idProductSku: number;
 
-    @Field(() => String)
-    @IsNotEmpty()
-    @IsEnum(StockMovementTypeEnum)
-    type: StockMovementTypeEnum;
+  @Field(() => String)
+  @IsNotEmpty()
+  @IsEnum(StockMovementTypeEnum)
+  type: StockMovementTypeEnum;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsNumber()
-    quantityDelta: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  quantityDelta: number;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    previousQuantity: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  previousQuantity: number;
 
-    @Field(() => Int)
-    @IsNotEmpty()
-    @Type(() => Number)
-    @IsInt()
-    newQuantity: number;
+  @Field(() => Int)
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  newQuantity: number;
 
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsString()
-    @MaxLength(500)
-    notes?: string;
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  notes?: string;
 }
