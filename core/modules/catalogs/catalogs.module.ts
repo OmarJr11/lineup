@@ -12,12 +12,16 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
   imports: [
     TypeOrmModule.forFeature([Catalog]),
     EntityAuditsModule,
-    BullModule.registerQueue({
-      name: QueueNamesEnum.searchData,
-      defaultJobOptions: {
-        removeOnComplete: true,
+    BullModule.registerQueue(
+      {
+        name: QueueNamesEnum.catalogs,
+        defaultJobOptions: { removeOnComplete: true },
       },
-    }),
+      {
+        name: QueueNamesEnum.searchData,
+        defaultJobOptions: { removeOnComplete: true },
+      },
+    ),
   ],
   providers: [CatalogsService, CatalogsSettersService, CatalogsGettersService],
   exports: [CatalogsService, CatalogsSettersService, CatalogsGettersService],

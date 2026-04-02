@@ -156,6 +156,10 @@ export class CatalogsService extends BasicService<Catalog> {
   @Transactional()
   async remove(id: number, businessReq: IBusinessReq): Promise<Catalog> {
     const catalog = await this.catalogsGettersService.findOne(id);
-    return await this.catalogsSettersService.remove(catalog, businessReq);
+    const removedCatalog = await this.catalogsSettersService.remove(
+      catalog,
+      businessReq,
+    );
+    return removedCatalog as Catalog;
   }
 }

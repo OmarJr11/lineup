@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCatalogInput } from './dto/create-catalog.input';
 import { BasicService } from '../../common/services';
@@ -17,6 +19,8 @@ import {
   ActionsEnum,
   AuditOperationEnum,
   AuditableEntityNameEnum,
+  CatalogsConsumerEnum,
+  QueueNamesEnum,
 } from '../../common/enums';
 import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
 import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
@@ -32,6 +36,8 @@ export class CatalogsSettersService extends BasicService<Catalog> {
     @InjectRepository(Catalog)
     private readonly catalogRepository: Repository<Catalog>,
     private readonly entityAuditsQueueService: EntityAuditsQueueService,
+    @InjectQueue(QueueNamesEnum.catalogs)
+    private readonly catalogsQueue: Queue,
   ) {
     super(catalogRepository);
   }
@@ -58,7 +64,7 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       });
       return catalog;
     } catch (error) {
-      LogError(this.logger, error, this.create.name, businessReq);
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
     }
   }
@@ -97,9 +103,13 @@ export class CatalogsSettersService extends BasicService<Catalog> {
    * Remove a catalog.
    * @param {Catalog} catalog - The catalog to remove.
    * @param {IBusinessReq} businessReq - The business request object.
+   * @returns {Promise<Catalog | Catalog[]>} The removed catalog.
    */
   @Transactional()
-  async remove(catalog: Catalog, businessReq: IBusinessReq) {
+  async remove(
+    catalog: Catalog,
+    businessReq: IBusinessReq,
+  ): Promise<Catalog | Catalog[]> {
     try {
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.Catalog,
@@ -110,7 +120,7 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       });
       return await this.deleteEntityByStatus(catalog, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.remove.name, businessReq);
+      LogError(this.logger, error as Error, this.remove.name, businessReq);
       throw new InternalServerErrorException(this.rDelete.error);
     }
   }
@@ -143,6 +153,24 @@ export class CatalogsSettersService extends BasicService<Catalog> {
       path: catalog.business.path,
     };
     await this.updateEntity({ visits }, catalog, businessReq);
+  }
+
+  /**
+   * Queues the background job for the catalog products count.
+   * @param {number} idCatalog - The ID of the catalog.
+   * @param {ActionsEnum} action - The action to perform.
+   * @param {IBusinessReq} businessReq - The business request object.
+   */
+  async updateProductsCountJob(
+    idCatalog: number,
+    action: ActionsEnum,
+    businessReq: IBusinessReq,
+  ) {
+    await this.catalogsQueue.add(
+      CatalogsConsumerEnum.UpdateProductsCount,
+      { idCatalog, action, businessReq },
+      { delay: 1000 * 60 },
+    );
   }
 
   /**

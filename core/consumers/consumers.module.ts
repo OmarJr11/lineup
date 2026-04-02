@@ -6,6 +6,7 @@ import {
   CurrencyConsumer,
   DiscountsConsumer,
   EntityAuditsConsumer,
+  FilesConsumer,
   MailsConsumer,
   QueuesManager,
   ReviewsConsumer,
@@ -51,6 +52,7 @@ export class ConsumersModule {
         GeminiModule,
         TagsModule,
         ScrappingModule,
+        ProductsModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [
@@ -58,6 +60,7 @@ export class ConsumersModule {
         CurrencyConsumer,
         DiscountsConsumer,
         EntityAuditsConsumer,
+        FilesConsumer,
         MailsConsumer,
         QueueLogsConsumer,
         SearchDataConsumer,

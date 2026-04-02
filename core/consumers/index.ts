@@ -3,6 +3,7 @@ export * from './currency.consumer';
 export * from './consumers.module';
 export * from './discounts.consumer';
 export * from './entity-audits.consumer';
+export * from './files.consumer';
 export * from './mails.consumer';
 export * from './queues.manager';
 export * from './search-data.consumer';

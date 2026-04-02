@@ -14,8 +14,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { filesResponses } from '../../../../core/common/responses';
 import { UploadFileDto } from '../../../../core/modules/files/dto/upload-file.dto';
-import { IFileInterface, IUserReq } from '../../../../core/common/interfaces';
-import { UserDec } from '../../../../core/common/decorators';
+import {
+  IBusinessReq,
+  IFileInterface,
+  IUserReq,
+} from '../../../../core/common/interfaces';
+import { BusinessDec, UserDec } from '../../../../core/common/decorators';
+
+const IMPORT_PRODUCTS_MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 
 @UsePipes(new ValidationPipe())
 @Controller('files')
@@ -43,5 +49,23 @@ export class FilesController {
       ...this.rUpload.success,
       file: await this.filesService.uploadFile(file, data, user),
     };
+  }
+
+  @Post('upload-document')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: IMPORT_PRODUCTS_MAX_FILE_SIZE_BYTES,
+      },
+    }),
+  )
+  @Bind(UploadedFile())
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  async uploadDocument(
+    file: IFileInterface,
+    @BusinessDec() businessReq: IBusinessReq,
+  ) {
+    await this.filesService.uploadDocumentFile(file, businessReq);
+    return this.rUpload.success;
   }
 }

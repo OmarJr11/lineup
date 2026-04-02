@@ -23,16 +23,10 @@ import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
     ProductFilesModule,
     ProductVariationsModule,
     ProductSkusModule,
-    BullModule.registerQueue(
-      {
-        name: QueueNamesEnum.catalogs,
-        defaultJobOptions: { removeOnComplete: true },
-      },
-      {
-        name: QueueNamesEnum.searchData,
-        defaultJobOptions: { removeOnComplete: true },
-      },
-    ),
+    BullModule.registerQueue({
+      name: QueueNamesEnum.searchData,
+      defaultJobOptions: { removeOnComplete: true },
+    }),
     CatalogsModule,
     EntityAuditsModule,
     FilesModule,

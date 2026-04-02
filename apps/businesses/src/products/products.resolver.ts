@@ -140,6 +140,34 @@ export class ProductsResolver {
   }
 
   /**
+   * Get all draft products for the authenticated business.
+   * Draft products are those with null idCatalog.
+   * @param {InfinityScrollInput} pagination - The pagination input.
+   * @param {IBusinessReq} businessReq - The business request.
+   */
+  @Query(() => PaginatedProducts, { name: 'getAllDraftProducts' })
+  @UseGuards(JwtAuthGuard, TokenGuard)
+  async getAllDraftProducts(
+    @Args('pagination', { type: () => InfinityScrollInput })
+    pagination: InfinityScrollInput,
+    @BusinessDec() businessReq: IBusinessReq,
+  ) {
+    const items: ProductSchema[] = (
+      await this.productsService.findAllByBusiness(
+        businessReq.businessId,
+        pagination,
+        true,
+      )
+    ).map((product) => toProductSchema(product));
+    return {
+      items,
+      total: items.length,
+      page: pagination.page,
+      limit: pagination.limit,
+    };
+  }
+
+  /**
    * Get products filtered by tag name or slug.
    * @param {string} tagNameOrSlug - Tag name or slug (e.g. "pan" or "pan-artesanal").
    * @param {InfinityScrollInput} pagination - Pagination parameters.

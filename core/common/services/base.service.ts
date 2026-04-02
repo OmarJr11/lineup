@@ -443,12 +443,12 @@ export class BasicService<Entity extends ObjectLiteral> {
    * Delete the entity by field 'status'
    * @param {Entity | Entity[]} entity Entity to update
    * @param {IUserReq} user User who executed the action
-   * @returns {Promise<any>}
+   * @returns {Promise<Entity | Entity[]>}
    */
   protected async deleteEntityByStatus(
     entity: Entity | Entity[],
     user: IUserOrBusinessReq,
-  ): Promise<any> {
+  ): Promise<Entity | Entity[]> {
     return this.updateEntity({ status: StatusEnum.DELETED }, entity, user);
   }
 

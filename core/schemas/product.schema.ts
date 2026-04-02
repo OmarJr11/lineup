@@ -42,8 +42,8 @@ export class ProductSchema {
   @Field(() => Float, { nullable: true })
   price?: number;
 
-  @Field(() => Int)
-  idCatalog: number;
+  @Field(() => Int, { nullable: true })
+  idCatalog?: number;
 
   @Field(() => CatalogSchema, { nullable: true })
   catalog?: CatalogSchema;

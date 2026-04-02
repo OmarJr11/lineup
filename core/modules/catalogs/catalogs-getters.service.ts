@@ -137,7 +137,11 @@ export class CatalogsGettersService extends BasicService<Catalog> {
         },
       });
     } catch (error) {
-      LogError(this.logger, error, this.checkIfExistsByIdAndBusinessId.name);
+      LogError(
+        this.logger,
+        error as Error,
+        this.checkIfExistsByIdAndBusinessId.name,
+      );
       throw new NotFoundException(this.rList.notFound);
     }
   }

@@ -26,6 +26,17 @@ export const filesResponses = {
       status: false,
       message: 'The image cannot be uploaded, poor quality.',
     },
+    importParseError: {
+      code: 700105,
+      status: false,
+      message:
+        'The document could not be parsed into products. Please validate document format and try again.',
+    },
+    importFileRequired: {
+      code: 700106,
+      status: false,
+      message: 'File is required for product import.',
+    },
     error: {
       code: 700199,
       status: false,
