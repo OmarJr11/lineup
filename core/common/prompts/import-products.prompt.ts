@@ -8,7 +8,6 @@ export const IMPORT_PRODUCTS_SYSTEM_INSTRUCTION: string = `You extract products 
     "title": string,
     "subtitle": string,
     "description": string,
-    "idCatalog": number,
     "variations"?: [{ "title": string, "options": [{ "value": string }] }],
     "isPrimary"?: boolean
   }

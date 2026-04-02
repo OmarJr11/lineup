@@ -46,18 +46,20 @@ export class LocationsSettersService extends BasicService<Location> {
     data: CreateLocationInput,
     businessReq: IBusinessReq,
   ): Promise<Location> {
-    const location = await this.save(data, businessReq).catch((error) => {
-      LogError(this.logger, error, this.create.name, businessReq);
+    try {
+      const location = await this.save(data, businessReq);
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.Location,
+        entityId: location.id,
+        operation: AuditOperationEnum.INSERT,
+        newValues: toEntityAuditValues(location),
+        userOrBusinessReq: businessReq,
+      });
+      return location;
+    } catch (error) {
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
-    });
-    await this.entityAuditsQueueService.addRecordJob({
-      entityName: AuditableEntityNameEnum.Location,
-      entityId: location.id,
-      operation: AuditOperationEnum.INSERT,
-      newValues: toEntityAuditValues(location),
-      userOrBusinessReq: businessReq,
-    });
-    return location;
+    }
   }
 
   /**
@@ -73,22 +75,22 @@ export class LocationsSettersService extends BasicService<Location> {
     data: UpdateLocationInput,
     businessReq: IBusinessReq,
   ): Promise<Location> {
-    const oldValues = toEntityAuditValues(location);
-    const updated = await this.updateEntity(data, location, businessReq).catch(
-      (error) => {
-        LogError(this.logger, error, this.update.name, businessReq);
-        throw new InternalServerErrorException(this.rUpdate.error);
-      },
-    );
-    await this.entityAuditsQueueService.addRecordJob({
-      entityName: AuditableEntityNameEnum.Location,
-      entityId: location.id,
-      operation: AuditOperationEnum.UPDATE,
-      oldValues,
-      newValues: toEntityAuditValues(updated),
-      userOrBusinessReq: businessReq,
-    });
-    return updated;
+    try {
+      const oldValues = toEntityAuditValues(location);
+      const updated = await this.updateEntity(data, location, businessReq);
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.Location,
+        entityId: location.id,
+        operation: AuditOperationEnum.UPDATE,
+        oldValues,
+        newValues: toEntityAuditValues(updated),
+        userOrBusinessReq: businessReq,
+      });
+      return updated;
+    } catch (error) {
+      LogError(this.logger, error as Error, this.update.name, businessReq);
+      throw new InternalServerErrorException(this.rUpdate.error);
+    }
   }
 
   /**
@@ -102,18 +104,19 @@ export class LocationsSettersService extends BasicService<Location> {
     location: Location,
     businessReq: IBusinessReq,
   ): Promise<boolean> {
-    await this.entityAuditsQueueService.addRecordJob({
-      entityName: AuditableEntityNameEnum.Location,
-      entityId: location.id,
-      operation: AuditOperationEnum.DELETE,
-      oldValues: toEntityAuditValues(location),
-      userOrBusinessReq: businessReq,
-    });
-    return await this.deleteEntityByStatus(location, businessReq).catch(
-      (error) => {
-        LogError(this.logger, error, this.remove.name, businessReq);
-        throw new InternalServerErrorException(this.rDelete.error);
-      },
-    );
+    try {
+      await this.entityAuditsQueueService.addRecordJob({
+        entityName: AuditableEntityNameEnum.Location,
+        entityId: location.id,
+        operation: AuditOperationEnum.DELETE,
+        oldValues: toEntityAuditValues(location),
+        userOrBusinessReq: businessReq,
+      });
+      await this.deleteEntityByStatus(location, businessReq);
+      return true;
+    } catch (error) {
+      LogError(this.logger, error as Error, this.remove.name, businessReq);
+      throw new InternalServerErrorException(this.rDelete.error);
+    }
   }
 }

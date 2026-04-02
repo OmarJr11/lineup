@@ -30,6 +30,7 @@ import {
   FilesConsumerEnum,
   QueueNamesEnum,
 } from '../../common/enums/consumers';
+import { IBusinessReq } from '../../common/interfaces';
 
 /** Minimum confidence score (0-1) for Vision API labels to be included */
 const VISION_LABEL_MIN_CONFIDENCE = 0.7;
@@ -136,8 +137,12 @@ export class FilesService extends BasicService<File> {
   /**
    * Extracts products from a document using Gemini.
    * @param {IFileInterface} file The uploaded document file
+   * @param {IBusinessReq} businessReq The business request object
    */
-  async uploadDocumentFile(file: IFileInterface): Promise<void> {
+  async uploadDocumentFile(
+    file: IFileInterface,
+    businessReq: IBusinessReq,
+  ): Promise<void> {
     const queueJobName: FilesConsumerEnum =
       FilesConsumerEnum.UploadDocumentFile;
     await this.filesQueue.add(queueJobName, {
@@ -147,6 +152,7 @@ export class FilesService extends BasicService<File> {
       mimetype: file.mimetype,
       size: file.size,
       bufferBase64: file.buffer.toString('base64'),
+      businessReq,
     });
   }
 

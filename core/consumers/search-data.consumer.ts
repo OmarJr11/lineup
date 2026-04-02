@@ -66,27 +66,39 @@ export class SearchDataConsumer extends WorkerHost {
    * @param {Job} job - The job to process.
    */
   async process(job: Job): Promise<void> {
-    switch (job.name) {
+    switch (job.name as SearchDataConsumerEnum) {
       case SearchDataConsumerEnum.SearchDataProduct:
-        await this.setDataInSearchIndexProduct(job);
+        await this.setDataInSearchIndexProduct(
+          job as Job<SearchDataProductJobData>,
+        );
         break;
       case SearchDataConsumerEnum.SearchDataBusiness:
-        await this.setDataInSearchIndexBusiness(job);
+        await this.setDataInSearchIndexBusiness(
+          job as Job<SearchDataBusinessJobData>,
+        );
         break;
       case SearchDataConsumerEnum.SearchDataCatalog:
-        await this.setDataInSearchIndexCatalog(job);
+        await this.setDataInSearchIndexCatalog(
+          job as Job<SearchDataCatalogJobData>,
+        );
         break;
       case SearchDataConsumerEnum.SearchDataVisitRecord:
-        await this.processVisitRecord(job);
+        await this.processVisitRecord(job as Job<SearchDataVisitRecordJobData>);
         break;
       case SearchDataConsumerEnum.SearchDataBusinessFollowRecord:
-        await this.processBusinessFollowRecord(job);
+        await this.processBusinessFollowRecord(
+          job as Job<SearchDataBusinessFollowRecordJobData>,
+        );
         break;
       case SearchDataConsumerEnum.SearchDataProductLikeRecord:
-        await this.processProductLikeRecord(job);
+        await this.processProductLikeRecord(
+          job as Job<SearchDataProductLikeRecordJobData>,
+        );
         break;
       case SearchDataConsumerEnum.SearchDataProductRatingRecord:
-        await this.processProductRatingRecord(job);
+        await this.processProductRatingRecord(
+          job as Job<SearchDataProductRatingRecordJobData>,
+        );
         break;
       default:
         LogWarn(this.log, `Unhandled job: ${job.name}`, this.process.name);

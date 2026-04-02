@@ -15,6 +15,7 @@ import {
 import { ProductImageInput } from './product-image.input';
 import { CreateProductVariationInput } from './create-product-variation.input';
 import { TransformBoolean } from '../../../common/transforms';
+import { StatusEnum } from '../../../common/enums';
 
 @InputType()
 export class CreateProductInput {
@@ -68,4 +69,7 @@ export class CreateProductInput {
 
   @IsEmpty()
   hasVariations?: boolean;
+
+  @IsEmpty()
+  status?: StatusEnum;
 }

@@ -25,18 +25,12 @@ import {
 } from '../../common/helpers/cartesian-product.helper';
 import { CreateProductVariationInput } from './dto/create-product-variation.input';
 import { ProductVariationInput } from './dto/product-variation.input';
-import { Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
-import {
-  ActionsEnum,
-  CatalogsConsumerEnum,
-  QueueNamesEnum,
-  SearchDataConsumerEnum,
-} from '../../common/enums';
+import { ActionsEnum, StatusEnum } from '../../common/enums';
 import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 import { ProductTagsService } from '../product-tags/product-tags.service';
 import { FilesGettersService } from '../files/files-getters.service';
 import { VariationOptions } from '../../common/types';
+import { CatalogsSettersService } from '../catalogs/catalogs-setters.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
@@ -55,11 +49,8 @@ export class ProductsService extends BasicService<Product> {
     private readonly productSkusSettersService: ProductSkusSettersService,
     private readonly productSkusGettersService: ProductSkusGettersService,
     private readonly catalogsGettersService: CatalogsGettersService,
+    private readonly catalogsSettersService: CatalogsSettersService,
     private readonly filesGettersService: FilesGettersService,
-    @InjectQueue(QueueNamesEnum.catalogs)
-    private readonly catalogsQueue: Queue,
-    @InjectQueue(QueueNamesEnum.searchData)
-    private readonly searchDataQueue: Queue,
   ) {
     super(productRepository, businessRequest);
   }
@@ -108,7 +99,6 @@ export class ProductsService extends BasicService<Product> {
     await this.enqueueProductCreationJobs(
       product.id,
       idCatalog,
-      tags,
       ActionsEnum.Increment,
       businessReq,
     );
@@ -256,6 +246,8 @@ export class ProductsService extends BasicService<Product> {
       data.id,
       idBusiness,
     );
+    const draft = product.status === StatusEnum.PENDING;
+
     const idCatalog = data.idCatalog || product.idCatalog;
     await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(
       idCatalog,
@@ -274,6 +266,8 @@ export class ProductsService extends BasicService<Product> {
       (data as unknown as Record<string, unknown>).hasVariations =
         variations.length > 0;
     }
+
+    data.status = StatusEnum.ACTIVE;
     await this.productsSettersService.update(product, data, businessReq);
 
     if (images && images.length > 0)
@@ -301,7 +295,14 @@ export class ProductsService extends BasicService<Product> {
         businessReq,
       );
     }
-    await this.queueForIdProduct(product.id);
+    await this.productsSettersService.queueForIdProduct(product.id);
+    if (draft) {
+      await this.catalogsSettersService.updateProductsCountJob(
+        product.idCatalog,
+        ActionsEnum.Increment,
+        businessReq,
+      );
+    }
 
     return await this.productsGettersService.findOneWithRelations(product.id);
   }
@@ -326,7 +327,7 @@ export class ProductsService extends BasicService<Product> {
       isPrimary: !product.isPrimary,
     };
     await this.productsSettersService.update(product, data, businessReq);
-    await this.queueForIdProduct(product.id);
+    await this.productsSettersService.queueForIdProduct(product.id);
     return await this.productsGettersService.findOneWithRelations(product.id);
   }
 
@@ -343,7 +344,7 @@ export class ProductsService extends BasicService<Product> {
     await this.removeProductSkus(product.id, businessReq);
     await this.removeProductVariations(product.id, businessReq);
     await this.productsSettersService.remove(product, businessReq);
-    await this.queueForIdCatalog(
+    await this.catalogsSettersService.updateProductsCountJob(
       product.idCatalog,
       ActionsEnum.Decrement,
       businessReq,
@@ -699,48 +700,20 @@ export class ProductsService extends BasicService<Product> {
    * and increments the catalog products count.
    * @param {number} idProduct - The ID of the created product.
    * @param {number} idCatalog - The ID of the catalog containing the product.
-   * @param {string[]} tags - The tags of the product.
    * @param {ActionsEnum} action - The action to perform.
    * @param {IBusinessReq} businessReq - The business request object.
    */
   private async enqueueProductCreationJobs(
     idProduct: number,
     idCatalog: number,
-    tags: string[],
     action: ActionsEnum,
     businessReq: IBusinessReq,
   ) {
-    await this.queueForIdProduct(idProduct);
-    await this.queueForIdCatalog(idCatalog, action, businessReq);
-  }
-
-  /**
-   * Queues the background job for the product search index.
-   * @param {number} idProduct - The ID of the product.
-   */
-  private async queueForIdProduct(idProduct: number) {
-    await this.searchDataQueue.add(
-      SearchDataConsumerEnum.SearchDataProduct,
-      { idProduct },
-      { delay: 1000 * 60 },
-    );
-  }
-
-  /**
-   * Queues the background job for the catalog products count.
-   * @param {number} idCatalog - The ID of the catalog.
-   * @param {ActionsEnum} action - The action to perform.
-   * @param {IBusinessReq} businessReq - The business request object.
-   */
-  private async queueForIdCatalog(
-    idCatalog: number,
-    action: ActionsEnum,
-    businessReq: IBusinessReq,
-  ) {
-    await this.catalogsQueue.add(
-      CatalogsConsumerEnum.UpdateProductsCount,
-      { idCatalog, action, businessReq },
-      { delay: 1000 * 60 },
+    await this.productsSettersService.queueForIdProduct(idProduct);
+    await this.catalogsSettersService.updateProductsCountJob(
+      idCatalog,
+      action,
+      businessReq,
     );
   }
 

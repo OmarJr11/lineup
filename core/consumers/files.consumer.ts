@@ -1,11 +1,14 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { FilesConsumerEnum, QueueNamesEnum } from '../common/enums/consumers';
-import { LogWarn } from '../common/helpers';
-import { IFileInterface } from '../common/interfaces';
+import { LogError, LogWarn } from '../common/helpers';
+import { IBusinessReq, IFileInterface } from '../common/interfaces';
+import { StatusEnum } from '../common/enums';
 import { FilesImportsService } from '../modules/files/files-imports.service';
 import { IImportedProductInput } from '../modules/files/dto/imported-product.input';
+import { ProductsSettersService } from '../modules/products/products-setters.service';
+import { CreateProductInput } from '../modules/products/dto/create-product.input';
 
 /**
  * Payload for UploadDocumentFile queue job.
@@ -17,6 +20,7 @@ export interface UploadDocumentFileJobData {
   mimetype: string;
   size: number;
   bufferBase64: string;
+  businessReq: IBusinessReq;
 }
 
 /**
@@ -26,7 +30,10 @@ export interface UploadDocumentFileJobData {
 export class FilesConsumer extends WorkerHost {
   private readonly log = new Logger(FilesConsumer.name);
 
-  constructor(private readonly filesImportsService: FilesImportsService) {
+  constructor(
+    private readonly filesImportsService: FilesImportsService,
+    private readonly productsSettersService: ProductsSettersService,
+  ) {
     super();
   }
 
@@ -52,12 +59,24 @@ export class FilesConsumer extends WorkerHost {
   private async processUploadDocumentFile(
     job: Job<UploadDocumentFileJobData>,
   ): Promise<void> {
-    const { bufferBase64, fieldname, originalname, encoding, mimetype, size } =
-      job.data;
-    if (!bufferBase64 || !originalname || !mimetype) {
+    const {
+      bufferBase64,
+      fieldname,
+      originalname,
+      encoding,
+      mimetype,
+      size,
+      businessReq,
+    } = job.data;
+    if (
+      !bufferBase64 ||
+      !originalname ||
+      !mimetype ||
+      !businessReq?.businessId
+    ) {
       LogWarn(
         this.log,
-        `Missing document payload in job ${job.id}`,
+        `Missing document payload or business data in job ${job.id}`,
         this.processUploadDocumentFile.name,
       );
       return;
@@ -72,8 +91,39 @@ export class FilesConsumer extends WorkerHost {
     };
     const importedProducts: IImportedProductInput[] =
       await this.filesImportsService.uploadDocumentFile(file);
+    await this.createImportedProductsAsPending(importedProducts, businessReq);
     this.log.log(
       `Processed imported file "${originalname}" with ${importedProducts.length} products`,
     );
+  }
+
+  /**
+   * Creates imported products with pending status.
+   * @param {IImportedProductInput[]} importedProducts Imported products list
+   * @param {IBusinessReq} businessReq Business context
+   * @returns {Promise<void>}
+   */
+  private async createImportedProductsAsPending(
+    importedProducts: IImportedProductInput[],
+    businessReq: IBusinessReq,
+  ): Promise<void> {
+    for (const importedProduct of importedProducts) {
+      try {
+        const createPayload: CreateProductInput = {
+          ...importedProduct,
+          images: [],
+          status: StatusEnum.PENDING,
+          idCatalog: null,
+        };
+        await this.productsSettersService.create(createPayload, businessReq);
+      } catch (error) {
+        LogError(
+          this.log,
+          error as Error,
+          this.createImportedProductsAsPending.name,
+        );
+        throw new InternalServerErrorException(error);
+      }
+    }
   }
 }

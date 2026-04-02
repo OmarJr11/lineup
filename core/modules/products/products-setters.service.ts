@@ -3,19 +3,23 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { Queue } from 'bullmq';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 import { Product } from '../../entities';
 import { BasicService } from '../../common/services';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { IBusinessReq, IUserReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
-import { Transactional } from 'typeorm-transactional-cls-hooked';
 import {
   AuditOperationEnum,
   AuditableEntityNameEnum,
+  QueueNamesEnum,
+  SearchDataConsumerEnum,
 } from '../../common/enums';
 import { EntityAuditsQueueService } from '../entity-audits/entity-audits-queue.service';
 import { toEntityAuditValues } from '../entity-audits/entity-audit-values.helper';
@@ -31,6 +35,8 @@ export class ProductsSettersService extends BasicService<Product> {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly entityAuditsQueueService: EntityAuditsQueueService,
+    @InjectQueue(QueueNamesEnum.searchData)
+    private readonly searchDataQueue: Queue,
   ) {
     super(productRepository);
   }
@@ -57,7 +63,7 @@ export class ProductsSettersService extends BasicService<Product> {
       });
       return product;
     } catch (error) {
-      LogError(this.logger, error, this.create.name, businessReq);
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
     }
   }
@@ -87,7 +93,7 @@ export class ProductsSettersService extends BasicService<Product> {
       });
       return updated;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, businessReq);
+      LogError(this.logger, error as Error, this.update.name, businessReq);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }
@@ -107,9 +113,9 @@ export class ProductsSettersService extends BasicService<Product> {
         oldValues: toEntityAuditValues(product),
         userOrBusinessReq: businessReq,
       });
-      return await this.deleteEntityByStatus(product, businessReq);
+      await this.deleteEntityByStatus(product, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.remove.name, businessReq);
+      LogError(this.logger, error as Error, this.remove.name, businessReq);
       throw new InternalServerErrorException(this.rDelete.error);
     }
   }
@@ -159,5 +165,17 @@ export class ProductsSettersService extends BasicService<Product> {
       path: '',
     };
     await this.updateEntity({ visits }, product, businessReq);
+  }
+
+  /**
+   * Queues the background job for the product search index.
+   * @param {number} idProduct - The ID of the product.
+   */
+  async queueForIdProduct(idProduct: number) {
+    await this.searchDataQueue.add(
+      SearchDataConsumerEnum.SearchDataProduct,
+      { idProduct },
+      { delay: 1000 * 60 },
+    );
   }
 }

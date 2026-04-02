@@ -52,6 +52,7 @@ export class ConsumersModule {
         GeminiModule,
         TagsModule,
         ScrappingModule,
+        ProductsModule,
         ...QueuesManager.queuesForImport(),
       ],
       providers: [

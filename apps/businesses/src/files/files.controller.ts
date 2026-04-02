@@ -14,8 +14,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
 import { filesResponses } from '../../../../core/common/responses';
 import { UploadFileDto } from '../../../../core/modules/files/dto/upload-file.dto';
-import { IFileInterface, IUserReq } from '../../../../core/common/interfaces';
-import { UserDec } from '../../../../core/common/decorators';
+import {
+  IBusinessReq,
+  IFileInterface,
+  IUserReq,
+} from '../../../../core/common/interfaces';
+import { BusinessDec, UserDec } from '../../../../core/common/decorators';
 
 const IMPORT_PRODUCTS_MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 
@@ -57,8 +61,11 @@ export class FilesController {
   )
   @Bind(UploadedFile())
   @UseGuards(JwtAuthGuard, TokenGuard)
-  async uploadDocument(file: IFileInterface) {
-    await this.filesService.uploadDocumentFile(file);
+  async uploadDocument(
+    file: IFileInterface,
+    @BusinessDec() businessReq: IBusinessReq,
+  ) {
+    await this.filesService.uploadDocumentFile(file, businessReq);
     return this.rUpload.success;
   }
 }
