@@ -246,19 +246,45 @@ export class ProductsGettersService extends BasicService<Product> {
   async findAllByBusiness(
     idBusiness: number,
     query: InfinityScrollInput,
+    onlyDraft?: boolean,
   ): Promise<Product[]> {
     const page = query.page || 1;
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
     const order = query.order || 'DESC';
     const orderBy = query.orderBy || 'creation_date';
+    const search = query.search?.trim() || null;
     const subQuery = this.createQueryBuilder('sub')
       .select('sub.id')
       .where('sub.status <> :status', { status: StatusEnum.DELETED })
       .andWhere('sub.idCreationBusiness = :idBusiness', { idBusiness })
-      .orderBy(`sub.${orderBy}`, order)
-      .limit(limit)
-      .offset(skip);
+      .orderBy(`sub.${orderBy}`, order);
+    if (onlyDraft) {
+      subQuery.andWhere('sub.idCatalog IS NULL OR sub.status = :status', {
+        status: StatusEnum.PENDING,
+      });
+    }
+    if (search) {
+      const normalizedSearch = `%${search}%`;
+      subQuery.andWhere(
+        new Brackets((queryBuilder) => {
+          queryBuilder
+            .where(
+              `translate(lower(coalesce(sub.title, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.subtitle, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(sub.description, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            );
+        }),
+      );
+    }
+    subQuery.limit(limit).offset(skip);
     return await this.getQueryRelations(this.createQueryBuilder('p'))
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())

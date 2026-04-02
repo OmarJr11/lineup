@@ -153,10 +153,12 @@ export class ProductsService extends BasicService<Product> {
   async findAllByBusiness(
     idBusiness: number,
     query: InfinityScrollInput,
+    onlyDraft?: boolean,
   ): Promise<Product[]> {
     return await this.productsGettersService.findAllByBusiness(
       idBusiness,
       query,
+      onlyDraft,
     );
   }
 
