@@ -576,6 +576,7 @@ export class BusinessStatisticsGettersService {
       endDate: range.endDate,
       granularity: timePeriod.granularity,
     };
+    console.log('movementPeriod', movementPeriod);
     const [
       skusLowOrOutOfStockCount,
       recentStockMovements,
