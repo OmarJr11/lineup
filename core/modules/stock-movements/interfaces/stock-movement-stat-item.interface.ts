@@ -8,4 +8,5 @@ export interface IStockMovementStatItem {
   type: StockMovementTypeEnum;
   quantityDelta: number;
   creationDate: Date;
+  price?: number;
 }

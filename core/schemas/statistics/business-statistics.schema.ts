@@ -12,12 +12,6 @@ export class StatisticsRootSchema {}
 export class TimeSeriesStatsSchema {
   @Field(() => Int, { description: 'Total count in the period' })
   total: number;
-
-  @Field(() => [TimeSeriesDataPointSchema], {
-    nullable: true,
-    description: 'Data points for line charts (when granularity provided)',
-  })
-  data?: TimeSeriesDataPointSchema[];
 }
 
 @ObjectType()
@@ -206,6 +200,9 @@ export class StockMovementStatItemSchema {
 
   @Field()
   creationDate: Date;
+
+  @Field(() => Float, { nullable: true })
+  price?: number;
 }
 
 /**

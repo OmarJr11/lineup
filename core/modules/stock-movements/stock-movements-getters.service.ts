@@ -96,7 +96,7 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
         relations: this.relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -176,6 +176,7 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
       type: sm.type,
       quantityDelta: sm.quantityDelta,
       creationDate: sm.creationDate,
+      price: sm.price,
     }));
   }
 

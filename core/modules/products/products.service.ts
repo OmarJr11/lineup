@@ -248,11 +248,11 @@ export class ProductsService extends BasicService<Product> {
       data.id,
       idBusiness,
     );
-    const draft = product.status === StatusEnum.PENDING;
+    const idCatalog = data.idCatalog;
+    const idCatalogOld = product.idCatalog;
 
-    const idCatalog = data.idCatalog || product.idCatalog;
     await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(
-      idCatalog,
+      idCatalog || idCatalogOld,
       idBusiness,
     );
     const { images, variations } = this.extractProductRelations(data);
@@ -298,9 +298,20 @@ export class ProductsService extends BasicService<Product> {
       );
     }
     await this.productsSettersService.queueForIdProduct(product.id);
-    if (draft) {
+
+    if (
+      idCatalogOld &&
+      idCatalog &&
+      Number(idCatalogOld) !== Number(idCatalog)
+    ) {
       await this.catalogsSettersService.updateProductsCountJob(
         product.idCatalog,
+        ActionsEnum.Decrement,
+        businessReq,
+      );
+    } else if (idCatalog && !idCatalogOld) {
+      await this.catalogsSettersService.updateProductsCountJob(
+        data.idCatalog,
         ActionsEnum.Increment,
         businessReq,
       );

@@ -137,8 +137,14 @@ export class CatalogsSettersService extends BasicService<Catalog> {
     businessReq: IBusinessReq,
   ): Promise<void> {
     let productsCount = Number(catalog.productsCount);
-    if (action === ActionsEnum.Increment) productsCount++;
-    else productsCount--;
+    switch (action) {
+      case ActionsEnum.Increment:
+        productsCount++;
+        break;
+      case ActionsEnum.Decrement:
+        productsCount--;
+        break;
+    }
     await this.updateEntity({ productsCount }, catalog, businessReq);
   }
 

@@ -70,7 +70,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
       });
       return sku;
     } catch (error) {
-      LogError(this.logger, error, this.create.name, businessReq);
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
     }
   }
