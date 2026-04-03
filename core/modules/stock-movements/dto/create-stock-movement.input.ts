@@ -1,4 +1,4 @@
-import { Field, InputType, Int } from '@nestjs/graphql';
+import { Field, Float, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { StockMovementTypeEnum } from '../../../common/enums';
 
@@ -50,4 +51,11 @@ export class CreateStockMovementInput {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @Field(() => Float, { nullable: true })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  price?: number;
 }

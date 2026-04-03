@@ -46,6 +46,9 @@ export class StockMovement extends BaseEntity {
   @Column('int', { name: 'new_quantity' })
   newQuantity: number;
 
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  price?: number;
+
   @Column('text', { nullable: true })
   notes?: string;
 

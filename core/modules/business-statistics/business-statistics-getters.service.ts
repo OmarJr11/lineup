@@ -11,7 +11,6 @@ import {
   IStatItemWithLikes,
   IStatItemWithRating,
   IStatItemWithVisits,
-  ITimeSeriesDataPoint,
   ITimeSeriesStats,
   IVisitToLikeRatio,
   IVisitsByAuthType,
@@ -132,9 +131,14 @@ export class BusinessStatisticsGettersService {
     if (granularity !== TimePeriodGranularityEnum.RANGE) {
       return StatisticsQueryHelper.calculateTimePeriodRange(granularity);
     }
+
+    const startDate = new Date(timePeriod.startDate);
+    const endDate = new Date(timePeriod.endDate);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
     return {
-      startDate: timePeriod.startDate,
-      endDate: timePeriod.endDate,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
     };
   }
 

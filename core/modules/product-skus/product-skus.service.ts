@@ -17,7 +17,7 @@ import { StockMovementsSettersService } from '../stock-movements/stock-movements
 import { UpdateProductSkuInput } from './dto/update-product-sku.input';
 import { UpdateProductSkusInput } from './dto/update-product-skus.input';
 import { AdjustStockInput } from './dto/adjust-stock.input';
-import { RegisterPurchaseInput } from './dto/register-purchase.input';
+import { RegisterSaleInput } from './dto/register-sale.input';
 import { IBusinessReq } from '../../common/interfaces';
 import { StockMovementTypeEnum } from '../../common/enums';
 import { LogWarn } from '../../common/helpers';
@@ -222,13 +222,13 @@ export class ProductSkusService extends BasicService<ProductSku> {
 
   /**
    * Register a purchase made by a customer (sale). Decreases stock and records the movement in history.
-   * @param {RegisterPurchaseInput} input - The sale data (quantity sold).
+   * @param {RegisterSaleInput} input - The sale data (quantity sold).
    * @param {IBusinessReq} businessReq - The business request object.
    * @returns {Promise<ProductSku>} The updated product SKU.
    */
   @Transactional()
   async registerSale(
-    input: RegisterPurchaseInput,
+    input: RegisterSaleInput,
     businessReq: IBusinessReq,
   ): Promise<ProductSku> {
     const [updatedSku] = await this.registerSales([input], businessReq);
@@ -237,13 +237,13 @@ export class ProductSkusService extends BasicService<ProductSku> {
 
   /**
    * Register multiple purchases in one operation. Decreases stock and records each movement in history.
-   * @param {RegisterPurchaseInput[]} input - The list of sales.
+   * @param {RegisterSaleInput[]} input - The list of sales.
    * @param {IBusinessReq} businessReq - The business request object.
    * @returns {Promise<ProductSku[]>} The updated product SKUs.
    */
   @Transactional()
   async registerSales(
-    input: RegisterPurchaseInput[],
+    input: RegisterSaleInput[],
     businessReq: IBusinessReq,
   ): Promise<ProductSku[]> {
     const updatedSkus: ProductSku[] = [];
@@ -271,6 +271,7 @@ export class ProductSkusService extends BasicService<ProductSku> {
           previousQuantity,
           newQuantity,
           notes: saleInput.notes,
+          price: saleInput.price,
         },
         businessReq,
       );
