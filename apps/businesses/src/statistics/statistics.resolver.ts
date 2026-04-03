@@ -15,12 +15,14 @@ import { IBusinessReq } from '../../../../core/common/interfaces';
 import { BusinessesPermissionsEnum } from '../../../../core/common/enums';
 import { BusinessStatisticsGettersService } from '../../../../core/modules/business-statistics/business-statistics-getters.service';
 import { TimePeriodInput } from '../../../../core/modules/business-statistics/dto/time-period.input';
+import { IBusinessSalesInTimePeriod } from '../../../../core/modules/business-statistics/interfaces';
 import {
   EngagementStatsSchema,
   ProductStatsSchema,
   CatalogStatsSchema,
   DiscountStatsSchema,
   InventoryStatsSchema,
+  BusinessSalesInTimePeriodSchema,
   StatisticsRootSchema,
 } from '../../../../core/schemas';
 
@@ -40,8 +42,8 @@ export class StatisticsResolver {
   @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(businessesResponses.list)
   async businessEngagementStats(
-    @BusinessDec() businessReq: IBusinessReq,
     @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     return await this.businessStatisticsGettersService.getEngagementStats(
       businessReq.businessId,
@@ -54,8 +56,8 @@ export class StatisticsResolver {
   @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(businessesResponses.list)
   async productStats(
-    @BusinessDec() businessReq: IBusinessReq,
     @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     return await this.businessStatisticsGettersService.getProductStats(
       businessReq.businessId,
@@ -68,8 +70,8 @@ export class StatisticsResolver {
   @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(businessesResponses.list)
   async catalogStats(
-    @BusinessDec() businessReq: IBusinessReq,
     @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     return await this.businessStatisticsGettersService.getCatalogStats(
       businessReq.businessId,
@@ -82,8 +84,8 @@ export class StatisticsResolver {
   @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(businessesResponses.list)
   async discountStats(
-    @BusinessDec() businessReq: IBusinessReq,
     @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
   ) {
     return await this.businessStatisticsGettersService.getDiscountStats(
       businessReq.businessId,
@@ -96,14 +98,33 @@ export class StatisticsResolver {
   @Permissions(BusinessesPermissionsEnum.BURLISOWN)
   @Response(businessesResponses.list)
   async inventoryStats(
-    @BusinessDec() businessReq: IBusinessReq,
     @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
     @Args('threshold', { type: () => Int, nullable: true }) threshold?: number,
   ) {
     return await this.businessStatisticsGettersService.getInventoryStats(
       businessReq.businessId,
       timePeriod,
       threshold,
+    );
+  }
+
+  /**
+   * Customer sales in the period: line items plus total SALE movement count for the same range.
+   */
+  @Query(() => BusinessSalesInTimePeriodSchema, {
+    name: 'businessSalesInTimePeriod',
+  })
+  @UseGuards(JwtAuthGuard, TokenGuard, PermissionsGuard)
+  @Permissions(BusinessesPermissionsEnum.BURLISOWN)
+  @Response(businessesResponses.list)
+  async businessSalesInTimePeriod(
+    @Args('timePeriod') timePeriod: TimePeriodInput,
+    @BusinessDec() businessReq: IBusinessReq,
+  ): Promise<IBusinessSalesInTimePeriod> {
+    return await this.businessStatisticsGettersService.getSalesInTimePeriod(
+      businessReq.businessId,
+      timePeriod,
     );
   }
 }

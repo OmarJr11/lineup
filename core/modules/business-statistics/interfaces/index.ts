@@ -9,5 +9,6 @@ export * from './catalog-stats.interface';
 export * from './discount-stats-date-range.interface';
 export * from './discount-stats.interface';
 export * from './inventory-stats.interface';
+export * from './business-sales-in-time-period.interface';
 export * from './product-stats.interface';
 export * from './get-product-stats-input.interface';

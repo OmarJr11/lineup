@@ -5,6 +5,7 @@ import {
   ICatalogStats,
   IDiscountStats,
   IEngagementStats,
+  IBusinessSalesInTimePeriod,
   IInventoryStats,
   IFrequencyDataPoint,
   IProductStats,
@@ -25,9 +26,11 @@ import { CatalogsGettersService } from '../catalogs/catalogs-getters.service';
 import { DiscountsGettersService } from '../discounts/discounts-getters.service';
 import { ProductSkusGettersService } from '../product-skus/product-skus-getters.service';
 import { StockMovementsGettersService } from '../stock-movements/stock-movements-getters.service';
-import { IStockMovementStatItem } from '../stock-movements/interfaces/stock-movement-stat-item.interface';
+import {
+  IStockMovementStatItem,
+  ITimePeriodFilter,
+} from '../../common/interfaces';
 import { TimePeriodGranularityEnum } from '../../common/enums';
-import { ITimePeriodFilter } from '../../common/interfaces';
 
 /** Default limit for top-N queries. */
 const DEFAULT_TOP_LIMIT = 10;
@@ -547,6 +550,33 @@ export class BusinessStatisticsGettersService {
   }
 
   /**
+   * Lists sales (SALE movements) in the period plus the total count for the same range.
+   *
+   * @param {number} idBusiness - The business ID.
+   * @param {TimePeriodInput} timePeriod - Preset granularity or RANGE (same resolution as other dashboard stats).
+   * @returns {Promise<IBusinessSalesInTimePeriod>} Sales rows and aggregate count.
+   */
+  async getSalesInTimePeriod(
+    idBusiness: number,
+    timePeriod: TimePeriodInput,
+  ): Promise<IBusinessSalesInTimePeriod> {
+    const range = this.resolveStatisticsTimeRange(timePeriod);
+    const movementPeriod: ITimePeriodFilter = {
+      startDate: range.startDate,
+      endDate: range.endDate,
+      granularity: timePeriod.granularity,
+    };
+    const [sales, salesCount] = await Promise.all([
+      this.stockMovementsGettersService.getSalesInPeriodForStatistics(
+        idBusiness,
+        movementPeriod,
+      ),
+      this.getSalesCount(idBusiness, movementPeriod),
+    ]);
+    return { sales, salesCount };
+  }
+
+  /**
    * Count products with no stock defined (quantity IS NULL on all SKUs).
    * @param {number} idBusiness - The business ID.
    * @returns {Promise<number>} The count of products with no stock.
@@ -566,31 +596,22 @@ export class BusinessStatisticsGettersService {
    */
   async getInventoryStats(
     idBusiness: number,
-    timePeriod: TimePeriodInput,
+    _timePeriod: TimePeriodInput,
     threshold?: number,
   ): Promise<IInventoryStats> {
-    const range = this.resolveStatisticsTimeRange(timePeriod);
     const effectiveThreshold = threshold ?? DEFAULT_LOW_STOCK_THRESHOLD;
-    const movementPeriod: ITimePeriodFilter = {
-      startDate: range.startDate,
-      endDate: range.endDate,
-      granularity: timePeriod.granularity,
-    };
     const [
       skusLowOrOutOfStockCount,
       recentStockMovements,
-      salesCount,
       productsWithoutStockCount,
     ] = await Promise.all([
       this.getSkusLowOrOutOfStockCount(idBusiness, effectiveThreshold),
       this.getRecentStockMovements(idBusiness, 20),
-      this.getSalesCount(idBusiness, movementPeriod),
       this.getProductsWithoutStockCount(idBusiness),
     ]);
     return {
       skusLowOrOutOfStockCount,
       recentStockMovements,
-      salesCount,
       productsWithoutStockCount,
     };
   }

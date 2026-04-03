@@ -21,6 +21,7 @@ export * from './user-or-business-req.interface';
 export * from './logout.interface';
 export * from './product-rating.interface';
 export * from './time-period-filter.interface';
+export * from './stock-movement-stat-item.interface';
 export * from './admin-time-series-data-point.interface';
 export * from './admin-time-series-stats.interface';
 export * from './admin-status-count.interface';
