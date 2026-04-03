@@ -25,6 +25,7 @@ services:
       - .env
     environment:
       DB_HOST: db
+      TZ: America/Caracas
     depends_on:
       - db
       - redis
@@ -40,6 +41,7 @@ services:
       - .env
     environment:
       DB_HOST: db
+      TZ: America/Caracas
     depends_on:
       - db
       - redis
@@ -55,6 +57,7 @@ services:
       - .env
     environment:
       DB_HOST: db
+      TZ: America/Caracas
     depends_on:
       - db
       - redis
@@ -67,6 +70,7 @@ services:
       - .env
     environment:
       DB_HOST: db
+      TZ: America/Caracas
     depends_on:
       - db
 
