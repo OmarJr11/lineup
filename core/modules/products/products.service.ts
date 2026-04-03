@@ -31,6 +31,7 @@ import { ProductTagsService } from '../product-tags/product-tags.service';
 import { FilesGettersService } from '../files/files-getters.service';
 import { VariationOptions } from '../../common/types';
 import { CatalogsSettersService } from '../catalogs/catalogs-setters.service';
+import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
@@ -164,16 +165,16 @@ export class ProductsService extends BasicService<Product> {
 
   /**
    * Get products by business and primary flag.
-   * @param {number} idBusiness - The ID of the business.
+   * @param {GetAllPrimaryProductsByBusinessInput} data - The data for the input.
    * @param {boolean} isPrimary - Primary flag filter.
    * @returns {Promise<Product[]>} Array of matching products.
    */
   async findAllByBusinessAndIsPrimary(
-    idBusiness: number,
+    data: GetAllPrimaryProductsByBusinessInput,
     isPrimary: boolean,
   ): Promise<Product[]> {
     return await this.productsGettersService.findAllByBusinessAndIsPrimary(
-      idBusiness,
+      data,
       isPrimary,
     );
   }
