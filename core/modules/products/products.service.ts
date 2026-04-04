@@ -511,9 +511,9 @@ export class ProductsService extends BasicService<Product> {
   ) {
     const existingVariations =
       await this.productVariationsGettersService.findAllByProduct(productId);
-    const existingIds = new Set(existingVariations.map((v) => v.id));
+    const existingIds = new Set(existingVariations.map((v) => Number(v.id)));
     const providedIds = new Set(
-      variations.filter((v) => v.id).map((v) => v.id),
+      variations.filter((v) => v.id).map((v) => Number(v.id)),
     );
 
     // Remove variations that are not in the provided array
