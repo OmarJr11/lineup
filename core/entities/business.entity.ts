@@ -83,6 +83,15 @@ export class Business extends BaseEntity {
   @Column('boolean', { name: 'is_online', default: false })
   isOnline: boolean;
 
+  /**
+   * When true, the storefront may show an equivalent price in Venezuelan bolívares (VES).
+   */
+  @Column('boolean', {
+    name: 'is_bs_equivalent_price_enabled',
+    default: false,
+  })
+  isBsEquivalentPriceEnabled: boolean;
+
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
 

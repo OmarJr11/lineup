@@ -74,4 +74,13 @@ export class UpdateBusinessInput {
   @IsOptional()
   @IsBoolean()
   isOnline?: boolean;
+
+  @Field({
+    nullable: true,
+    description:
+      'Show equivalent price in bolívares (VES) in the catalog or storefront',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isBsEquivalentPriceEnabled?: boolean;
 }
