@@ -62,9 +62,10 @@ export class ProductReactionsSettersService extends BasicService<ProductReaction
     userReq: IUserReq,
   ): Promise<ProductReaction> {
     try {
-      return await this.updateEntity(data, productReaction, userReq);
+      const updated = await this.updateEntity(data, productReaction, userReq);
+      return updated as ProductReaction;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, userReq);
+      LogError(this.logger, error as Error, this.update.name, userReq);
       throw new InternalServerErrorException(this.rLike.error);
     }
   }

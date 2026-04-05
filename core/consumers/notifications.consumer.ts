@@ -1,16 +1,24 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
-import { QueueNamesEnum, NotificationsConsumerEnum } from '../common/enums';
+import {
+  QueueNamesEnum,
+  NotificationsConsumerEnum,
+  NotificationContentScenarioEnum,
+  NotificationTypeEnum,
+} from '../common/enums';
 import { LogWarn } from '../common/helpers';
 import { NotificationsSettersService } from '../modules/notifications/notifications-setters.service';
 import { CreateNotificationParams } from '../modules/notifications/dto/create-notification.params';
 import { IUserOrBusinessReq } from '../common/interfaces';
+import { notificationsPublic } from '../common/constants';
 
 /** Payload for CreateNotificationUserJob job. */
-interface CreateNotificationJobData {
-  params: CreateNotificationParams;
+export interface CreateNotificationJobData {
   userOrBusinessReq: IUserOrBusinessReq;
+  scenario: NotificationContentScenarioEnum;
+  entityName: string;
+  type: NotificationTypeEnum;
 }
 
 /**
@@ -58,9 +66,22 @@ export class NotificationsConsumer extends WorkerHost {
    * @param {Job<CreateNotificationJobData>} job - Job with CreateNotificationJobData data
    */
   private async processCreateForUser(job: Job<CreateNotificationJobData>) {
-    const { params, userOrBusinessReq } = job.data;
+    const { entityName, userOrBusinessReq, scenario, type } = job.data;
+    const notificationEntry = notificationsPublic[scenario];
+    const { title, message, link } = notificationEntry.es;
+    const notificationParams: CreateNotificationParams = {
+      type,
+      title,
+      body: message,
+      idUser: userOrBusinessReq.userId,
+      payload: {
+        id: userOrBusinessReq.userId,
+        link,
+        entity: entityName,
+      },
+    };
     await this.notificationsSettersService.createAndDispatch(
-      params,
+      notificationParams,
       userOrBusinessReq,
     );
   }
@@ -71,9 +92,22 @@ export class NotificationsConsumer extends WorkerHost {
    * @param {Job} job - Job with CreateNotificationBusinessJobPayload data
    */
   private async processCreateForBusiness(job: Job<CreateNotificationJobData>) {
-    const { params, userOrBusinessReq } = job.data;
+    const { entityName, userOrBusinessReq, scenario, type } = job.data;
+    const notificationEntry = notificationsPublic[scenario];
+    const { title, message, link } = notificationEntry.es;
+    const notificationParams: CreateNotificationParams = {
+      type,
+      title,
+      body: message,
+      idBusiness: userOrBusinessReq.businessId,
+      payload: {
+        id: userOrBusinessReq.businessId,
+        link,
+        entity: entityName,
+      },
+    };
     await this.notificationsSettersService.createAndDispatch(
-      params,
+      notificationParams,
       userOrBusinessReq,
     );
   }

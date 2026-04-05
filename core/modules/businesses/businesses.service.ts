@@ -15,13 +15,15 @@ import { Business } from '../../entities';
 import { BasicService } from '../../common/services';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked/dist/Transactional';
-import { IBusinessReq, IUserReq } from '../../common/interfaces';
+import { IBusinessReq } from '../../common/interfaces';
 import { BusinessesGettersService } from './businesses-getters.service';
 import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
 import * as argon2 from 'argon2';
 import {
+  NotificationsConsumerEnum,
+  NotificationTypeEnum,
   ProvidersEnum,
   QueueNamesEnum,
   SearchDataConsumerEnum,
@@ -32,6 +34,8 @@ import { LogError } from '../../common/helpers/logger.helper';
 import { businessesResponses } from '../../common/responses';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { NotificationContentScenarioEnum } from '../../common/enums/notification-content-scenario.enum';
+import { CreateNotificationJobData } from 'core/consumers';
 
 @Injectable()
 export class BusinessesService extends BasicService<Business> {
@@ -51,6 +55,8 @@ export class BusinessesService extends BasicService<Business> {
     private readonly businessRolesService: BusinessRolesService,
     @InjectQueue(QueueNamesEnum.searchData)
     private readonly searchDataQueue: Queue,
+    @InjectQueue(QueueNamesEnum.notifications)
+    private readonly notificationsQueue: Queue,
   ) {
     super(businessRepository, userRequest);
   }
@@ -219,6 +225,15 @@ export class BusinessesService extends BasicService<Business> {
       hashedPassword,
       businessReq,
     );
+    await this.enqueueBusinessNotificationJob({
+      entityName: 'businesses',
+      scenario: NotificationContentScenarioEnum.BUSINESS_CHANGE_PASSWORD,
+      type: NotificationTypeEnum.WARNING,
+      userOrBusinessReq: {
+        businessId: businessReq.businessId,
+        path: businessReq.path,
+      },
+    });
     return true;
   }
 
@@ -284,5 +299,20 @@ export class BusinessesService extends BasicService<Business> {
       timeCost: 5,
       parallelism: 1,
     });
+  }
+
+  /**
+   * Enqueues a business inbox notification job. The worker resolves title/body
+   * from `notificationsPublic` using `scenario` and persists `type`.
+   *
+   * @param {CreateNotificationJobData} payload - CreateNotificationJobData data
+   */
+  private async enqueueBusinessNotificationJob(
+    payload: CreateNotificationJobData,
+  ) {
+    await this.notificationsQueue.add(
+      NotificationsConsumerEnum.CreateForBusiness,
+      payload,
+    );
   }
 }

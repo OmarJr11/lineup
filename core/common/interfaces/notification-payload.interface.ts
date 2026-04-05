@@ -9,4 +9,7 @@ export interface INotificationPayload {
   link?: string;
   /** Additional data to pass to the link */
   data?: object;
+
+  /** Entity to open when the user taps the notification */
+  entity?: string;
 }

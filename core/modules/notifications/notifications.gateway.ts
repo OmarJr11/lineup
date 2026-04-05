@@ -6,7 +6,6 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { StatusEnum } from '../../common/enums';
 import { UsersGettersService } from '../users/users.getters.service';
 import {
   NOTIFICATION_SOCKET_EVENT,
@@ -15,7 +14,7 @@ import {
 import { Notification } from '../../entities';
 
 /**
- * Authenticated Socket.IO namespace that targets users by id (`user:{id}` rooms).
+ * Authenticated Socket.IO namespace: user JWT joins `user:{id}`; business JWT joins `business:{id}`.
  */
 @WebSocketGateway({
   namespace: NOTIFICATION_SOCKET_NAMESPACE,
@@ -37,7 +36,7 @@ export class NotificationsGateway implements OnGatewayConnection {
   ) {}
 
   /**
-   * Verifies the handshake token and joins the socket to the user room.
+   * Verifies the handshake token and joins the socket to the user or business room.
    * @param {Socket} client - Connected socket instance
    */
   async handleConnection(client: Socket) {
@@ -51,16 +50,23 @@ export class NotificationsGateway implements OnGatewayConnection {
     try {
       const payload = await this.jwtService.verifyAsync<{
         sub: number | string;
-        username: string;
+        username?: string;
+        isBusiness?: boolean;
+        path?: string;
       }>(token);
-      const userId = Number(payload.sub);
-      await this.usersGettersService.findOneWithOptionsOrFail({
-        where: { id: userId, status: StatusEnum.ACTIVE },
-      });
-      const room = this.roomNameForUser(userId);
-      await client.join(room);
-      const data = client.data as { userId?: number };
-      data.userId = userId;
+      if (payload.isBusiness === true) {
+        const businessId = Number(payload.sub);
+        await client.join(this.roomNameForBusiness(businessId));
+        const socketData = client.data as { businessId?: number };
+        socketData.businessId = businessId;
+        return;
+      } else {
+        const userId = Number(payload.sub);
+        const room = this.roomNameForUser(userId);
+        await client.join(room);
+        const data = client.data as { userId?: number };
+        data.userId = userId;
+      }
     } catch (err) {
       this.logger.warn(
         `Notification socket rejected: ${err instanceof Error ? err.message : String(err)}`,
