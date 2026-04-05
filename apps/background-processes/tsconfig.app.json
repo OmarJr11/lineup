@@ -4,6 +4,6 @@
     "declaration": false,
     "outDir": "../../dist/background-processes"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../types/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

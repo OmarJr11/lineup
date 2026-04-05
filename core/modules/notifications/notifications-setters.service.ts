@@ -1,13 +1,10 @@
 import {
-  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Request } from 'express';
 import { Notification } from '../../entities/notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsGettersService } from './notifications-getters.service';
@@ -33,14 +30,12 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {NotificationsGettersService} notificationsGettersService - Read helpers
    */
   constructor(
-    @Inject(REQUEST)
-    private readonly userRequest: Request,
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly notificationsGateway: NotificationsGateway,
     private readonly notificationsGettersService: NotificationsGettersService,
   ) {
-    super(notificationRepository, userRequest);
+    super(notificationRepository);
   }
 
   /**
