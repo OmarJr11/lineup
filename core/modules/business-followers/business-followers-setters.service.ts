@@ -43,7 +43,7 @@ export class BusinessFollowersSettersService extends BasicService<BusinessFollow
     try {
       return await this.save(data, userReq);
     } catch (error) {
-      LogError(this.logger, error, this.create.name, userReq);
+      LogError(this.logger, error as Error, this.create.name, userReq);
       throw new InternalServerErrorException(this.rFollow.error);
     }
   }
@@ -62,9 +62,13 @@ export class BusinessFollowersSettersService extends BasicService<BusinessFollow
     userReq: IUserReq,
   ): Promise<BusinessFollower> {
     try {
-      return await this.updateEntity(data, businessFollower, userReq);
+      return (await this.updateEntity(
+        data,
+        businessFollower,
+        userReq,
+      )) as BusinessFollower;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, userReq);
+      LogError(this.logger, error as Error, this.update.name, userReq);
       throw new InternalServerErrorException(this.rFollow.error);
     }
   }
@@ -79,7 +83,7 @@ export class BusinessFollowersSettersService extends BasicService<BusinessFollow
     try {
       return await this.deleteEntity(businessFollower, { data: userReq });
     } catch (error) {
-      LogError(this.logger, error, this.remove.name, userReq);
+      LogError(this.logger, error as Error, this.remove.name, userReq);
       throw new InternalServerErrorException(this.rUnfollow.error);
     }
   }

@@ -13,7 +13,7 @@ import { Business, User } from '.';
 /**
  * Persisted in-app notification for a user, optionally scoped to a business context.
  */
-@Entity({ schema: 'system', name: 'notifications' })
+@Entity({ name: 'notifications' })
 export class Notification extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int8' })
   id: number;

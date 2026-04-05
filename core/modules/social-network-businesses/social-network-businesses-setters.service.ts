@@ -83,11 +83,11 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
       data.url = url;
       data.phone = phone;
       const oldValues = toEntityAuditValues(socialNetworkBusiness);
-      const updated = await this.updateEntity(
+      const updated: SocialNetworkBusiness = (await this.updateEntity(
         data,
         socialNetworkBusiness,
         businessReq,
-      );
+      )) as SocialNetworkBusiness;
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.SocialNetworkBusiness,
         entityId: socialNetworkBusiness.id,
@@ -98,7 +98,7 @@ export class SocialNetworkBusinessesSettersService extends BasicService<SocialNe
       });
       return updated;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, businessReq);
+      LogError(this.logger, error as Error, this.update.name, businessReq);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }

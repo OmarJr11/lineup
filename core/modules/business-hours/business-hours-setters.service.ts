@@ -95,7 +95,11 @@ export class BusinessHoursSettersService extends BasicService<BusinessHour> {
       throw new BadRequestException(this.rUpdate.invalidRange);
     }
     try {
-      return await this.updateEntity(data, businessHour, businessReq);
+      return (await this.updateEntity(
+        data,
+        businessHour,
+        businessReq,
+      )) as BusinessHour;
     } catch (error) {
       LogError(this.logger, error as Error, this.update.name, businessReq);
       throw new InternalServerErrorException(this.rUpdate.error);
