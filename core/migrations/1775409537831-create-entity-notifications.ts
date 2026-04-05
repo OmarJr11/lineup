@@ -23,10 +23,10 @@ export class CreateEntityNotifications1775409537831 implements MigrationInterfac
       `DROP TYPE "public"."entity_audits_operation_enum_old"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "system"."notifications" ADD CONSTRAINT "FK_bc05362222b52c852e9b8ad790d" FOREIGN KEY ("id_creation_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "public"."notifications" ADD CONSTRAINT "FK_bc05362222b52c852e9b8ad790d" FOREIGN KEY ("id_creation_user") REFERENCES "system"."users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "system"."notifications" ADD CONSTRAINT "FK_b34a08ac3a693b91a7afae30619" FOREIGN KEY ("id_creation_business") REFERENCES "businesses"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "public"."notifications" ADD CONSTRAINT "FK_b34a08ac3a693b91a7afae30619" FOREIGN KEY ("id_creation_business") REFERENCES "businesses"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
   }
 
