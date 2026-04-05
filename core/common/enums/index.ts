@@ -21,3 +21,4 @@ export * from './cookies.enum';
 export * from './directories.enum';
 export * from './time-period-granularity.enum';
 export * from './week-day.enum';
+export * from './notification-type.enum';
