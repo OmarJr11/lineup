@@ -8,7 +8,7 @@ import { DiscountsModule } from '../modules/discounts/discounts.module';
 
 /**
  * Module that registers scheduled cron jobs.
- * Used by the admin app for background tasks.
+ * Imported by the background-processes application.
  */
 @Module({
   imports: [

@@ -83,12 +83,7 @@ export class NotificationsGettersService extends BasicService<Notification> {
     try {
       return await this.findOneWithOptionsOrFail({
         where: { id },
-        relations: [
-          'creationUser',
-          'creationUser.profileImage',
-          'creationBusiness',
-          'creationBusiness.image',
-        ],
+        relations: ['user', 'user.profileImage', 'business', 'business.image'],
       });
     } catch (error) {
       LogError(this.logger, error as Error, this.findOne.name);

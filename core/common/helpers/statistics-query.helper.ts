@@ -51,12 +51,12 @@ export class StatisticsQueryHelper {
   }
 
   /**
-   * PostgreSQL `DATE_TRUNC` unit for time-series (month for last year, otherwise day).
+   * PostgreSQL `DATE_TRUNC` unit for time-series (month for this year, otherwise day).
    */
   static getPostgresTruncUnitForTimeSeries(
     granularity?: TimePeriodGranularityEnum,
   ): 'day' | 'week' | 'month' {
-    if (granularity === TimePeriodGranularityEnum.LAST_YEAR) {
+    if (granularity === TimePeriodGranularityEnum.THIS_YEAR) {
       return 'month';
     }
     return 'day';
@@ -123,22 +123,22 @@ export class StatisticsQueryHelper {
         end = new Date(py, pm, pd, 23, 59, 59, 999);
         break;
       }
-      case TimePeriodGranularityEnum.LAST_WEEK: {
-        const lastWeek = StatisticsQueryHelper.getLastWeek(now);
-        start = lastWeek.start;
-        end = lastWeek.end;
+      case TimePeriodGranularityEnum.THIS_WEEK: {
+        const thisWeek = StatisticsQueryHelper.getThisWeek(now);
+        start = thisWeek.start;
+        end = thisWeek.end;
         break;
       }
-      case TimePeriodGranularityEnum.LAST_MONTH: {
-        const lastMonth = StatisticsQueryHelper.getLastMonth(now);
-        start = lastMonth.start;
-        end = lastMonth.end;
+      case TimePeriodGranularityEnum.THIS_MONTH: {
+        const thisMonth = StatisticsQueryHelper.getThisMonth(now);
+        start = thisMonth.start;
+        end = thisMonth.end;
         break;
       }
-      case TimePeriodGranularityEnum.LAST_YEAR: {
-        const lastYear = StatisticsQueryHelper.getLastYear(now);
-        start = lastYear.start;
-        end = lastYear.end;
+      case TimePeriodGranularityEnum.THIS_YEAR: {
+        const thisYear = StatisticsQueryHelper.getThisYear(now);
+        start = thisYear.start;
+        end = thisYear.end;
         break;
       }
       case TimePeriodGranularityEnum.ALL: {
@@ -153,11 +153,11 @@ export class StatisticsQueryHelper {
   }
 
   /**
-   * Previous ISO week Mon–Sun in the **local** calendar of `date`.
+   * Current ISO week Mon–Sun in the **local** calendar of `date`.
    * @param {Date} date - Reference instant.
-   * @returns {{ start: Date; end: Date }} Local midnight to local end of Sunday.
+   * @returns {{ start: Date; end: Date }} Local start of Monday to end of Sunday.
    */
-  static getLastWeek(date: Date): { start: Date; end: Date } {
+  static getThisWeek(date: Date): { start: Date; end: Date } {
     const day = date.getDay();
     const mondayOffset = day === 0 ? -6 : 1 - day;
     const thisMonday = new Date(
@@ -169,36 +169,33 @@ export class StatisticsQueryHelper {
       0,
       0,
     );
-    const prevMonday = new Date(thisMonday);
-    prevMonday.setDate(thisMonday.getDate() - 7);
-    prevMonday.setHours(0, 0, 0, 0);
-    const prevSunday = new Date(prevMonday);
-    prevSunday.setDate(prevMonday.getDate() + 6);
-    prevSunday.setHours(23, 59, 59, 999);
-    return { start: prevMonday, end: prevSunday };
+    const thisSunday = new Date(thisMonday);
+    thisSunday.setDate(thisMonday.getDate() + 6);
+    thisSunday.setHours(23, 59, 59, 999);
+    return { start: thisMonday, end: thisSunday };
   }
 
   /**
-   * Previous calendar month in local time (1st 00:00 through last day 23:59:59.999).
+   * Current calendar month in local time (1st 00:00 through last day 23:59:59.999).
    * @param {Date} date - Reference instant.
    * @returns {{ start: Date; end: Date }} Month bounds.
    */
-  static getLastMonth(date: Date): { start: Date; end: Date } {
+  static getThisMonth(date: Date): { start: Date; end: Date } {
     const y = date.getFullYear();
     const m = date.getMonth();
     return {
-      start: new Date(y, m - 1, 1, 0, 0, 0, 0),
-      end: new Date(y, m, 0, 23, 59, 59, 999),
+      start: new Date(y, m, 1, 0, 0, 0, 0),
+      end: new Date(y, m + 1, 0, 23, 59, 59, 999),
     };
   }
 
   /**
-   * Previous calendar year in local time.
+   * Current calendar year in local time.
    * @param {Date} date - Reference instant.
    * @returns {{ start: Date; end: Date }} 1 Jan through 31 Dec local.
    */
-  static getLastYear(date: Date): { start: Date; end: Date } {
-    const year = date.getFullYear() - 1;
+  static getThisYear(date: Date): { start: Date; end: Date } {
+    const year = date.getFullYear();
     return {
       start: new Date(year, 0, 1, 0, 0, 0, 0),
       end: new Date(year, 11, 31, 23, 59, 59, 999),

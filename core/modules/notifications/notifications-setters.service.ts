@@ -16,6 +16,7 @@ import { notificationResponses } from '../../common/responses';
 import { BasicService } from '../../common/services/base.service';
 import { IUserOrBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 /**
  * Write-side operations and realtime delivery for notifications.
@@ -49,6 +50,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
    * @returns {Promise<Notification>} Saved entity
    */
+  @Transactional()
   async createAndDispatch(
     params: CreateNotificationParams,
     userOrBusinessReq: IUserOrBusinessReq,
@@ -83,6 +85,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {number} idNotification - Notification id
    * @returns {Promise<Notification>} Updated row
    */
+  @Transactional()
   async markAsReadForUser(
     idUser: number,
     idNotification: number,
@@ -117,6 +120,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {number} idUser - Owner user id
    * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
    */
+  @Transactional()
   async markAllAsReadForUser(
     idUser: number,
     userOrBusinessReq: IUserOrBusinessReq,
@@ -142,6 +146,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {number} idNotification - Notification id
    * @returns {Promise<Notification>} Updated row
    */
+  @Transactional()
   async markAsReadForBusiness(
     idBusiness: number,
     idNotification: number,
@@ -174,6 +179,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
    * @param {number} idBusiness - Business primary key
    * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
    */
+  @Transactional()
   async markAllAsReadForBusiness(
     idBusiness: number,
     userOrBusinessReq: IUserOrBusinessReq,

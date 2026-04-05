@@ -29,6 +29,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/users/tsconfig.app.json"
       }
+    },
+    "background-processes": {
+      "type": "application",
+      "root": "apps/background-processes",
+      "entryFile": "main",
+      "sourceRoot": "apps/background-processes/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/background-processes/tsconfig.app.json"
+      }
     }
   }
 }

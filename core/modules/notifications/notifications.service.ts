@@ -14,6 +14,7 @@ import {
   IUserReq,
 } from '../../common/interfaces';
 import { InfinityScrollInput } from '../../common/dtos';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
 
 /**
  * Facade over notifications getters and setters for a single injection point.
@@ -42,6 +43,7 @@ export class NotificationsService extends BasicService<Notification> {
    * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
    * @returns {Promise<Notification>} Saved entity
    */
+  @Transactional()
   async createAndDispatch(
     params: CreateNotificationParams,
     userOrBusinessReq: IUserOrBusinessReq,
@@ -115,6 +117,7 @@ export class NotificationsService extends BasicService<Notification> {
    * @param {IUserReq} userReq - User making the request
    * @returns {Promise<Notification>} Updated row
    */
+  @Transactional()
   async markAsReadForUser(
     idNotification: number,
     userReq: IUserReq,
@@ -133,6 +136,7 @@ export class NotificationsService extends BasicService<Notification> {
    * @param {number} idNotification - Notification id
    * @returns {Promise<Notification>} Updated row
    */
+  @Transactional()
   async markAsReadForBusiness(
     idNotification: number,
     businessReq: IBusinessReq,
@@ -149,6 +153,7 @@ export class NotificationsService extends BasicService<Notification> {
    *
    * @param {IUserReq} userReq - User request
    */
+  @Transactional()
   async markAllAsReadForUser(userReq: IUserReq) {
     return await this.notificationsSettersService.markAllAsReadForUser(
       userReq.userId,
@@ -161,6 +166,7 @@ export class NotificationsService extends BasicService<Notification> {
    *
    * @param {IBusinessReq} businessReq - Business request
    */
+  @Transactional()
   async markAllAsReadForBusiness(businessReq: IBusinessReq) {
     await this.notificationsSettersService.markAllAsReadForBusiness(
       businessReq.businessId,

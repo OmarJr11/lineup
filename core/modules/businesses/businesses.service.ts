@@ -35,7 +35,7 @@ import { businessesResponses } from '../../common/responses';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { NotificationContentScenarioEnum } from '../../common/enums/notification-content-scenario.enum';
-import { CreateNotificationJobData } from 'core/consumers';
+import { CreateNotificationJobData } from '../../consumers';
 
 @Injectable()
 export class BusinessesService extends BasicService<Business> {
