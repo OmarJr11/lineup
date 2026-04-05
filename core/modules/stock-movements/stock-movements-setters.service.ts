@@ -46,7 +46,7 @@ export class StockMovementsSettersService extends BasicService<StockMovement> {
       };
       return await this.save(payload, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.create.name, businessReq);
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
     }
   }

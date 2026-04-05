@@ -4,11 +4,14 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { LogError } from '../../common/helpers/logger.helper';
 import { stockMovementsResponses } from '../../common/responses';
-import { ITimePeriodFilter } from '../../common/interfaces';
-import { IStockMovementStatItem } from './interfaces/stock-movement-stat-item.interface';
+import {
+  IStockMovementStatItem,
+  ITimePeriodFilter,
+} from '../../common/interfaces';
 import { StockMovement } from '../../entities';
 import { StockMovementTypeEnum } from '../../common/enums/stock-movement-type.enum';
 import { ITimeSeriesStats } from '../business-statistics/interfaces/business-visits-stats.interface';
+import { StatusEnum } from '../../common/enums';
 
 /** Physical `creation_date` column for alias `sm`. */
 const SM_CREATION = '"sm"."creation_date"';
@@ -96,7 +99,7 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
         relations: this.relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -176,6 +179,7 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
       type: sm.type,
       quantityDelta: sm.quantityDelta,
       creationDate: sm.creationDate,
+      price: sm.price,
     }));
   }
 
@@ -196,5 +200,32 @@ export class StockMovementsGettersService extends BasicService<StockMovement> {
     this.appendCreationDateRange(qb, timePeriod);
     const total = await qb.getCount();
     return { total };
+  }
+
+  /**
+   * Lists SALE movements for a business in the inclusive date range (same bounds as sales count stats).
+   *
+   * @param {number} idBusiness - The business ID.
+   * @param {ITimePeriodFilter} timePeriod - Range (`granularity` ignored for filtering).
+   * @returns {Promise<StockMovement[]>} Sale rows with product title.
+   */
+  async getSalesInPeriodForStatistics(
+    idBusiness: number,
+    timePeriod: ITimePeriodFilter,
+  ): Promise<StockMovement[]> {
+    const qb = this.createQueryBuilder('sm')
+      .leftJoinAndSelect('sm.productSku', 'productSku')
+      .leftJoinAndSelect('productSku.product', 'product')
+      .leftJoinAndSelect(
+        'product.productFiles',
+        'productFiles',
+        'productFiles.status <> :statusProductFiles',
+        { statusProductFiles: StatusEnum.DELETED },
+      )
+      .leftJoinAndSelect('productFiles.file', 'file')
+      .where('sm.id_creation_business = :idBusiness', { idBusiness })
+      .andWhere('sm.type = :type', { type: StockMovementTypeEnum.SALE });
+    this.appendCreationDateRange(qb, timePeriod);
+    return await qb.orderBy('sm.creationDate', 'DESC').getMany();
   }
 }

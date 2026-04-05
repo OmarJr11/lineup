@@ -58,9 +58,9 @@ export class StatesSettersService extends BasicService<State> {
     userReq: IUserReq,
   ): Promise<State> {
     try {
-      return await this.updateEntity(data, state, userReq);
+      return (await this.updateEntity(data, state, userReq)) as State;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, userReq);
+      LogError(this.logger, error as Error, this.update.name, userReq);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }

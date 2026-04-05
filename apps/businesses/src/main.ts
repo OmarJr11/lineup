@@ -8,6 +8,7 @@ import { join } from 'path';
 import { createConnection } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
+import { SocketIoCorsAdapter } from '../../../core/common/adapters/socket-io.adapter';
 import * as cookieParser from 'cookie-parser';
 dotenv.config();
 
@@ -34,8 +35,9 @@ async function bootstrap() {
   const app = await NestFactory.create(BusinessesModule);
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
 
+  const corsOrigins = getCors();
   const cors = {
-    origin: getCors(),
+    origin: corsOrigins,
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -51,6 +53,7 @@ async function bootstrap() {
     exposedHeaders: ['token_expired'],
   };
   app.enableCors(cors);
+  app.useWebSocketAdapter(new SocketIoCorsAdapter(app, corsOrigins));
   app.use(cookieParser());
 
   await app.listen(process.env.PORT_BUSINESS ?? 3002);

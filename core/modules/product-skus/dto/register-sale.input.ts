@@ -1,4 +1,4 @@
-import { Field, InputType, Int } from '@nestjs/graphql';
+import { Field, Float, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsInt,
@@ -14,7 +14,7 @@ import {
  * Input for registering a purchase made by a customer (sale). Decreases stock.
  */
 @InputType()
-export class RegisterPurchaseInput {
+export class RegisterSaleInput {
   @Field(() => Int)
   @IsNotEmpty()
   @Type(() => Number)
@@ -33,4 +33,12 @@ export class RegisterPurchaseInput {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @Field(() => Float)
+  @IsOptional()
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  price?: number;
 }

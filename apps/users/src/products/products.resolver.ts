@@ -22,6 +22,7 @@ import { ProductsService } from '../../../../core/modules/products/products.serv
 import { TagsService } from '../../../../core/modules/tags/tags.service';
 import { GetAllByTagArgs } from '../../../../core/modules/products/dto/get-all-by-tag.dto';
 import { GetAllByTagsArgs } from '../../../../core/modules/products/dto/get-all-by-tags.dto';
+import { GetAllPrimaryProductsByBusinessInput } from '../../../../core/modules/products/dto/get-all-primary-products-by-business.input';
 
 @UsePipes(new ValidationPipe())
 @Resolver(() => ProductReactionSchema)
@@ -116,15 +117,16 @@ export class ProductsResolver {
 
   /**
    * Get all primary products by business.
-   * @param {number} idBusiness - The ID of the business.
+   * @param {GetAllPrimaryProductsByBusinessInput} data - Business and optional catalog.
    * @returns {Promise<ProductSchema[]>} Array of primary products.
    */
   @Query(() => [ProductSchema], { name: 'getAllPrimaryProductsByBusiness' })
   async getAllPrimaryProductsByBusiness(
-    @Args('idBusiness', { type: () => Int }) idBusiness: number,
+    @Args('data', { type: () => GetAllPrimaryProductsByBusinessInput })
+    data: GetAllPrimaryProductsByBusinessInput,
   ): Promise<ProductSchema[]> {
     const products = await this.productsService.findAllByBusinessAndIsPrimary(
-      idBusiness,
+      data,
       true,
     );
     return products.map((product) => toProductSchema(product));

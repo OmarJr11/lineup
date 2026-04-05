@@ -697,29 +697,6 @@ export class BasicService<Entity extends ObjectLiteral> {
   }
 
   /**
-   * Update and get register with relations
-   *
-   * @param {*} data - Data to update
-   * @param {Entity} entity - Entity to update
-   * @param {IUserReq} user - Logged user
-   * @param {string[]} relations - Array of relations
-   */
-  protected async updateAndGetRelations(
-    data: any,
-    entity: Entity,
-    user: IUserOrBusinessReq,
-    relations: string[],
-  ) {
-    const updatedEntity = await this.updateEntity(data, entity, user);
-    return this.cleanObjects(
-      await this.repository.findOne({
-        where: { id: updatedEntity.id },
-        relations,
-      }),
-    );
-  }
-
-  /**
    *  Update the entity in the database
    *
    * @param {*} data - Data to update the entity
@@ -729,9 +706,9 @@ export class BasicService<Entity extends ObjectLiteral> {
    */
   protected async updateEntity(
     data: any,
-    entity: Entity,
+    entity: Entity | Entity[],
     userOrBusiness?: IUserOrBusinessReq,
-  ): Promise<Entity>;
+  ): Promise<Entity | Entity[]>;
   protected async updateEntity(
     data: any,
     entity: Entity[],

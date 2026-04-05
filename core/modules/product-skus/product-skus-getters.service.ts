@@ -2,7 +2,6 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { BasicService } from '../../common/services';
-import { InfinityScrollInput } from '../../common/dtos';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productSkusResponses } from '../../common/responses';
@@ -35,7 +34,7 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
         where: { id, status: Not(StatusEnum.DELETED) },
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -52,7 +51,7 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
         relations: this.relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOneWithRelations.name);
+      LogError(this.logger, error as Error, this.findOneWithRelations.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -111,7 +110,7 @@ export class ProductSkusGettersService extends BasicService<ProductSku> {
         relations: this.relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOneByBusinessId.name);
+      LogError(this.logger, error as Error, this.findOneByBusinessId.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }

@@ -99,8 +99,15 @@ export class BusinessesSettersService extends BasicService<Business> {
    */
   @Transactional()
   async seedBusiness(data: ISeedBusinessData): Promise<Business | null> {
-    if (process.env.NODE_ENV !== EnvironmentsEnum.Development) {
-      throw new BadRequestException('Seed only allowed in development');
+    const environment = process.env.NODE_ENV as EnvironmentsEnum;
+    if (environment !== EnvironmentsEnum.Development) {
+      LogError(
+        this.logger,
+        this._uCreate.error.message,
+        this.seedBusiness.name,
+        data,
+      );
+      throw new BadRequestException(this._uCreate.error);
     }
     const exists = await this.businessRepository.findOne({
       where: { email: data.email.toLowerCase() },
@@ -124,6 +131,7 @@ export class BusinessesSettersService extends BasicService<Business> {
         followers: data.followers ?? 0,
         visits: data.visits ?? 0,
         isOnline: data.isOnline ?? false,
+        isBsEquivalentPriceEnabled: data.isBsEquivalentPriceEnabled ?? false,
         status: StatusEnum.ACTIVE,
       };
       const saved = await this.save(business);
@@ -136,7 +144,7 @@ export class BusinessesSettersService extends BasicService<Business> {
       delete (saved as unknown as Record<string, unknown>).password;
       return saved;
     } catch (error) {
-      LogError(this.logger, error, this.seedBusiness.name, data);
+      LogError(this.logger, error as Error, this.seedBusiness.name, data);
       throw new InternalServerErrorException(this._uCreate.error);
     }
   }
@@ -155,7 +163,11 @@ export class BusinessesSettersService extends BasicService<Business> {
   ): Promise<Business> {
     try {
       const oldValues = toEntityAuditValues(business);
-      const updated = await this.updateEntity(data, business, businessReq);
+      const updated: Business = (await this.updateEntity(
+        data,
+        business,
+        businessReq,
+      )) as Business;
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.Business,
         entityId: business.id,
@@ -184,9 +196,13 @@ export class BusinessesSettersService extends BasicService<Business> {
     businessReq: IBusinessReq,
   ): Promise<Business> {
     try {
-      return await this.updateEntity({ email }, business, businessReq);
+      return (await this.updateEntity(
+        { email },
+        business,
+        businessReq,
+      )) as Business;
     } catch (error) {
-      LogError(this.logger, error, this.updateEmail.name, businessReq);
+      LogError(this.logger, error as Error, this.updateEmail.name, businessReq);
       throw new InternalServerErrorException(this._ucUpdate.error);
     }
   }
@@ -204,13 +220,18 @@ export class BusinessesSettersService extends BasicService<Business> {
     businessReq: IBusinessReq,
   ): Promise<Business> {
     try {
-      return await this.updateEntity(
+      return (await this.updateEntity(
         { password: hashedPassword },
         business,
         businessReq,
-      );
+      )) as Business;
     } catch (error) {
-      LogError(this.logger, error, this.updatePassword.name, businessReq);
+      LogError(
+        this.logger,
+        error as Error,
+        this.updatePassword.name,
+        businessReq,
+      );
       throw new InternalServerErrorException(this._ucUpdate.error);
     }
   }
@@ -231,7 +252,7 @@ export class BusinessesSettersService extends BasicService<Business> {
       });
       return await this.deleteEntityByStatus(business, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.remove.name, businessReq);
+      LogError(this.logger, error as Error, this.remove.name, businessReq);
       throw new InternalServerErrorException(this._ucDelete.error);
     }
   }
@@ -246,7 +267,12 @@ export class BusinessesSettersService extends BasicService<Business> {
       const followers = business.followers + 1;
       return await this.updateEntity({ followers }, business, userReq);
     } catch (error) {
-      LogError(this.logger, error, this.incrementFollowers.name, userReq);
+      LogError(
+        this.logger,
+        error as Error,
+        this.incrementFollowers.name,
+        userReq,
+      );
       throw new InternalServerErrorException(this._ucUpdate.error);
     }
   }
@@ -261,7 +287,12 @@ export class BusinessesSettersService extends BasicService<Business> {
       const followers = business.followers - 1;
       return await this.updateEntity({ followers }, business, userReq);
     } catch (error) {
-      LogError(this.logger, error, this.decrementFollowers.name, userReq);
+      LogError(
+        this.logger,
+        error as Error,
+        this.decrementFollowers.name,
+        userReq,
+      );
       throw new InternalServerErrorException(this._ucUpdate.error);
     }
   }
@@ -279,7 +310,12 @@ export class BusinessesSettersService extends BasicService<Business> {
       };
       return await this.updateEntity({ visits }, business, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.incrementVisits.name, business);
+      LogError(
+        this.logger,
+        error as Error,
+        this.incrementVisits.name,
+        business,
+      );
       throw new InternalServerErrorException(this._ucUpdate.error);
     }
   }

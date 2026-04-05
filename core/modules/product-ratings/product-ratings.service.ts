@@ -12,9 +12,16 @@ import { ProductRatingsSettersService } from './product-ratings-setters.service'
 import { ProductsGettersService } from '../products/products-getters.service';
 import { RateProductInput } from './dto/rate-product.input';
 import { ICreateProductRating } from '../../common/interfaces';
-import { QueueNamesEnum, ReviewsConsumerEnum } from '../../common/enums';
+import {
+  NotificationsConsumerEnum,
+  NotificationTypeEnum,
+  QueueNamesEnum,
+  ReviewsConsumerEnum,
+} from '../../common/enums';
+import { NotificationContentScenarioEnum } from '../../common/enums/notification-content-scenario.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { CreateNotificationJobData } from '../../consumers';
 
 /**
  * Orchestrating service for product rating operations.
@@ -35,6 +42,8 @@ export class ProductRatingsService extends BasicService<ProductRating> {
     private readonly productsGettersService: ProductsGettersService,
     @InjectQueue(QueueNamesEnum.reviews)
     private readonly Queue: Queue,
+    @InjectQueue(QueueNamesEnum.notifications)
+    private readonly notificationsQueue: Queue,
   ) {
     super(productRatingRepository, userRequest);
   }
@@ -52,7 +61,7 @@ export class ProductRatingsService extends BasicService<ProductRating> {
     input: RateProductInput,
     userReq: IUserReq,
   ): Promise<ProductRating> {
-    await this.productsGettersService.findOne(input.idProduct);
+    const product = await this.productsGettersService.findOne(input.idProduct);
     const existingRating =
       await this.productRatingsGettersService.findOneByProductAndUser(
         input.idProduct,
@@ -61,6 +70,17 @@ export class ProductRatingsService extends BasicService<ProductRating> {
     const rating = existingRating
       ? await this.updateExistingRating(existingRating, input, userReq)
       : await this.createNewRating(input, userReq);
+    if (!existingRating && product.idCreationBusiness) {
+      await this.enqueueBusinessNotificationJob({
+        entityName: 'products',
+        scenario: NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW,
+        type: NotificationTypeEnum.INFO,
+        userOrBusinessReq: {
+          businessId: product.idCreationBusiness,
+          path: '',
+        },
+      });
+    }
     await this.syncProductRatingAverage(input.idProduct, userReq);
     return await this.productRatingsGettersService.findOne(rating.id);
   }
@@ -116,5 +136,19 @@ export class ProductRatingsService extends BasicService<ProductRating> {
       idProduct,
       user,
     });
+  }
+
+  /**
+   * Enqueues a business inbox notification job.
+   *
+   * @param {CreateNotificationJobData} payload - CreateNotificationJobData data
+   */
+  private async enqueueBusinessNotificationJob(
+    payload: CreateNotificationJobData,
+  ) {
+    await this.notificationsQueue.add(
+      NotificationsConsumerEnum.CreateForBusiness,
+      payload,
+    );
   }
 }

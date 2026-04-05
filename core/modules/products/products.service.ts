@@ -31,6 +31,7 @@ import { ProductTagsService } from '../product-tags/product-tags.service';
 import { FilesGettersService } from '../files/files-getters.service';
 import { VariationOptions } from '../../common/types';
 import { CatalogsSettersService } from '../catalogs/catalogs-setters.service';
+import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
@@ -164,16 +165,16 @@ export class ProductsService extends BasicService<Product> {
 
   /**
    * Get products by business and primary flag.
-   * @param {number} idBusiness - The ID of the business.
+   * @param {GetAllPrimaryProductsByBusinessInput} data - The data for the input.
    * @param {boolean} isPrimary - Primary flag filter.
    * @returns {Promise<Product[]>} Array of matching products.
    */
   async findAllByBusinessAndIsPrimary(
-    idBusiness: number,
+    data: GetAllPrimaryProductsByBusinessInput,
     isPrimary: boolean,
   ): Promise<Product[]> {
     return await this.productsGettersService.findAllByBusinessAndIsPrimary(
-      idBusiness,
+      data,
       isPrimary,
     );
   }
@@ -248,11 +249,11 @@ export class ProductsService extends BasicService<Product> {
       data.id,
       idBusiness,
     );
-    const draft = product.status === StatusEnum.PENDING;
+    const idCatalog = data.idCatalog;
+    const idCatalogOld = product.idCatalog;
 
-    const idCatalog = data.idCatalog || product.idCatalog;
     await this.catalogsGettersService.checkIfExistsByIdAndBusinessId(
-      idCatalog,
+      idCatalog || idCatalogOld,
       idBusiness,
     );
     const { images, variations } = this.extractProductRelations(data);
@@ -298,9 +299,20 @@ export class ProductsService extends BasicService<Product> {
       );
     }
     await this.productsSettersService.queueForIdProduct(product.id);
-    if (draft) {
+
+    if (
+      idCatalogOld &&
+      idCatalog &&
+      Number(idCatalogOld) !== Number(idCatalog)
+    ) {
       await this.catalogsSettersService.updateProductsCountJob(
         product.idCatalog,
+        ActionsEnum.Decrement,
+        businessReq,
+      );
+    } else if (idCatalog && !idCatalogOld) {
+      await this.catalogsSettersService.updateProductsCountJob(
+        data.idCatalog,
         ActionsEnum.Increment,
         businessReq,
       );
@@ -499,9 +511,9 @@ export class ProductsService extends BasicService<Product> {
   ) {
     const existingVariations =
       await this.productVariationsGettersService.findAllByProduct(productId);
-    const existingIds = new Set(existingVariations.map((v) => v.id));
+    const existingIds = new Set(existingVariations.map((v) => Number(v.id)));
     const providedIds = new Set(
-      variations.filter((v) => v.id).map((v) => v.id),
+      variations.filter((v) => v.id).map((v) => Number(v.id)),
     );
 
     // Remove variations that are not in the provided array

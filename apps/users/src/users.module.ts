@@ -22,6 +22,7 @@ import { CollectionsModule } from './collections/collections.module';
 import { VerificationCodesModule } from './verification-codes/verification-codes.module';
 import { StatesModule } from './states/states.module';
 import { BusinessHoursModule } from './business-hours/business-hours.module';
+import { NotificationsModule as NotificationsGraphqlModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { BusinessHoursModule } from './business-hours/business-hours.module';
     VerificationCodesModule,
     StatesModule,
     BusinessHoursModule,
+    NotificationsGraphqlModule,
   ],
 })
 export class UsersModule implements NestModule {

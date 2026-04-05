@@ -9,4 +9,5 @@ export enum QueueNamesEnum {
   entityAudits = 'entity-audits-queue',
   files = 'files-queue',
   products = 'products-queue',
+  notifications = 'notifications-queue',
 }

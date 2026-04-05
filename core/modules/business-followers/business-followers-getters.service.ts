@@ -37,7 +37,7 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
         relations: this._relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -62,7 +62,7 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
         relations: this._relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOneByBusinessAndUser.name);
+      LogError(this.logger, error as Error, this.findOneByBusinessAndUser.name);
       return null;
     }
   }
@@ -79,7 +79,7 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
         relations: this._relations,
       });
     } catch (error) {
-      LogError(this.logger, error, this.findAllByBusiness.name);
+      LogError(this.logger, error as Error, this.findAllByBusiness.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -116,7 +116,7 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
         f.business ? [this.formatBusiness(f.business)] : [],
       );
     } catch (error) {
-      LogError(this.logger, error, this.findAllByUserPaginated.name);
+      LogError(this.logger, error as Error, this.findAllByUserPaginated.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -133,7 +133,7 @@ export class BusinessFollowersGettersService extends BasicService<BusinessFollow
         .andWhere('bf.status <> :status', { status: StatusEnum.DELETED })
         .getCount();
     } catch (error) {
-      LogError(this.logger, error, this.countByBusiness.name);
+      LogError(this.logger, error as Error, this.countByBusiness.name);
       return 0;
     }
   }

@@ -64,9 +64,10 @@ export class ProductRatingsSettersService extends BasicService<ProductRating> {
     userReq: IUserReq,
   ): Promise<ProductRating> {
     try {
-      return await this.updateEntity(data, rating, userReq);
+      const updated = await this.updateEntity(data, rating, userReq);
+      return updated as ProductRating;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, userReq);
+      LogError(this.logger, error as Error, this.update.name, userReq);
       throw new InternalServerErrorException(this.rRate.error);
     }
   }

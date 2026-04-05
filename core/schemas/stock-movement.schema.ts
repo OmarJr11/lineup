@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { StockMovementTypeEnum } from '../common/enums';
 import { BusinessSchema, ProductSkuSchema } from '.';
 
@@ -33,6 +33,9 @@ export class StockMovementSchema {
 
   @Field(() => Int)
   newQuantity: number;
+
+  @Field(() => Float, { nullable: true })
+  price?: number;
 
   @Field({ nullable: true })
   notes?: string;

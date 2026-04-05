@@ -136,11 +136,11 @@ export class DiscountsSettersService extends BasicService<Discount> {
         if (data.endDate) updateData.endDate = formatted.endDate;
       }
       const oldValues = toEntityAuditValues(discount);
-      const updated: Discount = await this.updateEntity(
+      const updated: Discount = (await this.updateEntity(
         updateData,
         discount,
         businessReq,
-      );
+      )) as Discount;
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.Discount,
         entityId: discount.id,

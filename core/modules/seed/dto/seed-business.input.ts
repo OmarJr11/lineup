@@ -14,4 +14,5 @@ export interface ISeedBusinessData {
   password?: string;
   imgCode?: string;
   isOnline?: boolean;
+  isBsEquivalentPriceEnabled?: boolean;
 }

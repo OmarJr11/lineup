@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Request } from 'express';
+import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { IUserReq } from '../../common/interfaces';
@@ -22,7 +24,14 @@ import { UsersSettersService } from './users.setters.service';
 import { UsersGettersService } from './users.getters.service';
 import { userResponses } from '../../common/responses';
 import { generateRandomCodeByLength } from '../../common/helpers/generators.helper';
-import { ProvidersEnum, RolesCodesEnum } from '../../common/enums';
+import { NotificationContentScenarioEnum } from '../../common/enums/notification-content-scenario.enum';
+import {
+  NotificationsConsumerEnum,
+  NotificationTypeEnum,
+  ProvidersEnum,
+  QueueNamesEnum,
+  RolesCodesEnum,
+} from '../../common/enums';
 import * as argon2 from 'argon2';
 import { LogError } from '../../common/helpers/logger.helper';
 import { RolesService } from '../roles/roles.service';
@@ -30,6 +39,7 @@ import { UserRolesService } from '../user-roles/user-roles.service';
 import { InfinityScrollInput } from '../../common/dtos';
 import { StatesGettersService } from '../states/states-getters.service';
 import { FilesGettersService } from '../files/files-getters.service';
+import { CreateNotificationJobData } from '../../consumers';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService extends BasicService<User> {
@@ -50,6 +60,8 @@ export class UsersService extends BasicService<User> {
     private readonly userRolesService: UserRolesService,
     private readonly statesGettersService: StatesGettersService,
     private readonly filesGettersService: FilesGettersService,
+    @InjectQueue(QueueNamesEnum.notifications)
+    private readonly notificationsQueue: Queue,
   ) {
     super(userRepository, userRequest);
   }
@@ -257,6 +269,16 @@ export class UsersService extends BasicService<User> {
       hashedPassword,
       userReq,
     );
+
+    await this.enqueueUserNotificationJob({
+      entityName: 'users',
+      scenario: NotificationContentScenarioEnum.USER_CHANGE_PASSWORD,
+      type: NotificationTypeEnum.WARNING,
+      userOrBusinessReq: {
+        userId: userReq.userId,
+        username: userReq.username,
+      },
+    });
     return true;
   }
 
@@ -385,5 +407,21 @@ export class UsersService extends BasicService<User> {
       timeCost: 5,
       parallelism: 1,
     });
+  }
+
+  /**
+   * Enqueues a user inbox notification job. The worker resolves title/body from
+   * `notificationsPublic` using `scenario` and persists `type`.
+   *
+   * @param {CreateNotificationJobData} payload - Bull `job.
+   */
+  private async enqueueUserNotificationJob(
+    payload: CreateNotificationJobData,
+  ): Promise<void> {
+    await this.notificationsQueue.add(
+      NotificationsConsumerEnum.CreateForUser,
+      payload,
+      { removeOnComplete: true },
+    );
   }
 }

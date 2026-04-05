@@ -1,6 +1,7 @@
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import { TimeSeriesDataPointSchema } from './time-series-data-point.schema';
 import { FrequencyDataPointSchema } from './frequency-data-point.schema';
+import { StockMovementSchema } from '../stock-movement.schema';
 
 /**
  * Host ObjectType for statistics resolver (root Query fields only).
@@ -12,12 +13,6 @@ export class StatisticsRootSchema {}
 export class TimeSeriesStatsSchema {
   @Field(() => Int, { description: 'Total count in the period' })
   total: number;
-
-  @Field(() => [TimeSeriesDataPointSchema], {
-    nullable: true,
-    description: 'Data points for line charts (when granularity provided)',
-  })
-  data?: TimeSeriesDataPointSchema[];
 }
 
 @ObjectType()
@@ -206,6 +201,21 @@ export class StockMovementStatItemSchema {
 
   @Field()
   creationDate: Date;
+
+  @Field(() => Float, { nullable: true })
+  price?: number;
+}
+
+/**
+ * Sales in period: detail rows plus total SALE movement count for the same range.
+ */
+@ObjectType()
+export class BusinessSalesInTimePeriodSchema {
+  @Field(() => [StockMovementSchema])
+  sales: StockMovementSchema[];
+
+  @Field(() => TimeSeriesStatsSchema)
+  salesCount: TimeSeriesStatsSchema;
 }
 
 /**
@@ -218,9 +228,6 @@ export class InventoryStatsSchema {
 
   @Field(() => [StockMovementStatItemSchema])
   recentStockMovements: StockMovementStatItemSchema[];
-
-  @Field(() => TimeSeriesStatsSchema)
-  salesCount: TimeSeriesStatsSchema;
 
   @Field(() => Int)
   productsWithoutStockCount: number;

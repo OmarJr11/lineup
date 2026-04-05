@@ -1,4 +1,4 @@
-import type { StockMovementTypeEnum } from '../../../common/enums';
+import type { StockMovementTypeEnum } from '../enums';
 
 /**
  * Stock movement item for statistics (simplified view).
@@ -8,4 +8,5 @@ export interface IStockMovementStatItem {
   type: StockMovementTypeEnum;
   quantityDelta: number;
   creationDate: Date;
+  price?: number;
 }

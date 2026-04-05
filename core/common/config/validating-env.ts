@@ -5,6 +5,7 @@ export const ValidatingEnv = Joi.object({
   PORT_BUSINESS: Joi.number().required(),
   PORT_USER: Joi.number().required(),
   PORT_ADMIN: Joi.number().required(),
+  PORT_BACKGROUND_PROCESSES: Joi.number().required(),
   NODE_ENV: Joi.string()
     .valid(...Object.values(EnvironmentsEnum))
     .required(),

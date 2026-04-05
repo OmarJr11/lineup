@@ -10,6 +10,7 @@ import { LocationsModule } from '../locations/locations.module';
 import { EntityAuditsModule } from '../entity-audits/entity-audits.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,12 +19,21 @@ import { QueueNamesEnum } from '../../common/enums';
     EntityAuditsModule,
     RolesModule,
     LocationsModule,
-    BullModule.registerQueue({
-      name: QueueNamesEnum.searchData,
-      defaultJobOptions: {
-        removeOnComplete: true,
+    NotificationsModule,
+    BullModule.registerQueue(
+      {
+        name: QueueNamesEnum.searchData,
+        defaultJobOptions: {
+          removeOnComplete: true,
+        },
       },
-    }),
+      {
+        name: QueueNamesEnum.notifications,
+        defaultJobOptions: {
+          removeOnComplete: true,
+        },
+      },
+    ),
   ],
   providers: [
     BusinessesService,

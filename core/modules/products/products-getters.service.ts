@@ -13,6 +13,7 @@ import {
   IStatItemWithRating,
   IStatItemWithVisits,
 } from '../business-statistics/interfaces';
+import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
 
 @Injectable()
 export class ProductsGettersService extends BasicService<Product> {
@@ -294,20 +295,23 @@ export class ProductsGettersService extends BasicService<Product> {
 
   /**
    * Get products by business and primary flag.
-   * @param {number} idBusiness - The business ID.
+   * @param {GetAllPrimaryProductsByBusinessInput} data - The data for the input.
    * @param {boolean} isPrimary - Primary flag filter.
    * @returns {Promise<Product[]>} Array of matching products.
    */
   async findAllByBusinessAndIsPrimary(
-    idBusiness: number,
+    data: GetAllPrimaryProductsByBusinessInput,
     isPrimary: boolean,
   ): Promise<Product[]> {
-    return await this.getQueryRelations(this.createQueryBuilder('p'))
+    const { idBusiness, idCatalog } = data;
+    const queryBuilder = this.getQueryRelations(this.createQueryBuilder('p'))
       .where('p.idCreationBusiness = :idBusiness', { idBusiness })
       .andWhere('p.isPrimary = :isPrimary', { isPrimary })
-      .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
-      .orderBy('p.creationDate', 'DESC')
-      .getMany();
+      .andWhere('p.status <> :status', { status: StatusEnum.DELETED });
+    if (idCatalog !== undefined && idCatalog !== null) {
+      queryBuilder.andWhere('p.idCatalog = :idCatalog', { idCatalog });
+    }
+    return await queryBuilder.orderBy('p.creationDate', 'DESC').getMany();
   }
 
   /**

@@ -34,10 +34,10 @@ export class CatalogsConsumer extends WorkerHost {
 
   /**
    * Process incoming jobs.
-   * @param {Job} job - The job to process.
+   * @param {Job<UpdateProductsCountJobData>} job - The job to process.
    */
-  async process(job: Job): Promise<void> {
-    switch (job.name) {
+  async process(job: Job<UpdateProductsCountJobData>) {
+    switch (job.name as CatalogsConsumerEnum) {
       case CatalogsConsumerEnum.UpdateProductsCount:
         await this.processUpdateProductsCount(job);
         break;

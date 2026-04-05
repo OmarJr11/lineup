@@ -68,6 +68,12 @@ export class BusinessSchema {
   @Field({ description: 'Whether the business operates online' })
   isOnline: boolean;
 
+  @Field({
+    description:
+      'When enabled, clients may show an equivalent price in bolívares (VES) alongside the main price',
+  })
+  isBsEquivalentPriceEnabled: boolean;
+
   @Field(() => StatusEnum)
   status: StatusEnum;
 

@@ -70,7 +70,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
       });
       return sku;
     } catch (error) {
-      LogError(this.logger, error, this.create.name, businessReq);
+      LogError(this.logger, error as Error, this.create.name, businessReq);
       throw new InternalServerErrorException(this.rCreate.error);
     }
   }
@@ -90,7 +90,11 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
   ): Promise<ProductSku> {
     try {
       const oldValues = toEntityAuditValues(productSku);
-      const updated = await this.updateEntity(data, productSku, businessReq);
+      const updated: ProductSku = (await this.updateEntity(
+        data,
+        productSku,
+        businessReq,
+      )) as ProductSku;
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.ProductSku,
         entityId: productSku.id,
@@ -101,7 +105,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
       });
       return updated;
     } catch (error) {
-      LogError(this.logger, error, this.update.name, businessReq);
+      LogError(this.logger, error as Error, this.update.name, businessReq);
       throw new InternalServerErrorException(this.rUpdate.error);
     }
   }
@@ -126,7 +130,7 @@ export class ProductSkusSettersService extends BasicService<ProductSku> {
       });
       await this.deleteEntityByStatus(productSku, businessReq);
     } catch (error) {
-      LogError(this.logger, error, this.remove.name, businessReq);
+      LogError(this.logger, error as Error, this.remove.name, businessReq);
       throw new InternalServerErrorException(this.rDelete.error);
     }
   }

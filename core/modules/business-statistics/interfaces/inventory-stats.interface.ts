@@ -1,5 +1,4 @@
-import type { IStockMovementStatItem } from '../../stock-movements/interfaces/stock-movement-stat-item.interface';
-import type { ITimeSeriesStats } from './business-visits-stats.interface';
+import type { IStockMovementStatItem } from '../../../common/interfaces';
 
 /**
  * Combined inventory/stock statistics.
@@ -7,6 +6,5 @@ import type { ITimeSeriesStats } from './business-visits-stats.interface';
 export interface IInventoryStats {
   skusLowOrOutOfStockCount: number;
   recentStockMovements: IStockMovementStatItem[];
-  salesCount: ITimeSeriesStats;
   productsWithoutStockCount: number;
 }

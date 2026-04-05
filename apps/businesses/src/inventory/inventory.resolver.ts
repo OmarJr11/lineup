@@ -25,7 +25,7 @@ import {
   toStockMovementSchema,
 } from '../../../../core/common/functions';
 import { AdjustStockInput } from '../../../../core/modules/product-skus/dto/adjust-stock.input';
-import { RegisterPurchaseInput } from '../../../../core/modules/product-skus/dto/register-purchase.input';
+import { SalesInput } from '../../../../core/modules/product-skus/dto/sales.input';
 
 /**
  * Resolver for premium inventory management.
@@ -59,11 +59,13 @@ export class InventoryResolver {
   @Permissions(BusinessesPermissionsEnum.BURUPDOWN)
   @Response(inventoryResponses.registerPurchase)
   async registerSale(
-    @Args('data', { type: () => [RegisterPurchaseInput] })
-    data: RegisterPurchaseInput[],
+    @Args('data', { type: () => SalesInput }) data: SalesInput,
     @BusinessDec() businessReq: IBusinessReq,
   ): Promise<ProductSkuSchema[]> {
-    const skus = await this.productSkusService.registerSales(data, businessReq);
+    const skus = await this.productSkusService.registerSales(
+      data.sales,
+      businessReq,
+    );
     return skus.map(toProductSkuSchemaFromInventory);
   }
 

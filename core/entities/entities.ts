@@ -37,6 +37,7 @@ import {
   ProductRating,
   StockMovement,
   BusinessHour,
+  Notification,
 } from '.';
 
 export const entities = [
@@ -78,4 +79,5 @@ export const entities = [
   EntityAudit,
   UserSearch,
   BusinessHour,
+  Notification,
 ];
