@@ -28,6 +28,7 @@ import {
   DiscountProduct,
   EntityAudit,
   Tag,
+  Notification,
 } from '.';
 import { BusinessHour } from './business-hour.entity';
 import { ProvidersEnum } from '../common/enums';
@@ -82,6 +83,15 @@ export class Business extends BaseEntity {
 
   @Column('boolean', { name: 'is_online', default: false })
   isOnline: boolean;
+
+  /**
+   * When true, the storefront may show an equivalent price in Venezuelan bolívares (VES).
+   */
+  @Column('boolean', {
+    name: 'is_bs_equivalent_price_enabled',
+    default: false,
+  })
+  isBsEquivalentPriceEnabled: boolean;
 
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
@@ -199,4 +209,7 @@ export class Business extends BaseEntity {
 
   @OneToMany(() => Tag, (tag) => tag.creationBusiness)
   businessTags?: Tag[];
+
+  @OneToMany(() => Notification, (notification) => notification.business)
+  notifications?: Notification[];
 }

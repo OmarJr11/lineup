@@ -107,9 +107,9 @@ export class VerificationCodesSettersService extends BasicService<VerificationCo
   ): Promise<VerificationCode> {
     try {
       const data = { isUsed: true, status: StatusEnum.COMPLETED };
-      return await this.updateEntity(data, record, user);
+      return (await this.updateEntity(data, record, user)) as VerificationCode;
     } catch (error) {
-      LogError(this.logger, error, this.markAsUsed.name);
+      LogError(this.logger, error as Error, this.markAsUsed.name);
       throw new InternalServerErrorException(this.rVerify.invalid);
     }
   }

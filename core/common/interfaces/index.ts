@@ -31,3 +31,4 @@ export * from './admin-business-stats.interface';
 export * from './admin-platform-engagement-stats.interface';
 export * from './admin-catalog-global-stats.interface';
 export * from './admin-discount-global-stats.interface';
+export * from './notification-payload.interface';

@@ -77,7 +77,11 @@ export class LocationsSettersService extends BasicService<Location> {
   ): Promise<Location> {
     try {
       const oldValues = toEntityAuditValues(location);
-      const updated = await this.updateEntity(data, location, businessReq);
+      const updated: Location = (await this.updateEntity(
+        data,
+        location,
+        businessReq,
+      )) as Location;
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.Location,
         entityId: location.id,

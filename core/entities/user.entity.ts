@@ -15,6 +15,7 @@ import {
   CatalogVisit,
   Currency,
   File,
+  Notification,
   ProductRating,
   ProductReaction,
   ProductVisit,
@@ -115,4 +116,7 @@ export class User extends BaseEntity {
   @ManyToOne(() => File, (files) => files.userProfileImages)
   @JoinColumn([{ name: 'image_code', referencedColumnName: 'name' }])
   profileImage?: File;
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications?: Notification[];
 }

@@ -63,6 +63,22 @@ services:
       - redis
     restart: always
 
+  api-background-processes:
+    build: .
+    container_name: api-background-processes
+    command: npm run start:prod:background-processes
+    ports:
+      - "3003:3003"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      TZ: America/Caracas
+    depends_on:
+      - db
+      - redis
+    restart: always
+
   migrate:
     build: .
     command: npm run migration:run

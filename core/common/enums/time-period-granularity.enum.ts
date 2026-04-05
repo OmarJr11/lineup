@@ -9,12 +9,12 @@ export enum TimePeriodGranularityEnum {
   TODAY = 'today',
   /** Group by yesterday (e.g. 2025-03-17). */
   YESTERDAY = 'yesterday',
-  /** Group by week (e.g. 2025-W12). */
-  LAST_WEEK = 'last_week',
-  /** Group by month (e.g. 2025-03). */
-  LAST_MONTH = 'last_month',
-  /** Group by year (e.g. 2025). */
-  LAST_YEAR = 'last_year',
+  /** Current ISO week Mon–Sun (e.g. 2025-W12). */
+  THIS_WEEK = 'this_week',
+  /** Current calendar month (e.g. 2025-03). */
+  THIS_MONTH = 'this_month',
+  /** Current calendar year (e.g. 2025). */
+  THIS_YEAR = 'this_year',
   /** Range*/
   RANGE = 'range',
   ALL = 'all',
