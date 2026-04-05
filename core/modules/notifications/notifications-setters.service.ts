@@ -3,19 +3,17 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { Request } from 'express';
 import { Notification } from '../../entities/notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsGettersService } from './notifications-getters.service';
 import { CreateNotificationParams } from './dto/create-notification.params';
-import type { INotificationRealtimePayload } from './interfaces/notification-realtime-payload.interface';
 import { notificationResponses } from '../../common/responses';
 import { BasicService } from '../../common/services/base.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 import { IUserOrBusinessReq } from '../../common/interfaces';
 import { LogError } from '../../common/helpers';
 
@@ -56,38 +54,22 @@ export class NotificationsSettersService extends BasicService<Notification> {
     userOrBusinessReq: IUserOrBusinessReq,
   ): Promise<Notification> {
     try {
-      return await this.save(params, userOrBusinessReq);
+      const saved = await this.save(params, userOrBusinessReq);
+      const notification = await this.notificationsGettersService.findOne(
+        saved.id,
+      );
+      if (params.idUser) {
+        this.emitRealtimePayloadToUser(params.idUser, notification);
+      }
+      if (params.idBusiness) {
+        this.emitRealtimePayloadToBusiness(params.idBusiness, notification);
+      }
+      return notification;
     } catch (error) {
       LogError(
         this.logger,
         error as Error,
         this.createAndDispatch.name,
-        userOrBusinessReq,
-      );
-      throw new InternalServerErrorException(this.rCreate.error);
-    }
-  }
-
-  /**
-   * Sends a realtime-only notification (no database row).
-   *
-   * @param {CreateNotificationParams} params - Ephemeral payload
-   * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
-   * @returns {Promise<Notification>} Saved entity
-   */
-  async emitEphemeral(
-    params: CreateNotificationParams,
-    userOrBusinessReq: IUserOrBusinessReq,
-  ): Promise<Notification> {
-    try {
-      const saved = await this.createAndDispatch(params, userOrBusinessReq);
-      this.emitRealtimePayload(this.toRealtimePayload(saved, true));
-      return saved;
-    } catch (error) {
-      LogError(
-        this.logger,
-        error as Error,
-        this.emitEphemeral.name,
         userOrBusinessReq,
       );
       throw new InternalServerErrorException(this.rCreate.error);
@@ -211,47 +193,28 @@ export class NotificationsSettersService extends BasicService<Notification> {
   }
 
   /**
-   * Maps an entity to the wire payload and emits through the gateway.
+   * Emits a realtime payload to a user.
    *
-   * @param {INotificationRealtimePayload} payload - Payload
-   * @returns {void}
+   * @param {number} idUser - User id
+   * @param {Notification} notification - Notification entity
    */
-  private emitRealtimePayload(payload: INotificationRealtimePayload): void {
-    try {
-      this.notificationsGateway.emitToUser(payload.idUser, payload);
-    } catch (err) {
-      LogError(
-        this.logger,
-        err as Error,
-        this.emitRealtimePayload.name,
-        this.userRequest,
-      );
-      throw new InternalServerErrorException(this.rCreate.error);
-    }
+  private emitRealtimePayloadToUser(
+    idUser: number,
+    notification: Notification,
+  ) {
+    this.notificationsGateway.emitToUser(idUser, notification);
   }
 
   /**
-   * Maps a persisted row to the realtime DTO.
+   * Emits a realtime payload to a business.
    *
-   * @param {Notification} row - Entity
-   * @param {boolean} ephemeral - Whether the event is ephemeral-only
-   * @returns {INotificationRealtimePayload} Wire payload
+   * @param {number} idBusiness - Business id
+   * @param {Notification} notification - Notification entity
    */
-  private toRealtimePayload(
-    row: Notification,
-    ephemeral: boolean,
-  ): INotificationRealtimePayload {
-    return {
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      body: row.body,
-      payload: row.payload ?? null,
-      idUser: row.idCreationUser ?? 0,
-      idBusiness: row.idCreationBusiness ?? null,
-      readAt: row.readAt ?? null,
-      creationDate: row.creationDate,
-      ephemeral,
-    };
+  private emitRealtimePayloadToBusiness(
+    idBusiness: number,
+    notification: Notification,
+  ): void {
+    this.notificationsGateway.emitToBusiness(idBusiness, notification);
   }
 }

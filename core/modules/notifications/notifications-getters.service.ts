@@ -74,6 +74,29 @@ export class NotificationsGettersService extends BasicService<Notification> {
   }
 
   /**
+   * Finds a notification by its ID.
+   *
+   * @param {number} id - Notification primary key
+   * @returns {Promise<Notification>} Notification
+   */
+  async findOne(id: number): Promise<Notification> {
+    try {
+      return await this.findOneWithOptionsOrFail({
+        where: { id },
+        relations: [
+          'creationUser',
+          'creationUser.profileImage',
+          'creationBusiness',
+          'creationBusiness.image',
+        ],
+      });
+    } catch (error) {
+      LogError(this.logger, error as Error, this.findOne.name);
+      throw new InternalServerErrorException(this.rList.error);
+    }
+  }
+
+  /**
    * Loads a notification by id when it belongs to the user.
    *
    * @param {number} userId - Owner user id

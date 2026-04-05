@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
-import { DynamicModule, Logger, Module } from '@nestjs/common';
+import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   CatalogsConsumer,
@@ -8,6 +8,7 @@ import {
   EntityAuditsConsumer,
   FilesConsumer,
   MailsConsumer,
+  NotificationsConsumer,
   QueuesManager,
   ReviewsConsumer,
   SearchDataConsumer,
@@ -27,45 +28,53 @@ import { DiscountsModule } from '../modules/discounts/discounts.module';
 import { GeminiModule } from '../modules/gemini/gemini.module';
 import { TagsModule } from '../modules/tags/tags.module';
 import { ScrappingModule } from '../modules/scrapping/scrapping.module';
+import { NotificationsModule } from '../modules/notifications/notifications.module';
 
 @Module({})
 export class ConsumersModule {
   static register(): DynamicModule {
     const logger = new Logger('ConsumersModule');
     logger.log('Processing Bull jobs');
+
+    const providers: Provider[] = [
+      CatalogsConsumer,
+      CurrencyConsumer,
+      DiscountsConsumer,
+      EntityAuditsConsumer,
+      FilesConsumer,
+      MailsConsumer,
+      QueueLogsConsumer,
+      SearchDataConsumer,
+      ReviewsConsumer,
+      NotificationsConsumer,
+    ] as Provider[];
+
+    const imports = [
+      BullModule.registerQueue({ name: QueuesManager.queueNames.mails }),
+      TypeOrmModule.forFeature([]),
+      FilesModule,
+      ProductTagsModule,
+      UsersModule,
+      BusinessesModule,
+      ProductsModule,
+      CatalogsModule,
+      SearchModule,
+      MailModule,
+      ProductRatingsModule,
+      EntityAuditsModule,
+      DiscountsModule,
+      GeminiModule,
+      TagsModule,
+      ScrappingModule,
+      ProductsModule,
+      NotificationsModule,
+      ...QueuesManager.queuesForImport(),
+    ];
+
     return {
       module: ConsumersModule,
-      imports: [
-        BullModule.registerQueue({ name: QueuesManager.queueNames.mails }),
-        TypeOrmModule.forFeature([]),
-        FilesModule,
-        ProductTagsModule,
-        UsersModule,
-        BusinessesModule,
-        ProductsModule,
-        CatalogsModule,
-        SearchModule,
-        MailModule,
-        ProductRatingsModule,
-        EntityAuditsModule,
-        DiscountsModule,
-        GeminiModule,
-        TagsModule,
-        ScrappingModule,
-        ProductsModule,
-        ...QueuesManager.queuesForImport(),
-      ],
-      providers: [
-        CatalogsConsumer,
-        CurrencyConsumer,
-        DiscountsConsumer,
-        EntityAuditsConsumer,
-        FilesConsumer,
-        MailsConsumer,
-        QueueLogsConsumer,
-        SearchDataConsumer,
-        ReviewsConsumer,
-      ],
+      imports,
+      providers,
     };
   }
 }

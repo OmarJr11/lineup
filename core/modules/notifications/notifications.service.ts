@@ -53,23 +53,6 @@ export class NotificationsService extends BasicService<Notification> {
   }
 
   /**
-   * Sends a realtime-only notification (no database row).
-   *
-   * @param {CreateNotificationParams} params - Ephemeral payload
-   * @param {IUserOrBusinessReq} userOrBusinessReq - User or business making the request
-   * @returns {Promise<Notification>} Saved entity
-   */
-  async emitEphemeral(
-    params: CreateNotificationParams,
-    userOrBusinessReq: IUserOrBusinessReq,
-  ): Promise<Notification> {
-    return await this.notificationsSettersService.emitEphemeral(
-      params,
-      userOrBusinessReq,
-    );
-  }
-
-  /**
    * Paginates notifications for the consumer user inbox (`id_creation_user`).
    *
    * @param {number} userId - User id

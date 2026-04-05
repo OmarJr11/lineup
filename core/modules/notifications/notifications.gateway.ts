@@ -12,7 +12,7 @@ import {
   NOTIFICATION_SOCKET_EVENT,
   NOTIFICATION_SOCKET_NAMESPACE,
 } from '../../common/constants/notifications.constants';
-import type { INotificationRealtimePayload } from './interfaces/notification-realtime-payload.interface';
+import { Notification } from '../../entities';
 
 /**
  * Authenticated Socket.IO namespace that targets users by id (`user:{id}` rooms).
@@ -73,17 +73,34 @@ export class NotificationsGateway implements OnGatewayConnection {
    * Emits a notification payload to every socket in the user's room.
    *
    * @param {number} userId - Recipient user id
-   * @param {INotificationRealtimePayload} payload - Serializable payload
+   * @param {Notification} notification - Notification entity
    * @returns {void}
    */
-  emitToUser(userId: number, payload: INotificationRealtimePayload): void {
+  emitToUser(userId: number, notification: Notification): void {
     if (!this.server) {
       this.logger.warn('Socket server not initialized; skip emit');
       return;
     }
     this.server
       .to(this.roomNameForUser(userId))
-      .emit(NOTIFICATION_SOCKET_EVENT, payload);
+      .emit(NOTIFICATION_SOCKET_EVENT, notification);
+  }
+
+  /**
+   * Emits a notification payload to every socket in the business's room.
+   *
+   * @param {number} businessId - Recipient business id
+   * @param {Notification} notification - Notification entity
+   * @returns {void}
+   */
+  emitToBusiness(businessId: number, notification: Notification): void {
+    if (!this.server) {
+      this.logger.warn('Socket server not initialized; skip emit');
+      return;
+    }
+    this.server
+      .to(this.roomNameForBusiness(businessId))
+      .emit(NOTIFICATION_SOCKET_EVENT, notification);
   }
 
   /**
@@ -94,5 +111,15 @@ export class NotificationsGateway implements OnGatewayConnection {
    */
   roomNameForUser(userId: number): string {
     return `user:${userId}`;
+  }
+
+  /**
+   * Builds the Socket.IO room name for a business.
+   *
+   * @param {number} businessId - Business primary key
+   * @returns {string} Room name
+   */
+  roomNameForBusiness(businessId: number): string {
+    return `business:${businessId}`;
   }
 }
