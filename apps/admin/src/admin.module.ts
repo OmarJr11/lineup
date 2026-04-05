@@ -15,6 +15,7 @@ import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { SeedModule } from './seed/seed.module';
 import { RolesAdminModule } from './roles-admin/roles-admin.module';
 import { AdminStatisticsModule } from './admin-statistics/admin-statistics.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -79,6 +80,12 @@ import { AdminStatisticsModule } from './admin-statistics/admin-statistics.modul
         }
         const status = code >= 200 && code < 300;
         return { code, status, message };
+      },
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
       },
     }),
     UsersModule,
