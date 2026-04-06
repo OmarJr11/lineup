@@ -32,7 +32,7 @@ export class FilesGettersService extends BasicService<File> {
     return await this.find({
       where: { name: In(names) },
     }).catch((error) => {
-      LogError(this.logger, error, this.getImageByNames.name);
+      LogError(this.logger, error as Error, this.getImageByNames.name);
       throw new InternalServerErrorException(this.rUpload.error);
     });
   }
@@ -46,7 +46,7 @@ export class FilesGettersService extends BasicService<File> {
     try {
       return await this.findOneWithOptionsOrFail({ where: { name } });
     } catch (error) {
-      LogError(this.logger, error, this.getImageByName.name);
+      LogError(this.logger, error as Error, this.getImageByName.name);
       throw new InternalServerErrorException(this.rUpload.error);
     }
   }

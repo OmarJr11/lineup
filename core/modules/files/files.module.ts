@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { FilesGettersService } from './files-getters.service';
 import { GeminiModule } from '../gemini/gemini.module';
 import { FilesImportsService } from './files-imports.service';
+import { FilesSettersService } from './files-setters.service';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueNamesEnum } from '../../common/enums';
 
@@ -22,7 +23,17 @@ import { QueueNamesEnum } from '../../common/enums';
       envFilePath: '.env',
     }),
   ],
-  providers: [FilesService, FilesGettersService, FilesImportsService],
-  exports: [FilesService, FilesGettersService, FilesImportsService],
+  providers: [
+    FilesService,
+    FilesGettersService,
+    FilesImportsService,
+    FilesSettersService,
+  ],
+  exports: [
+    FilesService,
+    FilesGettersService,
+    FilesImportsService,
+    FilesSettersService,
+  ],
 })
 export class FilesModule {}

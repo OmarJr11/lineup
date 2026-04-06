@@ -3,9 +3,14 @@ import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { FilesConsumerEnum, QueueNamesEnum } from '../common/enums/consumers';
 import { LogError, LogWarn } from '../common/helpers';
-import { IBusinessReq, IFileInterface } from '../common/interfaces';
+import {
+  GenerateThumbnailsJobData,
+  IBusinessReq,
+  IFileInterface,
+} from '../common/interfaces';
 import { StatusEnum } from '../common/enums';
 import { FilesImportsService } from '../modules/files/files-imports.service';
+import { FilesSettersService } from '../modules/files/files-setters.service';
 import { IImportedProductInput } from '../modules/files/dto/imported-product.input';
 import { ProductsSettersService } from '../modules/products/products-setters.service';
 import { CreateProductInput } from '../modules/products/dto/create-product.input';
@@ -32,6 +37,7 @@ export class FilesConsumer extends WorkerHost {
 
   constructor(
     private readonly filesImportsService: FilesImportsService,
+    private readonly filesSettersService: FilesSettersService,
     private readonly productsSettersService: ProductsSettersService,
   ) {
     super();
@@ -41,15 +47,46 @@ export class FilesConsumer extends WorkerHost {
    * Process incoming jobs.
    * @param {Job} job - The job to process.
    */
-  async process(job: Job<UploadDocumentFileJobData>): Promise<void> {
+  async process(job: Job): Promise<void> {
     const name: FilesConsumerEnum = job.name as FilesConsumerEnum;
     switch (name) {
       case FilesConsumerEnum.UploadDocumentFile:
-        await this.processUploadDocumentFile(job);
+        await this.processUploadDocumentFile(
+          job as Job<UploadDocumentFileJobData>,
+        );
+        break;
+      case FilesConsumerEnum.GenerateThumbnails:
+        await this.processGenerateThumbnails(
+          job as Job<GenerateThumbnailsJobData>,
+        );
         break;
       default:
         LogWarn(this.log, `Unhandled job: ${job.name}`, this.process.name);
     }
+  }
+
+  /**
+   * Generates xs/sm/md thumbnails for an uploaded image and updates the file row.
+   * @param {Job<GenerateThumbnailsJobData>} job - Job with file name, directory, and mimetype
+   * @returns {Promise<void>}
+   */
+  private async processGenerateThumbnails(
+    job: Job<GenerateThumbnailsJobData>,
+  ): Promise<void> {
+    const { fileName, directory, mimetype } = job.data;
+    if (!fileName || !directory || !mimetype) {
+      LogWarn(
+        this.log,
+        `Missing thumbnail payload in job ${job.id}`,
+        this.processGenerateThumbnails.name,
+      );
+      return;
+    }
+    await this.filesSettersService.generateThumbnailsForImage({
+      fileName,
+      directory,
+      mimetype,
+    });
   }
 
   /**

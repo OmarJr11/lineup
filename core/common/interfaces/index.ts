@@ -15,6 +15,8 @@ export * from './token-generate.interface';
 export * from './refresh-token.interface';
 export * from './login-response.interface';
 export * from './file.interface';
+export * from './thumbnails.interface';
+export * from './generate-thumbnails-job.interface';
 export * from './social-medias.interface';
 export * from './business-req.interface';
 export * from './user-or-business-req.interface';

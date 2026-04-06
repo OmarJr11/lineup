@@ -1,4 +1,6 @@
 export * from './base.schema';
+export * from './thumbnail-variant.schema';
+export * from './thumbnails.schema';
 export * from './file.schema';
 export * from './role.schema';
 export * from './user-role.schema';

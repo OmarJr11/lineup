@@ -10,7 +10,13 @@ import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { IFileInterface, IUserReq } from '../../common/interfaces';
+import {
+  GenerateThumbnailsJobData,
+  IBusinessReq,
+  IFileInterface,
+  IFileUploadInterface,
+  IUserReq,
+} from '../../common/interfaces';
 import { File } from '../../entities';
 import { BasicService } from '../../common/services';
 import { filesResponses } from '../../common/responses';
@@ -21,7 +27,6 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { InjectQueue } from '@nestjs/bullmq';
-import { IFileUploadInterface } from '../../common/interfaces/file.interface';
 import { LogError } from '../../common/helpers/logger.helper';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { DirectoriesEnum } from '../../common/enums';
@@ -30,7 +35,6 @@ import {
   FilesConsumerEnum,
   QueueNamesEnum,
 } from '../../common/enums/consumers';
-import { IBusinessReq } from '../../common/interfaces';
 
 /** Minimum confidence score (0-1) for Vision API labels to be included */
 const VISION_LABEL_MIN_CONFIDENCE = 0.7;
@@ -127,7 +131,19 @@ export class FilesService extends BasicService<File> {
     };
 
     try {
-      return await this.save(fileToSave, user);
+      const saved = await this.save(fileToSave, user);
+      if (file.mimetype?.startsWith('image/')) {
+        const thumbnailJob: GenerateThumbnailsJobData = {
+          fileName: saved.name,
+          directory: saved.directory,
+          mimetype: file.mimetype,
+        };
+        await this.filesQueue.add(
+          FilesConsumerEnum.GenerateThumbnails,
+          thumbnailJob,
+        );
+      }
+      return saved;
     } catch (error) {
       LogError(this.logger, error as Error, this.uploadFile.name, user);
       throw new InternalServerErrorException(this.rUpload.error);
