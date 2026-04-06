@@ -34,13 +34,13 @@ export class NotificationSchema {
   idCreationUser: number;
 
   @Field(() => UserSchema, { nullable: true })
-  creationUser?: UserSchema;
+  user?: UserSchema;
 
   @Field(() => Int, { nullable: true })
   idCreationBusiness?: number;
 
   @Field(() => BusinessSchema, { nullable: true })
-  creationBusiness?: BusinessSchema;
+  business?: BusinessSchema;
 
   @Field(() => Date, { nullable: true })
   readAt?: Date;
