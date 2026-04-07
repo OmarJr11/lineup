@@ -19,6 +19,10 @@ export interface CreateNotificationJobData {
   scenario: NotificationContentScenarioEnum;
   entityName: string;
   type: NotificationTypeEnum;
+  data?: {
+    id?: number;
+    [key: string]: unknown;
+  };
 }
 
 /**
@@ -75,9 +79,10 @@ export class NotificationsConsumer extends WorkerHost {
       body: message,
       idUser: userOrBusinessReq.userId,
       payload: {
-        id: userOrBusinessReq.userId,
+        idUser: userOrBusinessReq.userId,
         link,
         entity: entityName,
+        scenario,
       },
     };
     await this.notificationsSettersService.createAndDispatch(
@@ -92,18 +97,30 @@ export class NotificationsConsumer extends WorkerHost {
    * @param {Job} job - Job with CreateNotificationBusinessJobPayload data
    */
   private async processCreateForBusiness(job: Job<CreateNotificationJobData>) {
-    const { entityName, userOrBusinessReq, scenario, type } = job.data;
+    const { entityName, userOrBusinessReq, scenario, type, data } = job.data;
     const notificationEntry = notificationsPublic[scenario];
-    const { title, message, link } = notificationEntry.es;
+    const { title, message } = notificationEntry.es;
+    let link = notificationEntry.es.link;
+
+    switch (scenario) {
+      case NotificationContentScenarioEnum.DISCOUNT_ACTIVATED:
+        link = `businesses/discounts/${data.id}`;
+        break;
+      default:
+        break;
+    }
+
     const notificationParams: CreateNotificationParams = {
       type,
       title,
       body: message,
       idBusiness: userOrBusinessReq.businessId,
       payload: {
-        id: userOrBusinessReq.businessId,
+        idBusiness: userOrBusinessReq.businessId,
         link,
         entity: entityName,
+        scenario,
+        id: data?.id,
       },
     };
     await this.notificationsSettersService.createAndDispatch(

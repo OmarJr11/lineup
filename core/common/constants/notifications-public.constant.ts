@@ -50,4 +50,29 @@ export const notificationsPublic: Record<
       message: 'Un cliente dejó una reseña en uno de tus productos.',
     },
   },
+  [NotificationContentScenarioEnum.DISCOUNT_ACTIVATED]: {
+    type: NotificationTypeEnum.INFO,
+    es: {
+      title: 'Descuento activado',
+      message:
+        'Uno de tus descuentos programados ya está activo y visible para tus clientes.',
+      link: 'dashboard/discounts',
+    },
+  },
+  [NotificationContentScenarioEnum.DISCOUNT_EXPIRED]: {
+    type: NotificationTypeEnum.INFO,
+    es: {
+      title: 'Descuento finalizado',
+      message: 'Un descuento alcanzó su fecha de término y dejó de aplicarse.',
+      link: 'dashboard/discounts',
+    },
+  },
+  [NotificationContentScenarioEnum.PRODUCT_LOW_STOCK]: {
+    type: NotificationTypeEnum.WARNING,
+    es: {
+      title: 'Stock bajo',
+      message: 'Uno de tus productos tiene stock bajo. Revisa tu inventario.',
+      link: 'dashboard/inventory',
+    },
+  },
 };
