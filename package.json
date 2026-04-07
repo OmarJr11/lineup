@@ -141,8 +141,10 @@
     ],
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
+    "passWithNoTests": true,
     "roots": [
-      "<rootDir>/apps/"
+      "<rootDir>/apps/",
+      "<rootDir>/core/"
     ]
   }
 }
