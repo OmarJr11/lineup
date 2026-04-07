@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,13 +27,14 @@ export class NotificationsSettersService extends BasicService<Notification> {
 
   /**
    * @param {Repository<Notification>} notificationRepository - TypeORM repository
-   * @param {NotificationsGateway} notificationsGateway - Socket.IO broadcaster
+   * @param {NotificationsGateway | undefined} notificationsGateway - Present only in background-processes
    * @param {NotificationsGettersService} notificationsGettersService - Read helpers
    */
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
-    private readonly notificationsGateway: NotificationsGateway,
+    @Optional()
+    private readonly notificationsGateway: NotificationsGateway | undefined,
     private readonly notificationsGettersService: NotificationsGettersService,
   ) {
     super(notificationRepository);
@@ -203,7 +205,7 @@ export class NotificationsSettersService extends BasicService<Notification> {
     idUser: number,
     notification: Notification,
   ) {
-    this.notificationsGateway.emitToUser(idUser, notification);
+    this.notificationsGateway?.emitToUser(idUser, notification);
   }
 
   /**
@@ -216,6 +218,6 @@ export class NotificationsSettersService extends BasicService<Notification> {
     idBusiness: number,
     notification: Notification,
   ): void {
-    this.notificationsGateway.emitToBusiness(idBusiness, notification);
+    this.notificationsGateway?.emitToBusiness(idBusiness, notification);
   }
 }

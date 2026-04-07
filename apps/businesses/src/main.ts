@@ -8,7 +8,6 @@ import { join } from 'path';
 import { createConnection } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
-import { SocketIoCorsAdapter } from '../../../core/common/adapters/socket-io.adapter';
 import * as cookieParser from 'cookie-parser';
 dotenv.config();
 
@@ -53,7 +52,6 @@ async function bootstrap() {
     exposedHeaders: ['token_expired'],
   };
   app.enableCors(cors);
-  app.useWebSocketAdapter(new SocketIoCorsAdapter(app, corsOrigins));
   app.use(cookieParser());
 
   await app.listen(process.env.PORT_BUSINESS ?? 3002);

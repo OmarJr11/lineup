@@ -7,10 +7,12 @@ import { configuration, ValidatingEnv } from '../../../core/common/config';
 import { entities } from '../../../core/entities/entities';
 import { ConsumersModule } from '../../../core/consumers';
 import { CronsModule } from '../../../core/crons';
+import { NotificationsRealtimeModule } from '../../../core/modules/notifications/notifications-realtime.module';
 
 /**
  * Worker application: BullMQ consumers and scheduled cron jobs.
  * Runs separately from the admin GraphQL API so queue processing is isolated.
+ * Notification Socket.IO is served here (`/notifications` on `PORT_BACKGROUND_PROCESSES`).
  */
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { CronsModule } from '../../../core/crons';
       load: [configuration],
       validationSchema: ValidatingEnv,
     }),
+    NotificationsRealtimeModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
