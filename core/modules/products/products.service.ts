@@ -275,7 +275,7 @@ export class ProductsService extends BasicService<Product> {
 
     if (images && images.length > 0)
       await this.updateProductImages(product.id, images, businessReq);
-    if (variations !== undefined) {
+    if (variations) {
       const updateVariations = variations;
       await this.updateProductVariations(
         product.id,
@@ -499,7 +499,7 @@ export class ProductsService extends BasicService<Product> {
 
   /**
    * Update product variations by synchronizing existing variations with the provided ones.
-   * Creates new variations, updates existing ones, and removes variations that are not in the provided array.
+   * Retains IDs present in the payload, removes persisted rows not referenced anymore, then updates or creates.
    * @param {number} productId - The ID of the product whose variations should be updated.
    * @param {ProductVariationInput[]} variations - Array of variation inputs containing title and options.
    * @param {IBusinessReq} businessReq - The business request object.
@@ -509,27 +509,26 @@ export class ProductsService extends BasicService<Product> {
     variations: ProductVariationInput[],
     businessReq: IBusinessReq,
   ) {
+    const retainedVariationIds = new Set(
+      variations.filter((v) => v.id != null).map((v) => Number(v.id)),
+    );
     const existingVariations =
       await this.productVariationsGettersService.findAllByProduct(productId);
     const existingIds = new Set(existingVariations.map((v) => Number(v.id)));
-    const providedIds = new Set(
-      variations.filter((v) => v.id).map((v) => Number(v.id)),
+    const variationsToRemove = existingVariations.filter(
+      (existing) => !retainedVariationIds.has(Number(existing.id)),
     );
-
-    // Remove variations that are not in the provided array
-    for (const existing of existingVariations) {
-      if (!providedIds.has(existing.id)) {
-        await this.productVariationsSettersService.remove(
-          existing,
-          businessReq,
-        );
-      }
+    for (const variationEntity of variationsToRemove) {
+      await this.productVariationsSettersService.remove(
+        variationEntity,
+        businessReq,
+      );
     }
-
-    // Create or update variations
     for (const variation of variations) {
-      if (variation.id && existingIds.has(variation.id)) {
-        const existing = existingVariations.find((v) => v.id === variation.id);
+      if (variation.id != null && existingIds.has(Number(variation.id))) {
+        const existing = existingVariations.find(
+          (v) => Number(v.id) === Number(variation.id),
+        );
         if (existing) {
           await this.productVariationsSettersService.update(
             existing,

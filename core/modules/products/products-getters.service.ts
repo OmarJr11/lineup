@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { InfinityScrollInput } from '../../common/dtos';
+import { productLowStockThresholds } from '../../common/constants';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
@@ -699,6 +700,81 @@ export class ProductsGettersService extends BasicService<Product> {
       }
     }
     return count;
+  }
+
+  /**
+   * Clears stock_notified for active products that no longer have any SKU in the low-stock band.
+   *
+   * @returns {Promise<void>}
+   */
+  async resetStockNotifiedForRestockedProducts(): Promise<void> {
+    const { minQuantity, maxQuantity } = productLowStockThresholds;
+    await this.productRepository.query(
+      `
+      UPDATE products p
+      SET stock_notified = false
+      WHERE p.stock_notified = true
+      AND p.status = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM product_skus ps
+        WHERE ps.id_product = p.id
+        AND ps.status = $2
+        AND ps.quantity IS NOT NULL
+        AND ps.quantity BETWEEN $3 AND $4
+      )
+      `,
+      [StatusEnum.ACTIVE, StatusEnum.ACTIVE, minQuantity, maxQuantity],
+    );
+  }
+
+  /**
+   * Active products with at least one non-deleted SKU whose quantity is in the low-stock band
+   * and stock_notified is false.
+   *
+   * @returns {Promise<number[]>} Product IDs to notify.
+   */
+  async findProductIdsWithLowStockPendingNotification(): Promise<number[]> {
+    const { minQuantity, maxQuantity } = productLowStockThresholds;
+    const raw = await this.createQueryBuilder('p')
+      .select('p.id', 'id')
+      .where('p.status = :pStatus', { pStatus: StatusEnum.ACTIVE })
+      .andWhere('p.stock_notified = :sn', { sn: false })
+      .andWhere(
+        `EXISTS (
+          SELECT 1 FROM product_skus ps
+          WHERE ps.id_product = p.id
+          AND ps.status = :skuStatus
+          AND ps.quantity IS NOT NULL
+          AND ps.quantity BETWEEN :lowMin AND :lowMax
+        )`,
+      )
+      .setParameter('skuStatus', StatusEnum.ACTIVE)
+      .setParameter('lowMin', minQuantity)
+      .setParameter('lowMax', maxQuantity)
+      .getRawMany<{ id: string }>();
+    return raw.map((row) => Number(row.id));
+  }
+
+  /**
+   * Loads id, title, and business for a low-stock job; null if missing or not active.
+   *
+   * @param {number} id - Product ID.
+   * @returns {Promise<Pick<Product, 'id' | 'title' | 'idCreationBusiness'> | null>}
+   */
+  async findOneActiveSummaryForLowStockJob(
+    id: number,
+  ): Promise<Pick<Product, 'id' | 'title' | 'idCreationBusiness'> | null> {
+    const product = await this.findOneWithOptions({
+      where: { id, status: StatusEnum.ACTIVE },
+    });
+    if (!product) {
+      return null;
+    }
+    return {
+      id: product.id,
+      title: product.title,
+      idCreationBusiness: product.idCreationBusiness,
+    };
   }
 
   /**

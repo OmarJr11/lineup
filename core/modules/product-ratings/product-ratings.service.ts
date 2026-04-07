@@ -79,6 +79,9 @@ export class ProductRatingsService extends BasicService<ProductRating> {
           businessId: product.idCreationBusiness,
           path: '',
         },
+        data: {
+          id: product.id,
+        },
       });
     }
     await this.syncProductRatingAverage(input.idProduct, userReq);

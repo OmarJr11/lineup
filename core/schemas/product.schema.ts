@@ -95,4 +95,8 @@ export class ProductSchema {
 
   @Field(() => DiscountProductSchema, { nullable: true })
   discountProduct?: DiscountProductSchema;
+
+  /** Whether a low-stock alert was already sent for the current low-stock period. */
+  @Field()
+  stockNotified: boolean;
 }
