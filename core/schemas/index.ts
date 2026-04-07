@@ -47,4 +47,5 @@ export * from './entity-audit.schema';
 export * from './stock-movement.schema';
 export * from './product-collection.schema';
 export * from './statistics';
+export * from './notification-payload.schema';
 export * from './notification.schema';

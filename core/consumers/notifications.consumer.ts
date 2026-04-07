@@ -82,7 +82,7 @@ export class NotificationsConsumer extends WorkerHost {
         idUser: userOrBusinessReq.userId,
         link,
         entity: entityName,
-        data: { scenario },
+        scenario,
       },
     };
     await this.notificationsSettersService.createAndDispatch(
@@ -119,11 +119,8 @@ export class NotificationsConsumer extends WorkerHost {
         idBusiness: userOrBusinessReq.businessId,
         link,
         entity: entityName,
-        data: {
-          scenario,
-          id: data?.id,
-          productTitle: data?.['productTitle'],
-        },
+        scenario,
+        id: data?.id,
       },
     };
     await this.notificationsSettersService.createAndDispatch(

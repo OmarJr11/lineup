@@ -1,9 +1,8 @@
-import GraphQLJSON from 'graphql-type-json';
 import { Field, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { NotificationTypeEnum } from '../common/enums/notification-type.enum';
-import type { INotificationPayload } from '../common/interfaces/notification-payload.interface';
-import { UserSchema } from './user.schema';
 import { BusinessSchema } from './business.schema';
+import { NotificationPayloadSchema } from './notification-payload.schema';
+import { UserSchema } from './user.schema';
 
 registerEnumType(NotificationTypeEnum, {
   name: 'NotificationTypeEnum',
@@ -27,8 +26,8 @@ export class NotificationSchema {
   @Field()
   body: string;
 
-  @Field(() => GraphQLJSON, { nullable: true })
-  payload?: INotificationPayload;
+  @Field(() => NotificationPayloadSchema, { nullable: true })
+  payload?: NotificationPayloadSchema;
 
   @Field(() => Int)
   idCreationUser: number;
