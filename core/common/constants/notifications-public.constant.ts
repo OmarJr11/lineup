@@ -72,7 +72,7 @@ export const notificationsPublic: Record<
     es: {
       title: 'Stock bajo',
       message: 'Uno de tus productos tiene stock bajo. Revisa tu inventario.',
-      link: 'dashboard/products',
+      link: 'dashboard/inventory',
     },
   },
 };

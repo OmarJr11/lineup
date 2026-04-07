@@ -106,8 +106,7 @@ export class NotificationsConsumer extends WorkerHost {
       case NotificationContentScenarioEnum.DISCOUNT_ACTIVATED:
         link = `businesses/discounts/${data.id}`;
         break;
-      case NotificationContentScenarioEnum.PRODUCT_LOW_STOCK:
-        link = `dashboard/products/${data.id}`;
+      default:
         break;
     }
 
