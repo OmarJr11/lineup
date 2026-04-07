@@ -34,3 +34,4 @@ export * from './admin-platform-engagement-stats.interface';
 export * from './admin-catalog-global-stats.interface';
 export * from './admin-discount-global-stats.interface';
 export * from './notification-payload.interface';
+export * from './notification-socket-subscribe-payload.interface';
