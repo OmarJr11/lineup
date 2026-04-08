@@ -6,10 +6,14 @@ import {
 } from 'typeorm-transactional-cls-hooked';
 import { join } from 'path';
 import { createConnection } from 'typeorm';
+import { json, urlencoded } from 'express';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
 import * as cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+/** Max JSON/urlencoded body size (GraphQL queries with large variables exceed the 100kb default). */
+const HTTP_BODY_SIZE_LIMIT = '2mb';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -31,7 +35,9 @@ async function bootstrap() {
     synchronize: false,
   });
 
-  const app = await NestFactory.create(UsersModule);
+  const app = await NestFactory.create(UsersModule, { bodyParser: false });
+  app.use(json({ limit: HTTP_BODY_SIZE_LIMIT }));
+  app.use(urlencoded({ extended: true, limit: HTTP_BODY_SIZE_LIMIT }));
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
 
   const corsOrigins = getCors();

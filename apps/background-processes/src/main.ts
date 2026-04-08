@@ -5,12 +5,16 @@ import {
 } from 'typeorm-transactional-cls-hooked';
 import { createConnection } from 'typeorm';
 import { join } from 'path';
+import { json, urlencoded } from 'express';
 import * as dotenv from 'dotenv';
 import { BackgroundProcessesModule } from './background-processes.module';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
 import { SocketIoCorsAdapter } from '../../../core/common/adapters/socket-io.adapter';
 
 dotenv.config();
+
+/** Max JSON/urlencoded body size (aligns with API apps; avoids 100kb default). */
+const HTTP_BODY_SIZE_LIMIT = '2mb';
 
 /**
  * Boots the background worker process (BullMQ consumers + cron schedules + notification sockets).
@@ -33,7 +37,11 @@ async function bootstrap(): Promise<void> {
     entities: [entitiesPath],
     synchronize: false,
   });
-  const app = await NestFactory.create(BackgroundProcessesModule);
+  const app = await NestFactory.create(BackgroundProcessesModule, {
+    bodyParser: false,
+  });
+  app.use(json({ limit: HTTP_BODY_SIZE_LIMIT }));
+  app.use(urlencoded({ extended: true, limit: HTTP_BODY_SIZE_LIMIT }));
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());
   const corsOrigins = getCors();
   const cors = {
