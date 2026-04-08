@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { Brackets, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { StatusEnum } from '../../common/enums';
 import { InfinityScrollInput } from '../../common/dtos';
@@ -80,11 +80,35 @@ export class CatalogsGettersService extends BasicService<Catalog> {
     const skip = (page - 1) * limit;
     const order = query.order || 'DESC';
     const orderBy = query.orderBy || 'creation_date';
+    const search = query.search?.trim();
+    const subQuery = this.createQueryBuilder('sub')
+      .select('sub.id')
+      .where('sub.status <> :status', { status: StatusEnum.DELETED })
+      .andWhere('sub.idCreationBusiness = :idBusiness', { idBusiness })
+      .orderBy(`sub.${orderBy}`, order);
+    if (search) {
+      const normalizedSearch = `%${search}%`;
+      subQuery.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `translate(lower(coalesce(sub.title, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+            { search: normalizedSearch },
+          )
+            .orWhere(
+              `translate(lower(coalesce(sub.path, '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            )
+            .orWhere(
+              `translate(lower(coalesce(array_to_string(sub.tags, ' '), '')), 'áéíóúäëïöüñ', 'aeiouaeioun') ILIKE translate(lower(:search), 'áéíóúäëïöüñ', 'aeiouaeioun')`,
+              { search: normalizedSearch },
+            );
+        }),
+      );
+    }
+    subQuery.limit(limit).offset(skip);
     return await this.getQueryRelations(this.createQueryBuilder('c'))
-      .where('c.status <> :status', { status: StatusEnum.DELETED })
-      .andWhere('c.idCreationBusiness = :idBusiness', { idBusiness })
-      .limit(limit)
-      .offset(skip)
+      .where(`c.id IN (${subQuery.getQuery()})`)
+      .setParameters(subQuery.getParameters())
       .orderBy(`c.${orderBy}`, order)
       .getMany();
   }

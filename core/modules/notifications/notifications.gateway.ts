@@ -1,78 +1,103 @@
 import { Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import {
-  OnGatewayConnection,
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { UsersGettersService } from '../users/users.getters.service';
 import {
   NOTIFICATION_SOCKET_EVENT,
   NOTIFICATION_SOCKET_NAMESPACE,
+  NOTIFICATION_SOCKET_SUBSCRIBE_MESSAGE,
 } from '../../common/constants/notifications.constants';
 import { Notification } from '../../entities';
+import type { INotificationSocketSubscribePayload } from '../../common/interfaces';
+import { NotificationSocketSubscribeType } from '../../common/enums';
 
 /**
- * Authenticated Socket.IO namespace: user JWT joins `user:{id}`; business JWT joins `business:{id}`.
+ * Socket.IO gateway for pushing {@link Notification} entities to subscribed clients.
  */
 @WebSocketGateway({
   namespace: NOTIFICATION_SOCKET_NAMESPACE,
   transports: ['websocket', 'polling'],
 })
-export class NotificationsGateway implements OnGatewayConnection {
-  private readonly logger = new Logger(NotificationsGateway.name);
+export class NotificationsGateway {
+  private readonly logger: Logger = new Logger(NotificationsGateway.name);
 
   @WebSocketServer()
   private readonly server: Server;
 
   /**
-   * @param {JwtService} jwtService - Verifies the same JWT as HTTP GraphQL
-   * @param {UsersGettersService} usersGettersService - Ensures the subject user is active
+   * Called after the server is initialized.
+   *
+   * @param {Server} _server - The server instance
+   * @returns {void}
    */
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly usersGettersService: UsersGettersService,
-  ) {}
+  afterInit(_server: Server): void {
+    this.logger.log('Notifications gateway initialized');
+  }
 
   /**
-   * Verifies the handshake token and joins the socket to the user or business room.
+   * Joins the socket to `notifications/user/:id` or `notifications/business/:id`.
+   *
    * @param {Socket} client - Connected socket instance
+   * @param {unknown} body - Client message body ({@link INotificationSocketSubscribePayload})
+   * @returns {void}
    */
-  async handleConnection(client: Socket) {
-    const rawToken = client.handshake.query?.token;
-    const token = typeof rawToken === 'string' ? rawToken : undefined;
-    if (!token) {
-      this.logger.warn('Missing token on notification socket connection');
-      client.disconnect(true);
+  @SubscribeMessage(NOTIFICATION_SOCKET_SUBSCRIBE_MESSAGE)
+  handleRoomJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: unknown,
+  ): void {
+    const payload: INotificationSocketSubscribePayload | null =
+      this.parseSubscribePayload(body);
+    if (payload === null) {
+      this.logger.warn(
+        `Invalid notification subscribe payload: ${JSON.stringify(body)}`,
+      );
       return;
     }
-    try {
-      const payload = await this.jwtService.verifyAsync<{
-        sub: number | string;
-        username?: string;
-        isBusiness?: boolean;
-        path?: string;
-      }>(token);
-      if (payload.isBusiness === true) {
-        const businessId = Number(payload.sub);
-        await client.join(this.roomNameForBusiness(businessId));
-        const socketData = client.data as { businessId?: number };
-        socketData.businessId = businessId;
-        return;
-      } else {
-        const userId = Number(payload.sub);
-        const room = this.roomNameForUser(userId);
-        await client.join(room);
-        const data = client.data as { userId?: number };
-        data.userId = userId;
-      }
-    } catch (err) {
-      this.logger.warn(
-        `Notification socket rejected: ${err instanceof Error ? err.message : String(err)}`,
-      );
-      client.disconnect(true);
+    const roomName: string =
+      payload.type === NotificationSocketSubscribeType.Business
+        ? this.roomNameForBusiness(payload.id)
+        : this.roomNameForUser(payload.id);
+    void client.join(roomName);
+    this.logger.log(`Connected to room notification ${roomName}`);
+  }
+
+  /**
+   * Parses and validates the subscribe message body.
+   *
+   * @param {unknown} body - Raw Socket.IO message body
+   * @returns {INotificationSocketSubscribePayload | null} Parsed payload or null if invalid
+   */
+  private parseSubscribePayload(
+    body: unknown,
+  ): INotificationSocketSubscribePayload | null {
+    if (typeof body !== 'object' || body === null) {
+      return null;
     }
+    const record: Record<string, unknown> = body as Record<string, unknown>;
+    const typeRaw: unknown = record.type;
+    const idRaw: unknown = record.id;
+    if (
+      typeRaw !== NotificationSocketSubscribeType.User &&
+      typeRaw !== NotificationSocketSubscribeType.Business
+    ) {
+      return null;
+    }
+    const id: number =
+      typeof idRaw === 'number'
+        ? idRaw
+        : typeof idRaw === 'string'
+          ? Number(idRaw)
+          : NaN;
+    if (!Number.isInteger(id) || id < 1) {
+      return null;
+    }
+    return { type: typeRaw, id };
   }
 
   /**
@@ -116,7 +141,7 @@ export class NotificationsGateway implements OnGatewayConnection {
    * @returns {string} Room name
    */
   roomNameForUser(userId: number): string {
-    return `user:${userId}`;
+    return `notifications/user/${userId}`;
   }
 
   /**
@@ -126,6 +151,6 @@ export class NotificationsGateway implements OnGatewayConnection {
    * @returns {string} Room name
    */
   roomNameForBusiness(businessId: number): string {
-    return `business:${businessId}`;
+    return `notifications/business/${businessId}`;
   }
 }
