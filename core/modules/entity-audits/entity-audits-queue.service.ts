@@ -5,7 +5,6 @@ import {
   EntityAuditsConsumerEnum,
   QueueNamesEnum,
 } from '../../common/enums/consumers';
-import { IUserOrBusinessReq } from '../../common/interfaces';
 import { RecordEntityAuditJobData } from '../../consumers/entity-audits.consumer';
 
 /**
