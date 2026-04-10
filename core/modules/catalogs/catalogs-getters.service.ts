@@ -273,9 +273,10 @@ export class CatalogsGettersService extends BasicService<Catalog> {
       .leftJoinAndSelect('c.business', 'business')
       .leftJoinAndSelect('business.image', 'businessImage')
       .leftJoinAndSelect(
-        'c.discounts', 
-        'discounts', 
-        'discounts.status = :discountStatus', { discountStatus: StatusEnum.ACTIVE }
+        'c.discounts',
+        'discounts',
+        'discounts.status = :discountStatus',
+        { discountStatus: StatusEnum.ACTIVE },
       )
       .leftJoinAndSelect(
         'c.products',
