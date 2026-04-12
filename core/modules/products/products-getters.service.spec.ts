@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ProductsGettersService } from './products-getters.service';
+import type { Catalog } from '../../entities';
 import { Product, ProductRating } from '../../entities';
 
 /**
@@ -91,6 +92,21 @@ describe('ProductsGettersService', () => {
       qb.andWhere.mockReturnValue(qb);
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
       await expect(service.findOneWithRelations(3)).resolves.toBe(row);
+    });
+  });
+
+  describe('findCatalogByProductId', () => {
+    it('returns catalog from loaded product', async () => {
+      const catalog = { id: 9, path: '/store/a' } as Catalog;
+      const product = { id: 4, catalog } as Product;
+      productRepositoryMock.findOneOrFail.mockResolvedValue(product);
+      await expect(service.findCatalogByProductId(4)).resolves.toBe(catalog);
+    });
+    it('throws NotFoundException when product is missing', async () => {
+      productRepositoryMock.findOneOrFail.mockRejectedValue(new Error('nf'));
+      await expect(service.findCatalogByProductId(0)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

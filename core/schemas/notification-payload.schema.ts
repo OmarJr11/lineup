@@ -26,4 +26,10 @@ export class NotificationPayloadSchema {
 
   @Field(() => Int, { nullable: true })
   id?: number;
+
+  @Field({ nullable: true })
+  catalogPath?: string;
+
+  @Field({ nullable: true })
+  productTitle?: string;
 }

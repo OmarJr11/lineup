@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -50,6 +49,7 @@ describe('ProductRatingsService', () => {
   };
   const productsGettersServiceMock = {
     findOne: jest.fn(),
+    findCatalogByProductId: jest.fn(),
   };
   const reviewsQueueMock = {
     add: jest.fn().mockResolvedValue(undefined),
@@ -99,6 +99,7 @@ describe('ProductRatingsService', () => {
     it('creates rating, notifies business, syncs average, returns loaded rating', async () => {
       const product = {
         id: 100,
+        title: 'Cool item',
         idCreationBusiness: 500,
       } as Product;
       const created = { id: 1, idProduct: 100 } as ProductRating;
@@ -108,6 +109,9 @@ describe('ProductRatingsService', () => {
         creationUser: {},
       } as ProductRating;
       productsGettersServiceMock.findOne.mockResolvedValue(product);
+      productsGettersServiceMock.findCatalogByProductId.mockResolvedValue({
+        path: '/summer-sale',
+      });
       productRatingsGettersServiceMock.findOneByProductAndUser.mockResolvedValue(
         null,
       );
@@ -121,7 +125,11 @@ describe('ProductRatingsService', () => {
         expect.objectContaining({
           scenario: NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW,
           type: NotificationTypeEnum.INFO,
-          data: { id: 100 },
+          data: {
+            id: 100,
+            productTitle: 'Cool item',
+            catalogPath: '/summer-sale',
+          },
         }),
       );
       expect(reviewsQueueMock.add).toHaveBeenCalledWith(

@@ -21,6 +21,8 @@ export interface CreateNotificationJobData {
   type: NotificationTypeEnum;
   data?: {
     id?: number;
+    catalogPath?: string;
+    productTitle?: string;
     [key: string]: unknown;
   };
 }
@@ -122,6 +124,8 @@ export class NotificationsConsumer extends WorkerHost {
         entity: entityName,
         scenario,
         id: data?.id,
+        catalogPath: data?.catalogPath,
+        productTitle: data?.productTitle,
       },
     };
     await this.notificationsSettersService.createAndDispatch(

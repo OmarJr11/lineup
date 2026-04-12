@@ -30,7 +30,7 @@ export class CurrenciesGettersService extends BasicService<Currency> {
         where: { id, status: Not(StatusEnum.DELETED) },
       });
     } catch (error) {
-      LogError(this.logger, error, this.findById.name);
+      LogError(this.logger, error as Error, this.findById.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -46,7 +46,7 @@ export class CurrenciesGettersService extends BasicService<Currency> {
         where: { code, status: Not(StatusEnum.DELETED) },
       });
     } catch (error) {
-      LogError(this.logger, error, this.findByCode.name);
+      LogError(this.logger, error as Error, this.findByCode.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -61,7 +61,7 @@ export class CurrenciesGettersService extends BasicService<Currency> {
         where: { status: Not(StatusEnum.DELETED) },
       });
     } catch (error) {
-      LogError(this.logger, error, this.findAll.name);
+      LogError(this.logger, error as Error, this.findAll.name);
       throw new NotFoundException(this.rList.error);
     }
   }

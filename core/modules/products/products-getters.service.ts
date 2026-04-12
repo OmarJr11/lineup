@@ -7,7 +7,7 @@ import { productLowStockThresholds } from '../../common/constants';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
-import { Product, ProductRating } from '../../entities';
+import { Catalog, Product, ProductRating } from '../../entities';
 import {
   IGetTopByVisitsForStatisticsInput,
   IStatItemWithLikes,
@@ -775,6 +775,24 @@ export class ProductsGettersService extends BasicService<Product> {
       title: product.title,
       idCreationBusiness: product.idCreationBusiness,
     };
+  }
+
+  /**
+   * Find a catalog by product ID.
+   * @param {number} id - The ID of the product.
+   * @returns {Promise<Catalog>} The found catalog.
+   */
+  async findCatalogByProductId(id: number): Promise<Catalog> {
+    try {
+      const product = await this.findOneWithOptionsOrFail({
+        where: { id, status: Not(StatusEnum.DELETED) },
+        relations: ['catalog'],
+      });
+      return product.catalog;
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findCatalogByProductId.name);
+      throw new NotFoundException(this.rList.notFound);
+    }
   }
 
   /**

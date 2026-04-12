@@ -1,6 +1,6 @@
-import { Job } from 'bullmq';
+import type { Job } from 'bullmq';
 import { NotificationsConsumer } from './notifications.consumer';
-import { NotificationsSettersService } from '../modules/notifications/notifications-setters.service';
+import type { NotificationsSettersService } from '../modules/notifications/notifications-setters.service';
 import { NotificationsConsumerEnum } from '../common/enums/consumers';
 import {
   NotificationContentScenarioEnum,
@@ -71,6 +71,39 @@ describe('NotificationsConsumer', () => {
         payload: expect.objectContaining({
           link: 'businesses/discounts/99',
           id: 99,
+          catalogPath: undefined,
+          productTitle: undefined,
+        }),
+      }),
+      userOrBusinessReq,
+    );
+  });
+
+  it('createForBusiness forwards catalogPath and productTitle into payload', async () => {
+    const userOrBusinessReq = { businessId: 3, path: '' };
+    const job = {
+      name: NotificationsConsumerEnum.CreateForBusiness,
+      data: {
+        entityName: 'products',
+        userOrBusinessReq,
+        scenario: NotificationContentScenarioEnum.PRODUCT_LOW_STOCK,
+        type: NotificationTypeEnum.WARNING,
+        data: {
+          id: 12,
+          catalogPath: '/c/cat',
+          productTitle: 'Low stock item',
+        },
+      },
+    } as Job;
+    await consumer.process(job);
+    expect(
+      notificationsSettersServiceMock.createAndDispatch,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          id: 12,
+          catalogPath: '/c/cat',
+          productTitle: 'Low stock item',
         }),
       }),
       userOrBusinessReq,

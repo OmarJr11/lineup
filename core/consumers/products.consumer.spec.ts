@@ -16,6 +16,7 @@ describe('ProductsConsumer', () => {
   let consumer: ProductsConsumer;
   const productsGettersServiceMock = {
     findOneActiveSummaryForLowStockJob: jest.fn(),
+    findCatalogByProductId: jest.fn(),
     findOne: jest.fn(),
   };
   const productsSettersServiceMock = {
@@ -56,6 +57,9 @@ describe('ProductsConsumer', () => {
     productsGettersServiceMock.findOneActiveSummaryForLowStockJob.mockResolvedValue(
       summary,
     );
+    productsGettersServiceMock.findCatalogByProductId.mockResolvedValue({
+      path: '/my-catalog',
+    });
     productsGettersServiceMock.findOne.mockResolvedValue(fullProduct);
     const job = {
       id: '2',
@@ -68,7 +72,11 @@ describe('ProductsConsumer', () => {
       expect.objectContaining({
         scenario: NotificationContentScenarioEnum.PRODUCT_LOW_STOCK,
         type: NotificationTypeEnum.WARNING,
-        data: expect.objectContaining({ id: 10 }),
+        data: expect.objectContaining({
+          id: 10,
+          catalogPath: '/my-catalog',
+          productTitle: 'Item',
+        }),
       }),
     );
     expect(productsSettersServiceMock.setStockNotified).toHaveBeenCalledWith(

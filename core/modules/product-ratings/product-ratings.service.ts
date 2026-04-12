@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { Transactional } from 'typeorm-transactional-cls-hooked';
 import { BasicService } from '../../common/services';
 import { IUserReq } from '../../common/interfaces';
-import { ProductRating } from '../../entities';
+import { Product, ProductRating } from '../../entities';
 import { ProductRatingsGettersService } from './product-ratings-getters.service';
 import { ProductRatingsSettersService } from './product-ratings-setters.service';
 import { ProductsGettersService } from '../products/products-getters.service';
@@ -70,20 +70,10 @@ export class ProductRatingsService extends BasicService<ProductRating> {
     const rating = existingRating
       ? await this.updateExistingRating(existingRating, input, userReq)
       : await this.createNewRating(input, userReq);
-    if (!existingRating && product.idCreationBusiness) {
-      await this.enqueueBusinessNotificationJob({
-        entityName: 'products',
-        scenario: NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW,
-        type: NotificationTypeEnum.INFO,
-        userOrBusinessReq: {
-          businessId: product.idCreationBusiness,
-          path: '',
-        },
-        data: {
-          id: product.id,
-        },
-      });
-    }
+    await this.enqueueNewProductReviewBusinessNotificationIfNeeded(
+      product,
+      existingRating,
+    );
     await this.syncProductRatingAverage(input.idProduct, userReq);
     return await this.productRatingsGettersService.findOne(rating.id);
   }
@@ -153,5 +143,39 @@ export class ProductRatingsService extends BasicService<ProductRating> {
       NotificationsConsumerEnum.CreateForBusiness,
       payload,
     );
+  }
+
+  /**
+   * When the user submits their first review on a product, notifies the
+   * business that created the product (if any) via the notifications queue.
+   *
+   * @param {Product} product - The product that was rated.
+   * @param {ProductRating | null} existingRating - Prior rating from this user, if any.
+   * @returns {Promise<void>}
+   */
+  private async enqueueNewProductReviewBusinessNotificationIfNeeded(
+    product: Product,
+    existingRating: ProductRating | null,
+  ): Promise<void> {
+    if (existingRating || !product.idCreationBusiness) {
+      return;
+    }
+    const catalog = await this.productsGettersService.findCatalogByProductId(
+      product.id,
+    );
+    await this.enqueueBusinessNotificationJob({
+      entityName: 'products',
+      scenario: NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW,
+      type: NotificationTypeEnum.INFO,
+      userOrBusinessReq: {
+        businessId: product.idCreationBusiness,
+        path: '',
+      },
+      data: {
+        id: product.id,
+        productTitle: product.title,
+        catalogPath: catalog.path,
+      },
+    });
   }
 }

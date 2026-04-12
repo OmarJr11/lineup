@@ -18,4 +18,10 @@ export interface INotificationPayload {
 
   /** ID of the entity to open when the user taps the notification */
   id?: number;
+
+  /** Title of the catalog to open when the user taps the notification */
+  catalogPath?: string;
+
+  /** Title of the product to open when the user taps the notification */
+  productTitle?: string;
 }

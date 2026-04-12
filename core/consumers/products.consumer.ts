@@ -86,6 +86,10 @@ export class ProductsConsumer extends WorkerHost {
         businessId: Number(product.idCreationBusiness),
         path: '',
       };
+
+      const catalog = await this.productsGettersService.findCatalogByProductId(
+        product.id,
+      );
       const payload: CreateNotificationJobData = {
         entityName: 'products',
         scenario: NotificationContentScenarioEnum.PRODUCT_LOW_STOCK,
@@ -93,6 +97,7 @@ export class ProductsConsumer extends WorkerHost {
         userOrBusinessReq: { ...businessReq },
         data: {
           id: product.id,
+          catalogPath: catalog.path,
           productTitle: product.title,
         },
       };
