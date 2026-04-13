@@ -26,7 +26,7 @@ RUN npm run build:prod:businesses
 RUN npm run build:prod:background-processes
 
 # Expose the ports for both apps
-EXPOSE 3000 3001 3002 3003
+EXPOSE 3000
 
 # Comando por defecto: levantar ambas apps en producción
 CMD ["npm", "run", "start:all:prod"]
