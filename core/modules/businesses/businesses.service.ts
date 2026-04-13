@@ -15,7 +15,7 @@ import { Business } from '../../entities';
 import { BasicService } from '../../common/services';
 import { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional-cls-hooked/dist/Transactional';
-import { IBusinessReq } from '../../common/interfaces';
+import { IBusinessReq, IUserOrBusinessReq } from '../../common/interfaces';
 import { BusinessesGettersService } from './businesses-getters.service';
 import { BusinessesSettersService } from './businesses-setters.service';
 import { InfinityScrollInput } from '../../common/dtos';
@@ -136,13 +136,13 @@ export class BusinessesService extends BasicService<Business> {
   /**
    * Update a business
    * @param {UpdateBusinessInput} data - The data to update the business
-   * @param {IBusinessReq} business - The business making the request
+   * @param {IUserOrBusinessReq} businessReq - Business session or admin user performing the update.
    * @returns {Promise<Business>} - The updated business entity
    */
   @Transactional()
   async update(
     data: UpdateBusinessInput,
-    businessReq: IBusinessReq,
+    businessReq: IUserOrBusinessReq,
   ): Promise<Business> {
     const business = await this.businessesGettersService.findOne(data.id);
     if (data.path && data.path !== business.path) {
@@ -243,7 +243,7 @@ export class BusinessesService extends BasicService<Business> {
    * @returns {Promise<boolean>}
    */
   @Transactional()
-  async remove(id: number, businessReq: IBusinessReq): Promise<boolean> {
+  async remove(id: number, businessReq: IUserOrBusinessReq): Promise<boolean> {
     const business = await this.businessesGettersService.findOne(id);
     await this.businessSettersService.remove(business, businessReq);
     return true;
