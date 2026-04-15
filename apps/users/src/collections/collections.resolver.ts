@@ -31,9 +31,8 @@ export class CollectionsResolver {
   async getProductCollections(
     @UserDec() user?: IUserReq | null,
   ): Promise<ProductCollectionSchema[]> {
-    const idUser = user?.userId ?? null;
     const collections =
-      await this.productCollectionsService.getCollections(idUser);
+      await this.productCollectionsService.getCollections(user);
     return collections.map((c) => ({
       id: c.id,
       title: c.title,

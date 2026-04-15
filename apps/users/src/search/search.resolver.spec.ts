@@ -1,9 +1,10 @@
 import { SearchResolver } from './search.resolver';
-import { SearchService } from '../../../../core/modules/search/search.service';
-import { UserSearchesService } from '../../../../core/modules/user-searches/user-searches.service';
 import { SearchTargetEnum } from '../../../../core/common/enums';
 import type { InfinityScrollInput } from '../../../../core/common/dtos';
 import type { IUserReq } from '../../../../core/common/interfaces';
+import type { SearchService } from '../../../../core/modules/search/search.service';
+import type { UserSearchesService } from '../../../../core/modules/user-searches/user-searches.service';
+import type { FeaturedCollectionsSchema } from '../../../../core/schemas/featured-collections.schema';
 
 /**
  * Unit tests for {@link SearchResolver}.
@@ -67,51 +68,76 @@ describe('SearchResolver', () => {
     });
 
     it('does not record search when term is empty', async () => {
-      const pagination = { page: 1, limit: 10, search: '   ' } as InfinityScrollInput;
+      const pagination = {
+        page: 1,
+        limit: 10,
+        search: '   ',
+      } as InfinityScrollInput;
       searchServiceMock.search.mockResolvedValue({
         items: [],
         total: 0,
         page: 1,
         limit: 10,
       });
-      await resolver.search(
-        pagination,
-        SearchTargetEnum.ALL,
-        undefined,
-        { userId: 1 } as IUserReq,
-      );
+      await resolver.search(pagination, SearchTargetEnum.ALL, undefined, {
+        userId: 1,
+      } as IUserReq);
       expect(userSearchesServiceMock.recordSearch).not.toHaveBeenCalled();
     });
   });
 
-  describe('featuredBusinesses', () => {
-    it('delegates to search service and maps items', async () => {
+  describe('getFeaturedResults', () => {
+    it('returns all featured collections in one response', async () => {
       const pagination = { page: 1, limit: 5 } as InfinityScrollInput;
       const b = { id: 2 };
+      const c = { id: 3 };
+      const p = { id: 4 };
+      const recent = { id: 5 };
       searchServiceMock.getFeaturedBusinesses.mockResolvedValue({
         items: [b],
         total: 1,
         page: 1,
         limit: 5,
       });
-      const out = await resolver.featuredBusinesses(pagination);
-      expect(out.items).toEqual([b]);
-      expect(out.total).toBe(1);
-    });
-  });
-
-  describe('recentlyAddedProducts', () => {
-    it('maps products with price field from toProductSchema', async () => {
-      const pagination = { page: 1, limit: 10 } as InfinityScrollInput;
-      const product = { id: 9 };
-      searchServiceMock.getRecentlyAddedProducts.mockResolvedValue({
-        items: [product],
+      searchServiceMock.getFeaturedCatalogs.mockResolvedValue({
+        items: [c],
         total: 1,
         page: 1,
-        limit: 10,
+        limit: 5,
       });
-      const out = await resolver.recentlyAddedProducts(pagination);
-      expect(out.items).toEqual([{ ...product, price: null }]);
+      searchServiceMock.getFeaturedProducts.mockResolvedValue({
+        items: [p],
+        total: 1,
+        page: 1,
+        limit: 5,
+      });
+      searchServiceMock.getRecentlyAddedProducts.mockResolvedValue({
+        items: [recent],
+        total: 1,
+        page: 1,
+        limit: 5,
+      });
+      const out: FeaturedCollectionsSchema =
+        await resolver.getFeaturedResults(pagination);
+      expect(searchServiceMock.getFeaturedBusinesses).toHaveBeenCalledWith(
+        pagination,
+      );
+      expect(searchServiceMock.getFeaturedCatalogs).toHaveBeenCalledWith(
+        pagination,
+      );
+      expect(searchServiceMock.getFeaturedProducts).toHaveBeenCalledWith(
+        pagination,
+      );
+      expect(searchServiceMock.getRecentlyAddedProducts).toHaveBeenCalledWith(
+        pagination,
+      );
+      expect(out.featuredBusinesses).toEqual([b]);
+      expect(out.featuredCatalogs).toEqual([c]);
+      expect(out.featuredProducts).toEqual([{ ...p, price: null }]);
+      expect(out.recentlyAddedProducts).toEqual([{ ...recent, price: null }]);
+      expect(out.total).toBe(4);
+      expect(out.page).toBe(1);
+      expect(out.limit).toBe(5);
     });
   });
 });

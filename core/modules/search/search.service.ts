@@ -4,7 +4,7 @@ import {
   InfinityScrollInput,
   ProductSearchFiltersInput,
 } from '../../common/dtos';
-import { IPaginatedResult } from '../../common/interfaces';
+import { IPaginatedResult, IUserReq } from '../../common/interfaces';
 import { SearchTargetEnum } from '../../common/enums';
 import { Business, Catalog, Product } from '../../entities';
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
@@ -224,10 +224,12 @@ export class SearchService {
    * Results are ordered descending by score.
    *
    * @param pagination - InfinityScrollInput (page, limit).
-   * @returns Object with items (Product[]), total count, page, limit.
+   * @param {IUserReq} user - The authenticated user.
+   * @returns {Promise<IPaginatedResult<Product>>} Object with items (Product[]), total count, page, limit.
    */
   async getFeaturedProducts(
     pagination: InfinityScrollInput,
+    user?: IUserReq | null,
   ): Promise<IPaginatedResult<Product>> {
     const page = Number(pagination.page) || 1;
     const limit = Math.min(Number(pagination.limit) || 10, 50);
@@ -256,7 +258,7 @@ export class SearchService {
       const ids = Array.isArray(rows) ? rows.map((r) => r.id) : [];
       const products =
         ids.length > 0
-          ? await this.fetchProductsByIds(ids)
+          ? await this.fetchProductsByIds(ids, user)
           : new Map<number, Product>();
       const items = ids
         .map((id) => products.get(id))
@@ -280,6 +282,7 @@ export class SearchService {
    */
   async getRecentlyAddedProducts(
     pagination: InfinityScrollInput,
+    user?: IUserReq | null,
   ): Promise<IPaginatedResult<Product>> {
     const page = Number(pagination.page) || 1;
     const limit = Math.min(Number(pagination.limit) || 10, 50);
@@ -797,13 +800,17 @@ export class SearchService {
    * Skips IDs that throw (e.g. not found or deleted).
    *
    * @param {number[]} ids - Product IDs to fetch.
+   * @param {IUserReq} user - The authenticated user.
    * @returns {Promise<Map<number, Product>>} Map of id -> Product.
    */
   private async fetchProductsByIds(
     ids: number[],
+    user?: IUserReq | null,
   ): Promise<Map<number, Product>> {
-    const products =
-      await this.productsGettersService.findManyWithRelations(ids);
+    const products = await this.productsGettersService.findManyWithRelations(
+      ids,
+      user,
+    );
     return new Map(products.map((p) => [p.id, p]));
   }
 }

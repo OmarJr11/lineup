@@ -32,7 +32,7 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
         relations: ['product', 'creationUser'],
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOne.name);
+      LogError(this.logger, error as Error, this.findOne.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -60,7 +60,7 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
         relations: ['product', 'creationUser'],
       });
     } catch (error) {
-      LogError(this.logger, error, this.findOneByProductAndUser.name);
+      LogError(this.logger, error as Error, this.findOneByProductAndUser.name);
       return null;
     }
   }
@@ -77,7 +77,7 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
         relations: ['creationUser'],
       });
     } catch (error) {
-      LogError(this.logger, error, this.findAllByProduct.name);
+      LogError(this.logger, error as Error, this.findAllByProduct.name);
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -144,7 +144,11 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
         .getMany();
       return reactions.flatMap((r) => (r.product ? [r.product] : []));
     } catch (error) {
-      LogError(this.logger, error, this.findAllLikedByUserPaginated.name);
+      LogError(
+        this.logger,
+        error as Error,
+        this.findAllLikedByUserPaginated.name,
+      );
       throw new NotFoundException(this.rList.notFound);
     }
   }
@@ -198,7 +202,7 @@ export class ProductReactionsGettersService extends BasicService<ProductReaction
         .andWhere('pr.status <> :status', { status: StatusEnum.DELETED })
         .getCount();
     } catch (error) {
-      LogError(this.logger, error, this.countByProductAndType.name);
+      LogError(this.logger, error as Error, this.countByProductAndType.name);
       return 0;
     }
   }

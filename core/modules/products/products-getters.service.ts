@@ -15,6 +15,7 @@ import {
   IStatItemWithVisits,
 } from '../business-statistics/interfaces';
 import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
+import { IUserReq } from '../../common/interfaces';
 
 @Injectable()
 export class ProductsGettersService extends BasicService<Product> {
@@ -95,12 +96,19 @@ export class ProductsGettersService extends BasicService<Product> {
    * Find products by IDs with relations. Returns only found ones; ignores missing/deleted.
    * Uses repository.find when query builder returns empty (avoids parameter/join issues).
    * @param {number[]} ids - Product IDs to fetch.
+   * @param {IUserReq} user - The authenticated user.
    * @returns {Promise<Product[]>} Array of found products.
    */
-  async findManyWithRelations(ids: number[]): Promise<Product[]> {
+  async findManyWithRelations(
+    ids: number[],
+    user?: IUserReq | null,
+  ): Promise<Product[]> {
     if (!ids?.length) return [];
     const uniqueIds = [...new Set(ids)];
-    let products = await this.getQueryRelations(this.createQueryBuilder('p'))
+    let products = await this.getQueryRelations(
+      this.createQueryBuilder('p'),
+      user,
+    )
       .where('p.id IN (:...ids)', { ids: uniqueIds })
       .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
       .getMany();
@@ -798,12 +806,14 @@ export class ProductsGettersService extends BasicService<Product> {
   /**
    * Apply common relations to a product query builder
    * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
+   * @param {IUserReq} user - The authenticated user.
    * @returns {SelectQueryBuilder<Product>} The query builder with relations applied
    */
   private getQueryRelations(
     queryBuilder: SelectQueryBuilder<Product>,
+    user?: IUserReq | null,
   ): SelectQueryBuilder<Product> {
-    return queryBuilder
+    queryBuilder = queryBuilder
       .leftJoinAndSelect(
         'p.productFiles',
         'productFiles',
@@ -830,13 +840,25 @@ export class ProductsGettersService extends BasicService<Product> {
       .leftJoinAndSelect('p.skus', 'skus', 'skus.status <> :statusSkus', {
         statusSkus: StatusEnum.DELETED,
       })
-      .leftJoinAndSelect('skus.currency', 'currency')
-      .leftJoinAndSelect(
+      .leftJoinAndSelect('skus.currency', 'currency');
+
+    if (user) {
+      queryBuilder = queryBuilder.leftJoinAndSelect(
+        'p.reactions',
+        'reactions',
+        'reactions.status <> :statusReaction AND reactions.idCreationUser = :userId',
+        { statusReaction: StatusEnum.DELETED, userId: user.userId },
+      );
+    } else {
+      queryBuilder = queryBuilder.leftJoinAndSelect(
         'p.reactions',
         'reactions',
         'reactions.status <> :statusReaction',
         { statusReaction: StatusEnum.DELETED },
-      )
+      );
+    }
+
+    return queryBuilder
       .leftJoinAndSelect('p.discountProduct', 'discountProduct')
       .leftJoinAndSelect(
         'discountProduct.discount',
