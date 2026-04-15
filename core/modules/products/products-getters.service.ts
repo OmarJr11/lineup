@@ -155,11 +155,13 @@ export class ProductsGettersService extends BasicService<Product> {
    * Get all Products by Catalog
    * @param {number} idCatalog - The ID of the catalog
    * @param {string} search - search query
+   * @param {IUserReq} user - The user request
    * @returns {Promise<Product[]>}
    */
   async getAllByCatalog(
     idCatalog: number,
     search?: string,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
     const subQuery = this.createQueryBuilder('sub')
       .select('sub.id')
@@ -188,7 +190,10 @@ export class ProductsGettersService extends BasicService<Product> {
       );
     }
 
-    const queryBuilder = this.getQueryRelations(this.createQueryBuilder('p'))
+    const queryBuilder = this.getQueryRelations(
+      this.createQueryBuilder('p'),
+      user,
+    )
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters());
     if (!trimmedSearch) {
@@ -206,6 +211,7 @@ export class ProductsGettersService extends BasicService<Product> {
   async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
     const page = query.page || 1;
     const limit = query.limit || 10;
@@ -240,7 +246,7 @@ export class ProductsGettersService extends BasicService<Product> {
       );
     }
     subQuery.orderBy(`sub.${orderBy}`, order).limit(limit).offset(skip);
-    return await this.getQueryRelations(this.createQueryBuilder('p'))
+    return await this.getQueryRelations(this.createQueryBuilder('p'), user)
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())
       .orderBy(`p.${orderBy}`, order)

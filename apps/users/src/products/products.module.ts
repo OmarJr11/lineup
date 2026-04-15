@@ -8,6 +8,8 @@ import { TokensModule } from '../../../../core/modules/token/token.module';
 import { AuthModule } from '../../../../core/modules/auth/auth.module';
 import { ProductsModule as ProductsModuleCore } from '../../../../core/modules/products/products.module';
 import { TagsModule } from '../../../../core/modules/tags/tags.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   providers: [ProductsResolver, ProductRatingsResolver],
@@ -20,6 +22,12 @@ import { TagsModule } from '../../../../core/modules/tags/tags.module';
     AuthModule,
     ProductsModuleCore,
     TagsModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+    }),
   ],
 })
 export class ProductsModule {}

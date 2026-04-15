@@ -8,7 +8,11 @@ import {
   TagSchema,
 } from '../../../../core/schemas';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard, TokenGuard } from '../../../../core/common/guards';
+import {
+  JwtAuthGuard,
+  OptionalJwtAuthGuard,
+  TokenGuard,
+} from '../../../../core/common/guards';
 import { UserDec } from '../../../../core/common/decorators';
 import { IUserReq } from '../../../../core/common/interfaces';
 import { ReactionTypeEnum, StatusEnum } from '../../../../core/common/enums';
@@ -58,15 +62,20 @@ export class ProductsResolver {
    * Get all products by catalog.
    * @param {number} idCatalog - The ID of the catalog.
    * @param {string} search - The search query.
+   * @param {IUserReq} user - The user request
    */
+  @UseGuards(OptionalJwtAuthGuard)
   @Query(() => [ProductSchema], { name: 'getAllByCatalog' })
   async getAllByCatalog(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('search', { type: () => String, nullable: true }) search?: string,
+    @UserDec() user?: IUserReq | null,
   ) {
+    user = user?.userId ? user : null;
     const items = await this.productsService.findAllByCatalog(
       idCatalog,
       search,
+      user,
     );
     return items.map((product) => toProductSchema(product));
   }
@@ -75,15 +84,23 @@ export class ProductsResolver {
    * Get all products by catalog with pagination.
    * @param {number} idCatalog - The ID of the catalog.
    * @param {InfinityScrollInput} pagination - The pagination input.
+   * @param {IUserReq} user - The user request
    */
+  @UseGuards(OptionalJwtAuthGuard)
   @Query(() => PaginatedProducts, { name: 'getAllByCatalogPaginated' })
   async getAllByCatalogPaginated(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
+    @UserDec() user?: IUserReq | null,
   ) {
+    user = user?.userId ? user : null;
     const items = (
-      await this.productsService.getAllByCatalogPaginated(idCatalog, pagination)
+      await this.productsService.getAllByCatalogPaginated(
+        idCatalog,
+        pagination,
+        user,
+      )
     ).map((product) => toProductSchema(product));
     return {
       items,

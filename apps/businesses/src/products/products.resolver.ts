@@ -7,6 +7,7 @@ import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { PaginatedProducts, ProductSchema } from '../../../../core/schemas';
 import {
   JwtAuthGuard,
+  OptionalJwtAuthGuard,
   PermissionsGuard,
   TokenGuard,
 } from '../../../../core/common/guards';
@@ -14,10 +15,11 @@ import {
   Permissions,
   BusinessDec,
   Response,
+  UserDec,
 } from '../../../../core/common/decorators';
 import { productsResponses } from '../../../../core/common/responses';
 import { ProductsPermissionsEnum } from '../../../../core/common/enums';
-import { IBusinessReq } from '../../../../core/common/interfaces';
+import { IBusinessReq, IUserReq } from '../../../../core/common/interfaces';
 import { toProductSchema } from '../../../../core/common/functions';
 import { InfinityScrollInput } from '../../../../core/common/dtos';
 
@@ -84,15 +86,20 @@ export class ProductsResolver {
    * Get all products by catalog.
    * @param {number} idCatalog - The ID of the catalog.
    * @param {string} search - The search query.
+   * @param {IUserReq} user - The user request
    */
+  @UseGuards(OptionalJwtAuthGuard)
   @Query(() => [ProductSchema], { name: 'getAllByCatalog' })
   async getAllByCatalog(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('search', { type: () => String, nullable: true }) search?: string,
+    @UserDec() user?: IUserReq | null,
   ) {
+    user = user?.userId ? user : null;
     const items = await this.productsService.findAllByCatalog(
       idCatalog,
       search,
+      user,
     );
     return items.map((product) => toProductSchema(product));
   }
@@ -101,15 +108,23 @@ export class ProductsResolver {
    * Get all products by catalog with pagination.
    * @param {number} idCatalog - The ID of the catalog.
    * @param {InfinityScrollInput} pagination - The pagination input.
+   * @param {IUserReq} user - The user request
    */
+  @UseGuards(OptionalJwtAuthGuard)
   @Query(() => PaginatedProducts, { name: 'getAllByCatalogPaginated' })
   async getAllByCatalogPaginated(
     @Args('idCatalog', { type: () => Int }) idCatalog: number,
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
+    @UserDec() user?: IUserReq | null,
   ) {
+    user = user?.userId ? user : null;
     const items = (
-      await this.productsService.getAllByCatalogPaginated(idCatalog, pagination)
+      await this.productsService.getAllByCatalogPaginated(
+        idCatalog,
+        pagination,
+        user,
+      )
     ).map((product) => toProductSchema(product));
     return {
       items,

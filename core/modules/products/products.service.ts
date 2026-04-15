@@ -32,6 +32,7 @@ import { FilesGettersService } from '../files/files-getters.service';
 import { VariationOptions } from '../../common/types';
 import { CatalogsSettersService } from '../catalogs/catalogs-setters.service';
 import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
+import { IUserReq } from '../../common/interfaces';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductsService extends BasicService<Product> {
@@ -120,28 +121,37 @@ export class ProductsService extends BasicService<Product> {
    * Get all Products by Catalog
    * @param {number} idCatalog - The ID of the catalog
    * @param {string} search - search query
+   * @param {IUserReq} user - The user request
    * @returns {Promise<Product[]>}
    */
   async findAllByCatalog(
     idCatalog: number,
     search?: string,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
-    return await this.productsGettersService.getAllByCatalog(idCatalog, search);
+    return await this.productsGettersService.getAllByCatalog(
+      idCatalog,
+      search,
+      user,
+    );
   }
 
   /**
    * Get all Products by Catalog with pagination
    * @param {number} idCatalog - The ID of the catalog
    * @param {InfinityScrollInput} query - query parameters for pagination
+   * @param {IUserReq} user - The user request
    * @returns {Promise<Product[]>}
    */
   async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
     return await this.productsGettersService.getAllByCatalogPaginated(
       idCatalog,
       query,
+      user,
     );
   }
 
