@@ -13,21 +13,21 @@ RUN apt-get update \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-COPY package*.json ./
-RUN npm install
+COPY package.json pnpm-lock.yaml* ./
+RUN corepack enable && pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the NestJS app
-RUN npm run build:prod:admin
-RUN npm run build:prod:users
-RUN npm run build:prod:businesses
-RUN npm run build:prod:background-processes
+RUN pnpm run build:prod:admin
+RUN pnpm run build:prod:users
+RUN pnpm run build:prod:businesses
+RUN pnpm run build:prod:background-processes
 
 # Expose the ports for both apps
 EXPOSE 3000 3001 3002 3003
 
 # Comando por defecto: levantar ambas apps en producción
-CMD ["npm", "run", "start:all:prod"]
+CMD ["pnpm", "run", "start:all:prod"]
 
