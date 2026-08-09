@@ -234,8 +234,10 @@ export class FilesImportsService {
    * Validates if a file can be used for product import.
    * @param {IFileInterface} file Uploaded file
    * @returns {void}
+   * @throws {BadRequestException} When the file payload is incomplete
+   * @throws {NotAcceptableException} When mime type or extension is not allowed
    */
-  private validateDocumentFile(file: IFileInterface): void {
+  validateDocumentFile(file: IFileInterface): void {
     if (!file || !file.mimetype || !file.originalname || !file.buffer) {
       LogError(
         this.logger,

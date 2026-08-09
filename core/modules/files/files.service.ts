@@ -35,6 +35,7 @@ import {
   FilesConsumerEnum,
   QueueNamesEnum,
 } from '../../common/enums/consumers';
+import { FilesImportsService } from './files-imports.service';
 
 /** Minimum confidence score (0-1) for Vision API labels to be included */
 const VISION_LABEL_MIN_CONFIDENCE = 0.7;
@@ -63,6 +64,7 @@ export class FilesService extends BasicService<File> {
     private readonly configService: ConfigService,
     @InjectQueue(QueueNamesEnum.files)
     private readonly filesQueue: Queue<unknown, void, FilesConsumerEnum>,
+    private readonly filesImportsService: FilesImportsService,
   ) {
     super(filesRepository, userRequest);
     this.bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
@@ -151,14 +153,16 @@ export class FilesService extends BasicService<File> {
   }
 
   /**
-   * Extracts products from a document using Gemini.
+   * Validates and enqueues a document for asynchronous product import.
    * @param {IFileInterface} file The uploaded document file
    * @param {IBusinessReq} businessReq The business request object
+   * @returns {Promise<void>}
    */
   async uploadDocumentFile(
     file: IFileInterface,
     businessReq: IBusinessReq,
   ): Promise<void> {
+    this.filesImportsService.validateDocumentFile(file);
     const queueJobName: FilesConsumerEnum =
       FilesConsumerEnum.UploadDocumentFile;
     await this.filesQueue.add(queueJobName, {

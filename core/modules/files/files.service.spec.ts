@@ -1,10 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { NotAcceptableException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { getQueueToken } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from './files.service';
+import { FilesImportsService } from './files-imports.service';
 import { File } from '../../entities';
 import {
   FilesConsumerEnum,
@@ -33,6 +35,9 @@ describe('FilesService', () => {
   const repositoryMock = {
     findOne: jest.fn(),
   };
+  const filesImportsServiceMock = {
+    validateDocumentFile: jest.fn(),
+  };
   let service: FilesService;
 
   beforeEach(async () => {
@@ -49,6 +54,10 @@ describe('FilesService', () => {
         {
           provide: getQueueToken(QueueNamesEnum.files),
           useValue: filesQueueMock,
+        },
+        {
+          provide: FilesImportsService,
+          useValue: filesImportsServiceMock,
         },
       ],
     }).compile();
@@ -72,7 +81,7 @@ describe('FilesService', () => {
   });
 
   describe('uploadDocumentFile', () => {
-    it('enqueues document payload with base64 buffer', async () => {
+    it('validates and enqueues document payload with base64 buffer', async () => {
       const buffer = Buffer.from('hello');
       const file = {
         fieldname: 'f',
@@ -85,6 +94,9 @@ describe('FilesService', () => {
       const businessReq: IBusinessReq = { path: '/b', businessId: 3 };
       filesQueueMock.add.mockResolvedValue(undefined);
       await service.uploadDocumentFile(file, businessReq);
+      expect(filesImportsServiceMock.validateDocumentFile).toHaveBeenCalledWith(
+        file,
+      );
       expect(filesQueueMock.add).toHaveBeenCalledWith(
         FilesConsumerEnum.UploadDocumentFile,
         expect.objectContaining({
@@ -93,6 +105,26 @@ describe('FilesService', () => {
           businessReq,
         }),
       );
+    });
+
+    it('does not enqueue when document format is invalid', async () => {
+      const buffer = Buffer.from('hello');
+      const file = {
+        fieldname: 'f',
+        originalname: 'photo.png',
+        encoding: '7bit',
+        mimetype: 'image/png',
+        size: buffer.length,
+        buffer,
+      };
+      const businessReq: IBusinessReq = { path: '/b', businessId: 3 };
+      filesImportsServiceMock.validateDocumentFile.mockImplementation(() => {
+        throw new NotAcceptableException();
+      });
+      await expect(
+        service.uploadDocumentFile(file, businessReq),
+      ).rejects.toThrow(NotAcceptableException);
+      expect(filesQueueMock.add).not.toHaveBeenCalled();
     });
   });
 });
