@@ -14,7 +14,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN corepack enable \
+  && corepack prepare pnpm@10.15.0 --activate \
+  && pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
@@ -28,6 +30,6 @@ RUN pnpm run build:prod:background-processes
 # Expose the ports for both apps
 EXPOSE 3000 3001 3002 3003
 
-# Comando por defecto: levantar ambas apps en producción
-CMD ["pnpm", "run", "start:all:prod"]
+# Default process; docker-compose overrides per service with node directly.
+CMD ["node", "dist/users/apps/users/src/main.js"]
 
