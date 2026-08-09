@@ -31,7 +31,7 @@ export const notificationsPublic: Record<
     es: {
       title: 'Contraseña actualizada',
       message: 'Tu contraseña se cambió correctamente.',
-      link: '/configuration',
+      link: 'profile/settings',
     },
   },
   [NotificationContentScenarioEnum.BUSINESS_CHANGE_PASSWORD]: {
@@ -40,7 +40,7 @@ export const notificationsPublic: Record<
       title: 'Contraseña actualizada',
       message:
         'La contraseña de la cuenta de tu negocio se cambió correctamente.',
-      link: 'businesses/configuration',
+      link: 'dashboard/settings',
     },
   },
   [NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW]: {
