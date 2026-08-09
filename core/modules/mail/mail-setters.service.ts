@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 import { LogError } from '../../common/helpers/logger.helper';
 import { mailResponses } from '../../common/responses';
 import {
@@ -43,7 +42,7 @@ export class MailSettersService implements OnModuleInit {
   private readonly rConfig = mailResponses.config;
   private readonly rSendMail = mailResponses.sendMail;
 
-  private oauth2Client: OAuth2Client;
+  private oauth2Client: InstanceType<typeof google.auth.OAuth2>;
   private senderEmail: string;
 
   constructor(
@@ -226,8 +225,10 @@ export class MailSettersService implements OnModuleInit {
         messageId: response.data.id,
         threadId: response.data.threadId,
       };
-    } catch (error) {
-      LogError(this.logger, error, this.sendMail.name);
+    } catch (error: unknown) {
+      const normalizedError: Error | Record<string, unknown> | string =
+        error instanceof Error || typeof error === 'string' ? error : { error };
+      LogError(this.logger, normalizedError, this.sendMail.name);
       throw new InternalServerErrorException(this.rSendMail.error);
     }
   }
