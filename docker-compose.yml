@@ -2,6 +2,9 @@ services:
   db:
     image: postgres:18
     restart: always
+    # Solo localhost del VPS (para túnel SSH / DBeaver). No exponer a internet.
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
