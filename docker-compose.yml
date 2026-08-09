@@ -85,7 +85,20 @@ services:
 
   migrate:
     build: .
-    command: ["pnpm", "run", "migration:run"]
+    # Avoid `pnpm` here: the node image entrypoint prepends `node` when `pnpm`
+    # is missing from PATH, which becomes `node /app/pnpm` and crashes.
+    command:
+      [
+        "node",
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register",
+        "./node_modules/typeorm/cli.js",
+        "migration:run",
+        "-d",
+        "./data-source.ts",
+      ]
     env_file:
       - .env
     environment:
