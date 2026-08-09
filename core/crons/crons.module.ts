@@ -5,6 +5,8 @@ import { QueueNamesEnum } from '../common/enums';
 import { BcvCurrencyCronService } from './bcv-currency.cron';
 import { DiscountsCronService } from './discounts.cron';
 import { DiscountsModule } from '../modules/discounts/discounts.module';
+import { ProductsModule } from '../modules/products/products.module';
+import { ProductsCronService } from './products.cron';
 
 /**
  * Module that registers scheduled cron jobs.
@@ -13,10 +15,18 @@ import { DiscountsModule } from '../modules/discounts/discounts.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    BullModule.registerQueue({ name: QueueNamesEnum.discounts }),
-    BullModule.registerQueue({ name: QueueNamesEnum.currency }),
+    BullModule.registerQueue(
+      { name: QueueNamesEnum.discounts },
+      { name: QueueNamesEnum.products },
+      { name: QueueNamesEnum.currency },
+    ),
     DiscountsModule,
+    ProductsModule,
   ],
-  providers: [BcvCurrencyCronService, DiscountsCronService],
+  providers: [
+    BcvCurrencyCronService,
+    DiscountsCronService,
+    ProductsCronService,
+  ],
 })
 export class CronsModule {}

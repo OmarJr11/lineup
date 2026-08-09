@@ -4,12 +4,24 @@
  */
 export interface INotificationPayload {
   /** ID of the entity to open when the user taps the notification */
-  id?: number;
+  idUser?: number;
+  idBusiness?: number;
+
   /** Link to open when the user taps the notification */
   link?: string;
-  /** Additional data to pass to the link */
-  data?: object;
 
   /** Entity to open when the user taps the notification */
   entity?: string;
+
+  /** Scenario to open when the user taps the notification */
+  scenario?: string;
+
+  /** ID of the entity to open when the user taps the notification */
+  id?: number;
+
+  /** Title of the catalog to open when the user taps the notification */
+  catalogPath?: string;
+
+  /** Title of the product to open when the user taps the notification */
+  productTitle?: string;
 }

@@ -24,3 +24,4 @@ export * from './week-day.enum';
 export * from './notification-type.enum';
 export * from './notification-content-scenario.enum';
 export * from './notification-public-locale.enum';
+export * from './notification-socket-subscribe-type.enum';

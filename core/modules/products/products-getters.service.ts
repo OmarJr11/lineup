@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { BasicService } from '../../common/services';
 import { InfinityScrollInput } from '../../common/dtos';
+import { productLowStockThresholds } from '../../common/constants';
 import { StatusEnum } from '../../common/enums';
 import { LogError } from '../../common/helpers/logger.helper';
 import { productsResponses } from '../../common/responses';
-import { Product, ProductRating } from '../../entities';
+import { Catalog, Product, ProductRating } from '../../entities';
 import {
   IGetTopByVisitsForStatisticsInput,
   IStatItemWithLikes,
@@ -14,6 +15,7 @@ import {
   IStatItemWithVisits,
 } from '../business-statistics/interfaces';
 import { GetAllPrimaryProductsByBusinessInput } from './dto/get-all-primary-products-by-business.input';
+import { IUserReq } from '../../common/interfaces';
 
 @Injectable()
 export class ProductsGettersService extends BasicService<Product> {
@@ -94,12 +96,19 @@ export class ProductsGettersService extends BasicService<Product> {
    * Find products by IDs with relations. Returns only found ones; ignores missing/deleted.
    * Uses repository.find when query builder returns empty (avoids parameter/join issues).
    * @param {number[]} ids - Product IDs to fetch.
+   * @param {IUserReq} user - The authenticated user.
    * @returns {Promise<Product[]>} Array of found products.
    */
-  async findManyWithRelations(ids: number[]): Promise<Product[]> {
+  async findManyWithRelations(
+    ids: number[],
+    user?: IUserReq | null,
+  ): Promise<Product[]> {
     if (!ids?.length) return [];
     const uniqueIds = [...new Set(ids)];
-    let products = await this.getQueryRelations(this.createQueryBuilder('p'))
+    let products = await this.getQueryRelations(
+      this.createQueryBuilder('p'),
+      user,
+    )
       .where('p.id IN (:...ids)', { ids: uniqueIds })
       .andWhere('p.status <> :status', { status: StatusEnum.DELETED })
       .getMany();
@@ -146,11 +155,13 @@ export class ProductsGettersService extends BasicService<Product> {
    * Get all Products by Catalog
    * @param {number} idCatalog - The ID of the catalog
    * @param {string} search - search query
+   * @param {IUserReq} user - The user request
    * @returns {Promise<Product[]>}
    */
   async getAllByCatalog(
     idCatalog: number,
     search?: string,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
     const subQuery = this.createQueryBuilder('sub')
       .select('sub.id')
@@ -179,7 +190,10 @@ export class ProductsGettersService extends BasicService<Product> {
       );
     }
 
-    const queryBuilder = this.getQueryRelations(this.createQueryBuilder('p'))
+    const queryBuilder = this.getQueryRelations(
+      this.createQueryBuilder('p'),
+      user,
+    )
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters());
     if (!trimmedSearch) {
@@ -197,6 +211,7 @@ export class ProductsGettersService extends BasicService<Product> {
   async getAllByCatalogPaginated(
     idCatalog: number,
     query: InfinityScrollInput,
+    user?: IUserReq | null,
   ): Promise<Product[]> {
     const page = query.page || 1;
     const limit = query.limit || 10;
@@ -231,7 +246,7 @@ export class ProductsGettersService extends BasicService<Product> {
       );
     }
     subQuery.orderBy(`sub.${orderBy}`, order).limit(limit).offset(skip);
-    return await this.getQueryRelations(this.createQueryBuilder('p'))
+    return await this.getQueryRelations(this.createQueryBuilder('p'), user)
       .where(`p.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())
       .orderBy(`p.${orderBy}`, order)
@@ -702,14 +717,109 @@ export class ProductsGettersService extends BasicService<Product> {
   }
 
   /**
+   * Clears stock_notified for active products that no longer have any SKU in the low-stock band.
+   *
+   * @returns {Promise<void>}
+   */
+  async resetStockNotifiedForRestockedProducts(): Promise<void> {
+    const { minQuantity, maxQuantity } = productLowStockThresholds;
+    await this.productRepository.query(
+      `
+      UPDATE products p
+      SET stock_notified = false
+      WHERE p.stock_notified = true
+      AND p.status = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM product_skus ps
+        WHERE ps.id_product = p.id
+        AND ps.status = $2
+        AND ps.quantity IS NOT NULL
+        AND ps.quantity BETWEEN $3 AND $4
+      )
+      `,
+      [StatusEnum.ACTIVE, StatusEnum.ACTIVE, minQuantity, maxQuantity],
+    );
+  }
+
+  /**
+   * Active products with at least one non-deleted SKU whose quantity is in the low-stock band
+   * and stock_notified is false.
+   *
+   * @returns {Promise<number[]>} Product IDs to notify.
+   */
+  async findProductIdsWithLowStockPendingNotification(): Promise<number[]> {
+    const { minQuantity, maxQuantity } = productLowStockThresholds;
+    const raw = await this.createQueryBuilder('p')
+      .select('p.id', 'id')
+      .where('p.status = :pStatus', { pStatus: StatusEnum.ACTIVE })
+      .andWhere('p.stock_notified = :sn', { sn: false })
+      .andWhere(
+        `EXISTS (
+          SELECT 1 FROM product_skus ps
+          WHERE ps.id_product = p.id
+          AND ps.status = :skuStatus
+          AND ps.quantity IS NOT NULL
+          AND ps.quantity BETWEEN :lowMin AND :lowMax
+        )`,
+      )
+      .setParameter('skuStatus', StatusEnum.ACTIVE)
+      .setParameter('lowMin', minQuantity)
+      .setParameter('lowMax', maxQuantity)
+      .getRawMany<{ id: string }>();
+    return raw.map((row) => Number(row.id));
+  }
+
+  /**
+   * Loads id, title, and business for a low-stock job; null if missing or not active.
+   *
+   * @param {number} id - Product ID.
+   * @returns {Promise<Pick<Product, 'id' | 'title' | 'idCreationBusiness'> | null>}
+   */
+  async findOneActiveSummaryForLowStockJob(
+    id: number,
+  ): Promise<Pick<Product, 'id' | 'title' | 'idCreationBusiness'> | null> {
+    const product = await this.findOneWithOptions({
+      where: { id, status: StatusEnum.ACTIVE },
+    });
+    if (!product) {
+      return null;
+    }
+    return {
+      id: product.id,
+      title: product.title,
+      idCreationBusiness: product.idCreationBusiness,
+    };
+  }
+
+  /**
+   * Find a catalog by product ID.
+   * @param {number} id - The ID of the product.
+   * @returns {Promise<Catalog>} The found catalog.
+   */
+  async findCatalogByProductId(id: number): Promise<Catalog> {
+    try {
+      const product = await this.findOneWithOptionsOrFail({
+        where: { id, status: Not(StatusEnum.DELETED) },
+        relations: ['catalog'],
+      });
+      return product.catalog;
+    } catch (error: unknown) {
+      LogError(this.logger, error as Error, this.findCatalogByProductId.name);
+      throw new NotFoundException(this.rList.notFound);
+    }
+  }
+
+  /**
    * Apply common relations to a product query builder
    * @param {SelectQueryBuilder<Product>} queryBuilder - The query builder to apply relations to
+   * @param {IUserReq} user - The authenticated user.
    * @returns {SelectQueryBuilder<Product>} The query builder with relations applied
    */
   private getQueryRelations(
     queryBuilder: SelectQueryBuilder<Product>,
+    user?: IUserReq | null,
   ): SelectQueryBuilder<Product> {
-    return queryBuilder
+    queryBuilder = queryBuilder
       .leftJoinAndSelect(
         'p.productFiles',
         'productFiles',
@@ -736,13 +846,25 @@ export class ProductsGettersService extends BasicService<Product> {
       .leftJoinAndSelect('p.skus', 'skus', 'skus.status <> :statusSkus', {
         statusSkus: StatusEnum.DELETED,
       })
-      .leftJoinAndSelect('skus.currency', 'currency')
-      .leftJoinAndSelect(
+      .leftJoinAndSelect('skus.currency', 'currency');
+
+    if (user) {
+      queryBuilder = queryBuilder.leftJoinAndSelect(
+        'p.reactions',
+        'reactions',
+        'reactions.status <> :statusReaction AND reactions.idCreationUser = :userId',
+        { statusReaction: StatusEnum.DELETED, userId: user.userId },
+      );
+    } else {
+      queryBuilder = queryBuilder.leftJoinAndSelect(
         'p.reactions',
         'reactions',
         'reactions.status <> :statusReaction',
         { statusReaction: StatusEnum.DELETED },
-      )
+      );
+    }
+
+    return queryBuilder
       .leftJoinAndSelect('p.discountProduct', 'discountProduct')
       .leftJoinAndSelect(
         'discountProduct.discount',

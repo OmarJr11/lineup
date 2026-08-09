@@ -31,7 +31,7 @@ export const notificationsPublic: Record<
     es: {
       title: 'Contraseña actualizada',
       message: 'Tu contraseña se cambió correctamente.',
-      link: '/configuration',
+      link: 'profile/settings',
     },
   },
   [NotificationContentScenarioEnum.BUSINESS_CHANGE_PASSWORD]: {
@@ -40,7 +40,7 @@ export const notificationsPublic: Record<
       title: 'Contraseña actualizada',
       message:
         'La contraseña de la cuenta de tu negocio se cambió correctamente.',
-      link: 'businesses/configuration',
+      link: 'dashboard/settings',
     },
   },
   [NotificationContentScenarioEnum.NEW_PRODUCT_REVIEW]: {
@@ -48,6 +48,31 @@ export const notificationsPublic: Record<
     es: {
       title: 'Nueva reseña de producto',
       message: 'Un cliente dejó una reseña en uno de tus productos.',
+    },
+  },
+  [NotificationContentScenarioEnum.DISCOUNT_ACTIVATED]: {
+    type: NotificationTypeEnum.INFO,
+    es: {
+      title: 'Descuento activado',
+      message:
+        'Uno de tus descuentos programados ya está activo y visible para tus clientes.',
+      link: 'dashboard/discounts',
+    },
+  },
+  [NotificationContentScenarioEnum.DISCOUNT_EXPIRED]: {
+    type: NotificationTypeEnum.INFO,
+    es: {
+      title: 'Descuento finalizado',
+      message: 'Un descuento alcanzó su fecha de término y dejó de aplicarse.',
+      link: 'dashboard/discounts',
+    },
+  },
+  [NotificationContentScenarioEnum.PRODUCT_LOW_STOCK]: {
+    type: NotificationTypeEnum.WARNING,
+    es: {
+      title: 'Stock bajo',
+      message: 'Uno de tus productos tiene stock bajo. Revisa tu inventario.',
+      link: 'dashboard/inventory',
     },
   },
 };

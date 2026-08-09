@@ -5,6 +5,7 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
     "build": "nest build",
     "build:prod:admin": "rimraf dist/admin && tsc -p apps/admin/tsconfig.app.json",
@@ -26,8 +27,8 @@
     "start:background-processes": "nest start background-processes",
     "start:dev:background-processes": "nest start background-processes --watch",
     "start:prod:background-processes": "node dist/background-processes/apps/background-processes/src/main.js",
-    "start:all:prod": "concurrently \"npm run start:prod:users\" \"npm run start:prod:admin\" \"npm run start:prod:businesses\" \"npm run start:prod:background-processes\"",
-    "start:all:dev": "concurrently \"npm run start:dev:users\" \"npm run start:dev:admin\" \"npm run start:dev:businesses\" \"npm run start:dev:background-processes\"",
+    "start:all:prod": "concurrently \"pnpm run start:prod:users\" \"pnpm run start:prod:admin\" \"pnpm run start:prod:businesses\" \"pnpm run start:prod:background-processes\"",
+    "start:all:dev": "concurrently \"pnpm run start:dev:users\" \"pnpm run start:dev:admin\" \"pnpm run start:dev:businesses\" \"pnpm run start:dev:background-processes\"",
     "start:debug": "nest start --debug --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -75,6 +76,7 @@
     "graphql-type-json": "0.3.2",
     "handlebars": "4.7.9",
     "joi": "18.1.1",
+    "jsonwebtoken": "^9.0.2",
     "moment": "2.30.1",
     "nestjs-typeorm-paginate": "4.1.0",
     "passport": "0.7.0",
@@ -85,6 +87,7 @@
     "reflect-metadata": "0.2.2",
     "rimraf": "6.1.3",
     "rxjs": "7.8.2",
+    "sharp": "^0.34.5",
     "socket.io": "4.8.1",
     "tsconfig-paths": "4.2.0",
     "typeorm": "0.3.28",
@@ -103,6 +106,7 @@
     "@types/express": "5.0.6",
     "@types/handlebars": "4.0.40",
     "@types/jest": "30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "4.17.24",
     "@types/multer": "2.1.0",
     "@types/node": "25.5.0",
@@ -124,6 +128,11 @@
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },
+  "pnpm": {
+    "overrides": {
+      "google-auth-library": "10.6.2"
+    }
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",
@@ -140,8 +149,10 @@
     ],
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
+    "passWithNoTests": true,
     "roots": [
-      "<rootDir>/apps/"
+      "<rootDir>/apps/",
+      "<rootDir>/core/"
     ]
   }
 }

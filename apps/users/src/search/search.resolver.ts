@@ -9,12 +9,8 @@ import {
   ProductSearchFiltersInput,
 } from '../../../../core/common/dtos';
 import { SearchTargetEnum } from '../../../../core/common/enums';
-import {
-  PaginatedSearchResults,
-  PaginatedBusinesses,
-  PaginatedCatalogs,
-  PaginatedProducts,
-} from '../../../../core/schemas';
+import { PaginatedSearchResults } from '../../../../core/schemas/paginated.schema';
+import { FeaturedCollectionsSchema } from '../../../../core/schemas/featured-collections.schema';
 import {
   toBusinessSchema,
   toCatalogSchema,
@@ -86,87 +82,77 @@ export class SearchResolver {
   }
 
   /**
-   * Returns featured businesses ordered by score (followers×3 + visits + catalogVisits + productVisits + productLikes×2).
+   * Returns all featured collections in one request.
    * @param pagination - InfinityScrollInput (page, limit)
-   * @returns Paginated businesses sorted by score descending
+   * @returns Object with featured businesses, featured catalogs, featured products and recently added products
    */
   @UseGuards(OptionalJwtAuthGuard)
-  @Query(() => PaginatedBusinesses, { name: 'featuredBusinesses' })
-  async featuredBusinesses(
+  @Query(() => FeaturedCollectionsSchema, { name: 'featured' })
+  async getFeaturedResults(
     @Args('pagination', { type: () => InfinityScrollInput })
     pagination: InfinityScrollInput,
-  ): Promise<PaginatedBusinesses> {
-    const result = await this.searchService.getFeaturedBusinesses(pagination);
-    const items = result.items.map((b) => toBusinessSchema(b));
+    @UserDec() user?: IUserReq | null,
+  ): Promise<FeaturedCollectionsSchema> {
+    const [
+      featuredBusinesses,
+      featuredCatalogs,
+      featuredProducts,
+      recentlyAddedProducts,
+    ] = await Promise.all([
+      this.searchService.getFeaturedBusinesses(pagination),
+      this.searchService.getFeaturedCatalogs(pagination),
+      this.searchService.getFeaturedProducts(pagination, user),
+      this.searchService.getRecentlyAddedProducts(pagination, user),
+    ]);
     return {
-      items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
+      featuredBusinesses: this.mapFeaturedBusinessesItems(featuredBusinesses),
+      featuredCatalogs: this.mapFeaturedCatalogsItems(featuredCatalogs),
+      featuredProducts: this.mapFeaturedProductsItems(featuredProducts),
+      recentlyAddedProducts: this.mapFeaturedProductsItems(
+        recentlyAddedProducts,
+      ),
+      total: featuredProducts.total,
+      page: featuredBusinesses.page,
+      limit: featuredBusinesses.limit,
     };
   }
 
   /**
-   * Returns featured catalogs ordered by score (visits×3 + productLikesTotal×2 + productVisitsTotal×1).
-   * @param pagination - InfinityScrollInput (page, limit)
-   * @returns Paginated catalogs sorted by score descending
+   * Maps featured business entities to GraphQL business schema.
+   * @param result - Paginated business entities
+   * @returns Array of business schema items
    */
-  @UseGuards(OptionalJwtAuthGuard)
-  @Query(() => PaginatedCatalogs, { name: 'featuredCatalogs' })
-  async featuredCatalogs(
-    @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput,
-  ): Promise<PaginatedCatalogs> {
-    const result = await this.searchService.getFeaturedCatalogs(pagination);
-    const items = result.items.map((c) => toCatalogSchema(c));
-    return {
-      items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-    };
+  private mapFeaturedBusinessesItems(
+    result: Awaited<ReturnType<SearchService['getFeaturedBusinesses']>>,
+  ): ReturnType<typeof toBusinessSchema>[] {
+    return result.items.map((business) => ({
+      ...toBusinessSchema(business),
+    }));
   }
 
   /**
-   * Returns featured products ordered by score (likes×2 + visits×1).
-   * @param pagination - InfinityScrollInput (page, limit)
-   * @returns Paginated products sorted by score descending
+   * Maps featured catalog entities to GraphQL catalog schema.
+   * @param result - Paginated catalog entities
+   * @returns Array of catalog schema items
    */
-  @UseGuards(OptionalJwtAuthGuard)
-  @Query(() => PaginatedProducts, { name: 'featuredProducts' })
-  async featuredProducts(
-    @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput,
-  ): Promise<PaginatedProducts> {
-    const result = await this.searchService.getFeaturedProducts(pagination);
-    const items = result.items.map((p) => toProductSchema(p));
-    return {
-      items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-    };
+  private mapFeaturedCatalogsItems(
+    result: Awaited<ReturnType<SearchService['getFeaturedCatalogs']>>,
+  ): ReturnType<typeof toCatalogSchema>[] {
+    return result.items.map((catalog) => ({
+      ...toCatalogSchema(catalog),
+    }));
   }
 
   /**
-   * Returns recently added products ordered by creation date descending.
-   * @param pagination - InfinityScrollInput (page, limit)
-   * @returns Paginated products sorted by newest first
+   * Maps featured/recently-added products to GraphQL product schema.
+   * @param result - Paginated product entities
+   * @returns Array of product schema items
    */
-  @UseGuards(OptionalJwtAuthGuard)
-  @Query(() => PaginatedProducts, { name: 'recentlyAddedProducts' })
-  async recentlyAddedProducts(
-    @Args('pagination', { type: () => InfinityScrollInput })
-    pagination: InfinityScrollInput,
-  ): Promise<PaginatedProducts> {
-    const result =
-      await this.searchService.getRecentlyAddedProducts(pagination);
-    const items = result.items.map((p) => toProductSchema(p));
-    return {
-      items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-    };
+  private mapFeaturedProductsItems(
+    result: Awaited<ReturnType<SearchService['getFeaturedProducts']>>,
+  ): ReturnType<typeof toProductSchema>[] {
+    return result.items.map((product) => ({
+      ...toProductSchema(product),
+    }));
   }
 }

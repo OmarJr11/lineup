@@ -7,7 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LogError } from '../../common/helpers/logger.helper';
-import { IBusinessReq, IUserReq } from '../../common/interfaces';
+import {
+  IBusinessReq,
+  IUserOrBusinessReq,
+  IUserReq,
+} from '../../common/interfaces';
 import { BasicService } from '../../common/services';
 import { Business } from '../../entities';
 import { businessesResponses } from '../../common/responses';
@@ -153,13 +157,13 @@ export class BusinessesSettersService extends BasicService<Business> {
    * Update Business
    * @param {UpdateBusinessInput} data - The data to update the Business
    * @param {Business} business - The Business to update
-   * @param {IBusinessReq} businessReq - The logged business
+   * @param {IUserOrBusinessReq} businessReq - Actor (business session or admin user).
    * @returns {Promise<Business>}
    */
   async update(
     data: UpdateBusinessInput,
     business: Business,
-    businessReq: IBusinessReq,
+    businessReq: IUserOrBusinessReq,
   ): Promise<Business> {
     try {
       const oldValues = toEntityAuditValues(business);
@@ -239,9 +243,9 @@ export class BusinessesSettersService extends BasicService<Business> {
   /**
    * Remove Business
    * @param {Business} business - The business to remove
-   * @param {IBusinessReq} businessReq - The logged business
+   * @param {IUserOrBusinessReq} businessReq - Actor (business session or admin user).
    */
-  async remove(business: Business, businessReq: IBusinessReq) {
+  async remove(business: Business, businessReq: IUserOrBusinessReq) {
     try {
       await this.entityAuditsQueueService.addRecordJob({
         entityName: AuditableEntityNameEnum.Business,

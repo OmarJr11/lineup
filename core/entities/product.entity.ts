@@ -139,4 +139,11 @@ export class Product extends BaseEntity {
 
   @OneToOne(() => DiscountProduct, (discountProduct) => discountProduct.product)
   discountProduct?: DiscountProduct;
+
+  /**
+   * When true, a low-stock notification was already sent while at least one SKU was in the low band.
+   * Reset by the products cron when no SKU remains in that band.
+   */
+  @Column({ type: 'boolean', name: 'stock_notified', default: false })
+  stockNotified: boolean;
 }

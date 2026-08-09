@@ -178,4 +178,28 @@ export class ProductsSettersService extends BasicService<Product> {
       { delay: 1000 * 60 },
     );
   }
+
+  /**
+   * Sets stock_notified (used by low-stock background job; no audit or search reindex).
+   * @param {Product} product - Product.
+   * @param {boolean} stockNotified - New flag value.
+   * @param {IBusinessReq} businessReq - The business request object.
+   */
+  async setStockNotified(
+    product: Product,
+    stockNotified: boolean,
+    businessReq: IBusinessReq,
+  ) {
+    try {
+      await this.updateEntity({ stockNotified }, product, businessReq);
+    } catch (error) {
+      LogError(
+        this.logger,
+        error as Error,
+        this.setStockNotified.name,
+        businessReq,
+      );
+      throw new InternalServerErrorException(this.rUpdate.error);
+    }
+  }
 }

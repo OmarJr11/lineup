@@ -362,6 +362,12 @@ export class BusinessesGettersService extends BasicService<Business> {
         { locationStatus: StatusEnum.DELETED },
       )
       .leftJoinAndSelect('b.businessFollowers', 'businessFollowers')
-      .leftJoinAndSelect('b.businessHours', 'businessHours');
+      .leftJoinAndSelect('b.businessHours', 'businessHours')
+      .leftJoinAndSelect(
+        'b.discounts',
+        'discounts',
+        'discounts.status = :discountStatus',
+        { discountStatus: StatusEnum.ACTIVE },
+      );
   }
 }

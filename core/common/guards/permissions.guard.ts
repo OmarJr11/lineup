@@ -80,7 +80,7 @@ export class PermissionsGuard implements CanActivate {
   async checkPermissionForBusiness(
     idBusiness: number,
     permissions: string[],
-    response: [{}],
+    response: [object],
   ): Promise<boolean> {
     if (
       !(await this.rolesPermissionsChecker.businessHasPermission(

@@ -19,17 +19,24 @@ export interface CreateNotificationJobData {
   scenario: NotificationContentScenarioEnum;
   entityName: string;
   type: NotificationTypeEnum;
+  data?: {
+    id?: number;
+    catalogPath?: string;
+    productTitle?: string;
+    [key: string]: unknown;
+  };
 }
 
 /**
- * Processes notification creation jobs (user inbox vs business inbox).
+ * Creates notifications from the queue and dispatches Socket.IO on the background-processes app
+ * (`PORT_BACKGROUND_PROCESSES`, namespace `/notifications`). GraphQL APIs do not open a socket server.
  */
 @Processor(QueueNamesEnum.notifications)
 export class NotificationsConsumer extends WorkerHost {
   private readonly logger = new Logger(NotificationsConsumer.name);
 
   /**
-   * @param {NotificationsSettersService} notificationsSettersService - Writes and realtime from jobs
+   * @param {NotificationsSettersService} notificationsSettersService - Persists rows and emits on the worker gateway
    */
   constructor(
     private readonly notificationsSettersService: NotificationsSettersService,
@@ -61,7 +68,7 @@ export class NotificationsConsumer extends WorkerHost {
   }
 
   /**
-   * Persists a user inbox notification and emits realtime.
+   * Persists a user inbox notification then emits to room `user:{id}` on the background socket.
    *
    * @param {Job<CreateNotificationJobData>} job - Job with CreateNotificationJobData data
    */
@@ -75,9 +82,10 @@ export class NotificationsConsumer extends WorkerHost {
       body: message,
       idUser: userOrBusinessReq.userId,
       payload: {
-        id: userOrBusinessReq.userId,
+        idUser: userOrBusinessReq.userId,
         link,
         entity: entityName,
+        scenario,
       },
     };
     await this.notificationsSettersService.createAndDispatch(
@@ -87,23 +95,37 @@ export class NotificationsConsumer extends WorkerHost {
   }
 
   /**
-   * Persists a business inbox notification and optionally emits realtime.
+   * Persists a business inbox notification then emits to room `business:{id}` on the background socket.
    *
    * @param {Job} job - Job with CreateNotificationBusinessJobPayload data
    */
   private async processCreateForBusiness(job: Job<CreateNotificationJobData>) {
-    const { entityName, userOrBusinessReq, scenario, type } = job.data;
+    const { entityName, userOrBusinessReq, scenario, type, data } = job.data;
     const notificationEntry = notificationsPublic[scenario];
-    const { title, message, link } = notificationEntry.es;
+    const { title, message } = notificationEntry.es;
+    let link = notificationEntry.es.link;
+
+    switch (scenario) {
+      case NotificationContentScenarioEnum.DISCOUNT_ACTIVATED:
+        link = `businesses/discounts/${data.id}`;
+        break;
+      default:
+        break;
+    }
+
     const notificationParams: CreateNotificationParams = {
       type,
       title,
       body: message,
       idBusiness: userOrBusinessReq.businessId,
       payload: {
-        id: userOrBusinessReq.businessId,
+        idBusiness: userOrBusinessReq.businessId,
         link,
         entity: entityName,
+        scenario,
+        id: data?.id,
+        catalogPath: data?.catalogPath,
+        productTitle: data?.productTitle,
       },
     };
     await this.notificationsSettersService.createAndDispatch(

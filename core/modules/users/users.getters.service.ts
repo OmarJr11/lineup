@@ -103,28 +103,42 @@ export class UsersGettersService extends BasicService<User> {
    * @returns {Promise<User>}
    */
   async findOneByEmailWithPassword(email: string): Promise<User> {
-    const user = await this.createQueryBuilder('user')
-      .addSelect('user.password')
-      .leftJoinAndSelect('user.userRoles', 'userRoles')
-      .leftJoinAndSelect('userRoles.role', 'role')
-      .leftJoinAndSelect('role.rolePermissions', 'rolePermissions')
-      .leftJoinAndSelect('rolePermissions.permission', 'permission')
-      .where('LOWER(user.email) = LOWER(:email)', { email })
-      .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
-      .getOneOrFail()
-      .catch((error) => {
-        LogError(this.logger, error, this.findOneByEmailWithPassword.name);
+    try {
+      const user = await this.createQueryBuilder('user')
+        .addSelect('user.password')
+        .leftJoinAndSelect('user.userRoles', 'userRoles')
+        .leftJoinAndSelect('userRoles.role', 'role')
+        .leftJoinAndSelect('role.rolePermissions', 'rolePermissions')
+        .leftJoinAndSelect('rolePermissions.permission', 'permission')
+        .where('LOWER(user.email) = LOWER(:email)', { email })
+        .andWhere('user.status <> :status', { status: StatusEnum.DELETED })
+        .getOneOrFail()
+        .catch((error) => {
+          LogError(
+            this.logger,
+            error as Error,
+            this.findOneByEmailWithPassword.name,
+          );
+          throw new UnauthorizedException(this._uList.userNotFound);
+        });
+
+      if (!user) {
+        LogError(
+          this.logger,
+          this._uList.userNotFound,
+          this.findOneByEmailWithPassword.name,
+        );
         throw new UnauthorizedException(this._uList.userNotFound);
-      });
-    if (!user) {
+      }
+      return user;
+    } catch (error) {
       LogError(
         this.logger,
-        this._uList.userNotFound,
+        error as Error,
         this.findOneByEmailWithPassword.name,
       );
       throw new UnauthorizedException(this._uList.userNotFound);
     }
-    return user;
   }
 
   /**
@@ -283,7 +297,8 @@ export class UsersGettersService extends BasicService<User> {
    */
   async getNewUsersStatsForAdminStatistics(
     timePeriod: ITimePeriodFilter,
-  ): Promise<IAdminTimeSeriesStats> {/*
+  ): Promise<IAdminTimeSeriesStats> {
+    /*
     const raw = await StatisticsQueryHelper.computeAggregatedTimeSeries(
       () =>
         this.createQueryBuilder('u').where('u.status <> :userStatus', {

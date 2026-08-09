@@ -7,6 +7,7 @@ import {
   SocialNetworkSchema,
   UserSchema,
 } from '.';
+import { ThumbnailsSchema } from './thumbnails.schema';
 
 @ObjectType()
 export class FileSchema extends BaseSchema {
@@ -33,6 +34,9 @@ export class FileSchema extends BaseSchema {
 
   @Field(() => BusinessSchema, { nullable: true })
   creationBusiness?: BusinessSchema;
+
+  @Field(() => ThumbnailsSchema, { nullable: true })
+  thumbnails?: ThumbnailsSchema;
 
   @Field(() => [String], { nullable: true })
   tags?: string[];

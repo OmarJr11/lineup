@@ -46,8 +46,8 @@ export class NotificationsGettersService extends BasicService<Notification> {
     const order = options.order || 'DESC';
     const orderBy = options.orderBy || 'creation_date';
     return await this.createQueryBuilder('n')
-      .leftJoinAndSelect('n.creationUser', 'creationUser')
-      .leftJoinAndSelect('creationUser.profileImage', 'profileImage')
+      .leftJoinAndSelect('n.user', 'user')
+      .leftJoinAndSelect('user.profileImage', 'profileImage')
       .where('n.idCreationUser = :userId', { userId })
       .orderBy(`n.${orderBy}`, order)
       .limit(limit)
@@ -105,7 +105,7 @@ export class NotificationsGettersService extends BasicService<Notification> {
     try {
       return await this.findOneWithOptionsOrFail({
         where: { id: notificationId, idCreationUser: userId },
-        relations: ['creationUser', 'creationUser.profileImage'],
+        relations: ['user', 'user.profileImage'],
       });
     } catch (error) {
       LogError(this.logger, error as Error, this.findOneForUserOrFail.name);
@@ -130,8 +130,8 @@ export class NotificationsGettersService extends BasicService<Notification> {
     const order = options.order || 'DESC';
     const orderBy = options.orderBy || 'creation_date';
     return await this.createQueryBuilder('n')
-      .leftJoinAndSelect('n.creationBusiness', 'creationBusiness')
-      .leftJoinAndSelect('creationBusiness.image', 'imageBusiness')
+      .leftJoinAndSelect('n.business', 'business')
+      .leftJoinAndSelect('business.image', 'imageBusiness')
       .where('n.idCreationBusiness = :businessId', { businessId })
       .orderBy(`n.${orderBy}`, order)
       .limit(limit)
@@ -171,7 +171,7 @@ export class NotificationsGettersService extends BasicService<Notification> {
     try {
       return await this.findOneWithOptionsOrFail({
         where: { id: notificationId, idCreationBusiness: businessId },
-        relations: ['creationBusiness', 'creationBusiness.image'],
+        relations: ['business', 'business.image'],
       });
     } catch (error) {
       LogError(this.logger, error as Error, this.findOneForBusinessOrFail.name);

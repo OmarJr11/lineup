@@ -10,6 +10,7 @@ import { ProductReactionsGettersService } from '../product-reactions/product-rea
 import { InfinityScrollInput } from '../../common/dtos';
 import { SearchTargetEnum } from '../../common/enums';
 import { IProductCollection } from './interfaces/product-collection.interface';
+import { IUserReq } from '../../common/interfaces';
 
 /** Default number of products per collection. */
 const DEFAULT_COLLECTION_LIMIT = 10;
@@ -32,25 +33,25 @@ export class ProductCollectionsService {
 
   /**
    * Gets all product collections for a user (or fallback collections when anonymous).
-   * @param {number | null} idUser - The user ID, or null for anonymous.
+   * @param {IUserReq | null} user - The authenticated user, or null for anonymous.
    * @returns {Promise<IProductCollection[]>} Array of product collections.
    */
-  async getCollections(idUser: number | null): Promise<IProductCollection[]> {
+  async getCollections(user?: IUserReq | null): Promise<IProductCollection[]> {
     const collections: IProductCollection[] = [];
-    if (idUser) {
-      const visitedTags = await this.buildCollectionFromVisitedTags(idUser);
+    if (user?.userId) {
+      const visitedTags = await this.buildCollectionFromVisitedTags(user);
       if (visitedTags.products.length > 0) {
         collections.push(visitedTags);
       }
-      const likedTags = await this.buildCollectionFromLikedTags(idUser);
+      const likedTags = await this.buildCollectionFromLikedTags(user);
       if (likedTags.products.length > 0) {
         collections.push(likedTags);
       }
-      const byLocation = await this.buildCollectionByUserLocation(idUser);
+      const byLocation = await this.buildCollectionByUserLocation(user);
       if (byLocation.products.length > 0) {
         collections.push(byLocation);
       }
-      const bySearches = await this.buildCollectionFromSearchHistory(idUser);
+      const bySearches = await this.buildCollectionFromSearchHistory(user);
       if (bySearches.products.length > 0) {
         collections.push(bySearches);
       }
@@ -63,15 +64,15 @@ export class ProductCollectionsService {
 
   /**
    * Builds a collection from tags of products the user has visited.
-   * @param {number} idUser - The user ID.
+   * @param {IUserReq} user - The authenticated user.
    * @returns {Promise<IProductCollection>} The product collection.
    */
   private async buildCollectionFromVisitedTags(
-    idUser: number,
+    user: IUserReq,
   ): Promise<IProductCollection> {
     const tagIds =
       await this.productVisitsGettersService.getTagIdsFromVisitedProducts(
-        idUser,
+        user.userId,
       );
     if (tagIds.length === 0) {
       return {
@@ -84,8 +85,10 @@ export class ProductCollectionsService {
       tagIds,
       DEFAULT_COLLECTION_LIMIT,
     );
-    const products =
-      await this.productsGettersService.findManyWithRelations(productIds);
+    const products = await this.productsGettersService.findManyWithRelations(
+      productIds,
+      user,
+    );
     return {
       id: 'visited-tags',
       title: 'Basado en lo que visitaste',
@@ -95,13 +98,14 @@ export class ProductCollectionsService {
 
   /**
    * Builds a collection from tags of products the user has liked.
+   * @param {IUserReq} user - The authenticated user.
    */
   private async buildCollectionFromLikedTags(
-    idUser: number,
+    user: IUserReq,
   ): Promise<IProductCollection> {
     const tagIds =
       await this.productReactionsGettersService.getTagIdsFromLikedProducts(
-        idUser,
+        user.userId,
       );
     if (tagIds.length === 0) {
       return { id: 'liked-tags', title: 'Basado en tus likes', products: [] };
@@ -110,8 +114,10 @@ export class ProductCollectionsService {
       tagIds,
       DEFAULT_COLLECTION_LIMIT,
     );
-    const products =
-      await this.productsGettersService.findManyWithRelations(productIds);
+    const products = await this.productsGettersService.findManyWithRelations(
+      productIds,
+      user,
+    );
     return {
       id: 'liked-tags',
       title: 'Basado en tus likes',
@@ -121,12 +127,13 @@ export class ProductCollectionsService {
 
   /**
    * Builds a collection from products in the user's state/location.
+   * @param {IUserReq} user - The authenticated user.
    */
   private async buildCollectionByUserLocation(
-    idUser: number,
+    user: IUserReq,
   ): Promise<IProductCollection> {
-    const user = await this.usersGettersService.findOne(idUser);
-    const stateName = user?.state?.name;
+    const userData = await this.usersGettersService.findOne(user.userId);
+    const stateName = userData?.state?.name;
     if (!stateName) {
       return { id: 'location', title: 'Cerca de ti', products: [] };
     }
@@ -145,12 +152,13 @@ export class ProductCollectionsService {
 
   /**
    * Builds a collection from the user's recent search terms.
+   * @param {IUserReq} user - The authenticated user.
    */
   private async buildCollectionFromSearchHistory(
-    idUser: number,
+    user: IUserReq,
   ): Promise<IProductCollection> {
     const searchTerms = await this.userSearchesService.getRecentSearchTerms(
-      idUser,
+      user.userId,
       3,
     );
     if (searchTerms.length === 0) {
@@ -178,8 +186,10 @@ export class ProductCollectionsService {
       0,
       DEFAULT_COLLECTION_LIMIT,
     );
-    const products =
-      await this.productsGettersService.findManyWithRelations(productIds);
+    const products = await this.productsGettersService.findManyWithRelations(
+      productIds,
+      user,
+    );
     return {
       id: 'searches',
       title: 'Basado en tus búsquedas',

@@ -1,15 +1,22 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import {
   DiscountsConsumerEnum,
   QueueNamesEnum,
 } from '../common/enums/consumers';
-import { StatusEnum } from '../common/enums';
+import {
+  NotificationsConsumerEnum,
+  NotificationTypeEnum,
+  StatusEnum,
+} from '../common/enums';
+import { NotificationContentScenarioEnum } from '../common/enums/notification-content-scenario.enum';
 import { IUserReq } from '../common/interfaces';
 import { LogWarn } from '../common/helpers';
+import { Discount } from '../entities';
 import { DiscountsGettersService } from '../modules/discounts/discounts-getters.service';
 import { DiscountsSettersService } from '../modules/discounts/discounts-setters.service';
+import { CreateNotificationJobData } from './notifications.consumer';
 
 /** Payload for ActivateDiscount job. */
 interface ActivateDiscountJobData {
@@ -33,6 +40,8 @@ export class DiscountsConsumer extends WorkerHost {
   constructor(
     private readonly discountsGettersService: DiscountsGettersService,
     private readonly discountsSettersService: DiscountsSettersService,
+    @InjectQueue(QueueNamesEnum.notifications)
+    private readonly notificationsQueue: Queue,
   ) {
     super();
   }
@@ -80,6 +89,10 @@ export class DiscountsConsumer extends WorkerHost {
       discounts,
       userReq,
     );
+    await this.enqueueBusinessNotificationsForDiscounts(
+      discounts,
+      NotificationContentScenarioEnum.DISCOUNT_ACTIVATED,
+    );
   }
 
   /**
@@ -103,6 +116,40 @@ export class DiscountsConsumer extends WorkerHost {
     for (const discount of discounts) {
       await this.discountsSettersService.markAsExpired(discount, userReq);
       await this.discountsSettersService.removeDiscount(discount, userReq);
+    }
+    await this.enqueueBusinessNotificationsForDiscounts(
+      discounts,
+      NotificationContentScenarioEnum.DISCOUNT_EXPIRED,
+    );
+  }
+
+  /**
+   * Enqueues one business inbox notification per discount for the owning business.
+   *
+   * @param {Discount[]} discounts - Discounts that were activated or expired.
+   * @param {NotificationContentScenarioEnum} scenario - Activated vs expired copy.
+   */
+  private async enqueueBusinessNotificationsForDiscounts(
+    discounts: Discount[],
+    scenario: NotificationContentScenarioEnum,
+  ): Promise<void> {
+    for (const discount of discounts) {
+      const payload: CreateNotificationJobData = {
+        entityName: 'discounts',
+        scenario,
+        type: NotificationTypeEnum.INFO,
+        userOrBusinessReq: {
+          businessId: Number(discount.idCreationBusiness),
+          path: '',
+        },
+        data: {
+          id: discount.id,
+        },
+      };
+      await this.notificationsQueue.add(
+        NotificationsConsumerEnum.CreateForBusiness,
+        payload,
+      );
     }
   }
 }

@@ -2,6 +2,9 @@ services:
   db:
     image: postgres:18
     restart: always
+    # Solo localhost del VPS (para túnel SSH / DBeaver). No exponer a internet.
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
@@ -18,7 +21,7 @@ services:
   api-users:
     build: .
     container_name: api-users
-    command: npm run start:prod:users
+    command: pnpm run start:prod:users
     ports:
       - "3000:3000"
     env_file:
@@ -34,7 +37,7 @@ services:
   api-admin:
     build: .
     container_name: api-admin
-    command: npm run start:prod:admin
+    command: pnpm run start:prod:admin
     ports:
       - "3001:3001"
     env_file:
@@ -50,7 +53,7 @@ services:
   api-businesses:
     build: .
     container_name: api-businesses
-    command: npm run start:prod:businesses
+    command: pnpm run start:prod:businesses
     ports:
       - "3002:3002"
     env_file:
@@ -66,7 +69,7 @@ services:
   api-background-processes:
     build: .
     container_name: api-background-processes
-    command: npm run start:prod:background-processes
+    command: pnpm run start:prod:background-processes
     ports:
       - "3003:3003"
     env_file:
@@ -81,7 +84,7 @@ services:
 
   migrate:
     build: .
-    command: npm run migration:run
+    command: pnpm run migration:run
     env_file:
       - .env
     environment:

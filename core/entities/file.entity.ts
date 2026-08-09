@@ -6,6 +6,7 @@ import {
   OneToMany,
   Check,
 } from 'typeorm';
+import { ThumbnailsInterface } from '../common/interfaces';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 import { Business, Catalog, ProductFile, SocialNetwork } from '.';
@@ -38,9 +39,10 @@ export class File extends BaseEntity {
   @ManyToOne(() => Business, (businesses) => businesses.files)
   @JoinColumn([{ name: 'id_creation_business', referencedColumnName: 'id' }])
   creationBusiness?: Business;
-  /*@Column('jsonb', { name: 'thumbnails', nullable: true })
-    thumbnails?: ThumbnailsInterface;
-    */
+
+  @Column('jsonb', { name: 'thumbnails', nullable: true })
+  thumbnails?: ThumbnailsInterface;
+
   @Column({ type: 'simple-array', nullable: true })
   tags: string[];
 

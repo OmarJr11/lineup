@@ -2,6 +2,7 @@ import {
   Check,
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -21,6 +22,10 @@ import { Business, Currency, Product, StockMovement } from './';
 @Check(
   `(price IS NULL AND id_currency IS NULL) OR (price IS NOT NULL AND id_currency IS NOT NULL)`,
 )
+@Index('uq_product_skus_sku_code_not_deleted', ['skuCode'], {
+  unique: true,
+  where: `status != '${StatusEnum.DELETED}'`,
+})
 export class ProductSku extends BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int8' })
   id: number;
@@ -32,8 +37,8 @@ export class ProductSku extends BaseEntity {
   @JoinColumn([{ name: 'id_product', referencedColumnName: 'id' }])
   product?: Product;
 
-  /** Unique code for the SKU (e.g. "P1-AMAR-M"). */
-  @Column({ type: 'varchar', name: 'sku_code', length: 100, unique: true })
+  /** Unique code for the SKU (e.g. "P1-AMAR-M"). Enforced unique only when status is not deleted. */
+  @Column({ type: 'varchar', name: 'sku_code', length: 100 })
   skuCode: string;
 
   /**

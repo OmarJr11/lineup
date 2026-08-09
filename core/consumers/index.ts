@@ -9,3 +9,4 @@ export * from './queues.manager';
 export * from './search-data.consumer';
 export * from './reviews.consumer';
 export * from './notifications.consumer';
+export * from './products.consumer';

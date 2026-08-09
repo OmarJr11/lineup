@@ -421,7 +421,6 @@ export class UsersService extends BasicService<User> {
     await this.notificationsQueue.add(
       NotificationsConsumerEnum.CreateForUser,
       payload,
-      { removeOnComplete: true },
     );
   }
 }

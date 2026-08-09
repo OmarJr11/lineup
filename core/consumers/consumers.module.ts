@@ -12,6 +12,7 @@ import {
   QueuesManager,
   ReviewsConsumer,
   SearchDataConsumer,
+  ProductsConsumer,
 } from '.';
 import { QueueLogsConsumer } from './queue-logs.consumer';
 import { FilesModule } from '../modules/files/files.module';
@@ -47,6 +48,7 @@ export class ConsumersModule {
       SearchDataConsumer,
       ReviewsConsumer,
       NotificationsConsumer,
+      ProductsConsumer,
     ] as Provider[];
 
     const imports = [
