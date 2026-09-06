@@ -24,6 +24,7 @@ import {
   Token,
   UserRole,
   UserSearch,
+  Cart,
 } from '.';
 
 @Entity({ schema: 'system', name: 'users' })
@@ -119,4 +120,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications?: Notification[];
+
+  @OneToMany(() => Cart, (cart) => cart.creationUser)
+  carts?: Cart[];
 }

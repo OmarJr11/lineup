@@ -50,3 +50,5 @@ export * from './product-collection.schema';
 export * from './statistics';
 export * from './notification-payload.schema';
 export * from './notification.schema';
+export * from './cart.schema';
+export * from './cart-item.schema';

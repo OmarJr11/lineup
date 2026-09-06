@@ -31,7 +31,11 @@ export class TokenGettersService extends BasicService<Token> {
     try {
       return await this.findOneWithOptionsOrFail({ where: { token } });
     } catch (error) {
-      LogError(this.logger, error, this.findOneByTokenOrFail.name);
+      LogError(
+        this.logger,
+        error instanceof Error ? error : String(error),
+        this.findOneByTokenOrFail.name,
+      );
       throw new NotFoundException(this.rToken.tokenNotFound);
     }
   }
