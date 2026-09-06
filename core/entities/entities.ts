@@ -38,6 +38,8 @@ import {
   StockMovement,
   BusinessHour,
   Notification,
+  Cart,
+  CartItem,
 } from '.';
 
 export const entities = [
@@ -80,4 +82,6 @@ export const entities = [
   UserSearch,
   BusinessHour,
   Notification,
+  Cart,
+  CartItem,
 ];

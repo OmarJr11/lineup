@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { TokenGettersService } from '../../modules/token/token-getters.service';
 import { IResponse } from '../interfaces';
 import { userResponses } from '../responses';
@@ -15,7 +16,7 @@ export class TokenGuard implements CanActivate {
   constructor(private readonly tokenGettersService: TokenGettersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    let request = context.switchToHttp().getRequest();
+    let request: Request | undefined = context.switchToHttp().getRequest<Request>();
     if (!request) {
       const gqlCtx = context.getArgByIndex(2);
       request = gqlCtx?.req;

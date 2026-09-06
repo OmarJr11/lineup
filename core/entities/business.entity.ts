@@ -29,6 +29,7 @@ import {
   EntityAudit,
   Tag,
   Notification,
+  Cart,
 } from '.';
 import { BusinessHour } from './business-hour.entity';
 import { ProvidersEnum } from '../common/enums';
@@ -212,4 +213,7 @@ export class Business extends BaseEntity {
 
   @OneToMany(() => Notification, (notification) => notification.business)
   notifications?: Notification[];
+
+  @OneToMany(() => Cart, (cart) => cart.business)
+  carts?: Cart[];
 }

@@ -12,3 +12,4 @@ export * from './inventory.function';
 export * from './discounts.function';
 export * from './business-hours.function';
 export * from './notifications.function';
+export * from './cart.function';

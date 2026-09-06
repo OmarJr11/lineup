@@ -37,3 +37,5 @@ export * from './notification.entity';
 export * from './validation-mail.entity';
 export * from './verification-code.entity';
 export * from './user-search.entity';
+export * from './cart.entity';
+export * from './cart-item.entity';
