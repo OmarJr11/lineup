@@ -178,6 +178,13 @@ describe('AuthService', () => {
         service.checkBusinessLogged(null as unknown as Business, 'x'),
       ).rejects.toThrow(UnauthorizedException);
     });
+    it('throws when password does not match', async () => {
+      argon2VerifyMock.mockResolvedValueOnce(false);
+      const business = buildActiveBusiness();
+      await expect(
+        service.checkBusinessLogged(business, 'wrong'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
   });
 
   describe('validateUser', () => {

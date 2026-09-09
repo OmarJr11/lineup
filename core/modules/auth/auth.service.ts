@@ -76,14 +76,19 @@ export class AuthService {
         this.logger,
         'User not exist or wrong password',
         this.validateUser.name,
-        user,
       );
       throw new UnauthorizedException(this.rLogin.wrongData);
     }
-    await argon2.verify(user.password, password).catch((error: Error) => {
-      LogWarn(this.logger, error, this.validateUser.name, user);
+    try {
+      const isPasswordValid = await argon2.verify(user.password, password);
+      if (!isPasswordValid) {
+        LogWarn(this.logger, this.rLogin.wrongData, this.validateUser.name);
+        throw new UnauthorizedException(this.rLogin.wrongData);
+      }
+    } catch (error) {
+      LogWarn(this.logger, error as Error, this.validateUser.name);
       throw new UnauthorizedException(this.rLogin.wrongData);
-    });
+    }
   }
 
   /**
@@ -97,14 +102,19 @@ export class AuthService {
         this.logger,
         'Business not exist or wrong password',
         this.validateUser.name,
-        business,
       );
       throw new UnauthorizedException(this.rLogin.wrongData);
     }
-    await argon2.verify(business.password, password).catch((error: Error) => {
-      LogWarn(this.logger, error, this.validateUser.name, business);
+    try {
+      const isPasswordValid = await argon2.verify(business.password, password);
+      if (!isPasswordValid) {
+        LogWarn(this.logger, this.rLogin.wrongData, this.validateUser.name);
+        throw new UnauthorizedException(this.rLogin.wrongData);
+      }
+    } catch (error) {
+      LogWarn(this.logger, error as Error, this.validateUser.name);
       throw new UnauthorizedException(this.rLogin.wrongData);
-    });
+    }
   }
 
   /**
