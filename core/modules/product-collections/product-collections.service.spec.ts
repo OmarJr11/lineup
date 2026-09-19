@@ -121,7 +121,10 @@ describe('ProductCollectionsService', () => {
       productsGettersServiceMock.findManyWithRelations
         .mockResolvedValueOnce(p1)
         .mockResolvedValueOnce(p2);
-      const result = await service.getCollections(1);
+      const result = await service.getCollections({
+        userId: 1,
+        username: 'user1',
+      } as any);
       expect(result[0].id).toBe('top-rated');
       expect(result[1].id).toBe('most-visited');
     });
@@ -138,7 +141,10 @@ describe('ProductCollectionsService', () => {
       );
       usersGettersServiceMock.findOne.mockResolvedValue({ state: null });
       userSearchesServiceMock.getRecentSearchTerms.mockResolvedValue([]);
-      const result = await service.getCollections(5);
+      const result = await service.getCollections({
+        userId: 5,
+        username: 'user5',
+      } as any);
       expect(result.some((c) => c.id === 'visited-tags')).toBe(true);
       expect(
         result.find((c) => c.id === 'visited-tags')?.products,
@@ -165,7 +171,10 @@ describe('ProductCollectionsService', () => {
       });
       const loaded = [productEntity] as Product[];
       productsGettersServiceMock.findManyWithRelations.mockResolvedValue(loaded);
-      const result = await service.getCollections(2);
+      const result = await service.getCollections({
+        userId: 2,
+        username: 'user2',
+      } as any);
       const searches = result.find((c) => c.id === 'searches');
       expect(searches?.title).toBe('Basado en tus búsquedas');
       expect(searches?.products).toEqual(loaded);
