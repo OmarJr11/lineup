@@ -27,9 +27,9 @@ describe('CollectionsResolver', () => {
       },
     ]);
     const out = await resolver.getProductCollections({ userId: 2 } as IUserReq);
-    expect(productCollectionsServiceMock.getCollections).toHaveBeenCalledWith(
-      2,
-    );
+    expect(productCollectionsServiceMock.getCollections).toHaveBeenCalledWith({
+      userId: 2,
+    });
     expect(out).toEqual([
       {
         id: 1,
@@ -39,11 +39,11 @@ describe('CollectionsResolver', () => {
     ]);
   });
 
-  it('uses null user id when anonymous', async () => {
+  it('uses undefined user when anonymous', async () => {
     productCollectionsServiceMock.getCollections.mockResolvedValue([]);
     await resolver.getProductCollections(undefined);
     expect(productCollectionsServiceMock.getCollections).toHaveBeenCalledWith(
-      null,
+      undefined,
     );
   });
 });

@@ -127,15 +127,17 @@ describe('SearchResolver', () => {
       );
       expect(searchServiceMock.getFeaturedProducts).toHaveBeenCalledWith(
         pagination,
+        undefined,
       );
       expect(searchServiceMock.getRecentlyAddedProducts).toHaveBeenCalledWith(
         pagination,
+        undefined,
       );
       expect(out.featuredBusinesses).toEqual([b]);
       expect(out.featuredCatalogs).toEqual([c]);
       expect(out.featuredProducts).toEqual([{ ...p, price: null }]);
       expect(out.recentlyAddedProducts).toEqual([{ ...recent, price: null }]);
-      expect(out.total).toBe(4);
+      expect(out.total).toBe(1);
       expect(out.page).toBe(1);
       expect(out.limit).toBe(5);
     });
