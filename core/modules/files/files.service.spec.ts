@@ -1,6 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotAcceptableException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotAcceptableException,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { getQueueToken } from '@nestjs/bullmq';
@@ -12,6 +15,7 @@ import {
   FilesConsumerEnum,
   QueueNamesEnum,
 } from '../../common/enums/consumers';
+import { DirectoriesEnum } from '../../common/enums';
 import { IBusinessReq } from '../../common/interfaces';
 
 /**
@@ -124,6 +128,86 @@ describe('FilesService', () => {
       await expect(
         service.uploadDocumentFile(file, businessReq),
       ).rejects.toThrow(NotAcceptableException);
+      expect(filesQueueMock.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('uploadFile', () => {
+    const file = {
+      fieldname: 'file',
+      originalname: 'avatar.png',
+      encoding: '7bit',
+      mimetype: 'image/png',
+      size: 3,
+      buffer: Buffer.from('png'),
+    };
+    const data = { directory: DirectoriesEnum.USER };
+    const user = { userId: 8, username: 'tester' };
+
+    it('uploads to S3, saves metadata, and schedules thumbnails', async () => {
+      const s3SendMock = jest.fn().mockResolvedValue({});
+      const saved = {
+        name: 'generated-name',
+        directory: 'public/users',
+        url: 'https://bucket.s3.us-east-1.amazonaws.com/public/users/generated-name',
+      };
+      const internals = service as unknown as {
+        client: { send: jest.Mock };
+        generateFileName: jest.Mock;
+        save: jest.Mock;
+      };
+      internals.client.send = s3SendMock;
+      internals.generateFileName = jest
+        .fn()
+        .mockResolvedValue('generated-name');
+      internals.save = jest.fn().mockResolvedValue(saved);
+
+      await expect(service.uploadFile(file, data, user)).resolves.toBe(saved);
+
+      expect(s3SendMock).toHaveBeenCalledTimes(1);
+      expect(s3SendMock.mock.calls[0][0].input).toMatchObject({
+        Bucket: 'bucket',
+        Key: 'public/users/generated-name',
+        Body: file.buffer,
+        ContentType: 'image/png',
+        Metadata: { originalName: 'avatar.png' },
+      });
+      expect(internals.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'generated-name',
+          directory: 'public/users',
+          extension: 'png',
+        }),
+        user,
+      );
+      expect(filesQueueMock.add).toHaveBeenCalledWith(
+        FilesConsumerEnum.GenerateThumbnails,
+        {
+          fileName: 'generated-name',
+          directory: 'public/users',
+          mimetype: 'image/png',
+        },
+      );
+    });
+
+    it('wraps an S3 upload failure and does not save metadata', async () => {
+      const internals = service as unknown as {
+        client: { send: jest.Mock };
+        generateFileName: jest.Mock;
+        save: jest.Mock;
+      };
+      internals.client.send = jest
+        .fn()
+        .mockRejectedValue(new Error('s3 unavailable'));
+      internals.generateFileName = jest
+        .fn()
+        .mockResolvedValue('generated-name');
+      internals.save = jest.fn();
+
+      await expect(service.uploadFile(file, data, user)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(internals.save).not.toHaveBeenCalled();
       expect(filesQueueMock.add).not.toHaveBeenCalled();
     });
   });
