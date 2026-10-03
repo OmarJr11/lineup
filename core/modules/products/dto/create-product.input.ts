@@ -28,11 +28,10 @@ export class CreateProductInput {
 
   @Field()
   @IsOptional()
-  @IsNotEmpty()
   @MinLength(3)
   @MaxLength(255)
   @IsString()
-  subtitle: string;
+  subtitle?: string;
 
   @Field()
   @IsNotEmpty()
