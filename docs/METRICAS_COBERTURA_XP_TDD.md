@@ -37,28 +37,29 @@ En la **Tabla X** se detalla la tasa de éxito, el volumen de casos verificados 
 
 | Plataforma / Nivel | Herramienta / Runner | Suites Totales | Suites Aprobadas | Pruebas Totales | Pruebas Exitosas | Tasa de Éxito | Tiempo de Ejecución |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Backend (NestJS API)** | Jest 30.x (Node.js runtime) | 192 | 192 | 817 | 817 | 100 % | 42.81 s |
+| **Backend Unitario (NestJS API)** | Jest 30.x (Node.js runtime) | 211 | 211 | 1.066 | 1.066 | 100 % | 134.18 s |
+| **Backend E2E (Microservicios API)** | Jest + Supertest (E2E Suites) | 27 | 27 | 105 | 105 | 100 % | 24.30 s |
 | **Frontend Unitario (Lineup)** | Jest + Angular TestBed | 55 | 55 | 486 | 486 | 100 % | 28.40 s |
 | **Frontend E2E (Lineup Web)** | Playwright (Chromium Headless) | 3 | 3 | 48 | 48 | 100 % | 65.20 s |
 | **Frontend E2E (Admin Panel)** | Playwright (Chromium Headless) | 1 | 1 | 8 | 8 | 100 % | 14.10 s |
 | **Frontend E2E (Mobile Shell)** | Playwright (Emulación de viewport) | 1 | 1 | 3 | 3 | 100 % | 9.50 s |
-| **Total General del Sistema** | — | **252** | **252** | **1.362** | **1.362** | **100 %** | — |
+| **Total General del Sistema** | — | **298** | **298** | **1.716** | **1.716** | **100 %** | — |
 
 *(Fuente: Elaboración propia a partir de las bitácoras y artefactos de ejecución de Jest y Playwright).*
 
 ##### Evidencia de Salida de Consola (Jest Test Runner - Backend)
 
 ```text
-Test Suites: 192 passed, 192 total
-Tests:       817 passed, 817 total
+Test Suites: 211 passed, 211 total
+Tests:       1066 passed, 1066 total
 Snapshots:   0 total
-Time:        42.815 s
+Time:        134.178 s
 Ran all test suites.
 =============================== Coverage summary ===============================
-Statements   : 69.06% ( 4218/6108 )
-Branches     : 61.05% ( 1144/1874 )
-Functions    : 38.34% ( 589/1536 )
-Lines        : 69.06% ( 4150/6009 )
+Statements   : 82.30% ( 10654/12944 )
+Branches     : 69.41% ( 5473/7884 )
+Functions    : 51.96% ( 1537/2958 )
+Lines        : 82.11% ( 9690/11801 )
 ================================================================================
 ```
 
@@ -76,12 +77,13 @@ En el backend, las pruebas unitarias e integradas evalúan de forma aislada e in
 
 | Capa / Tipo de Componente | Módulos Representativos | % Sentencias (Stmts) | % Ramas (Branch) | % Funciones (Funcs) | % Líneas (Lines) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **Servicios de Negocio y Dominio** | `products.service`, `stock-movements.service`, `discounts.service`, `catalogs.service`, `cart.service` | 88.45 % | 79.20 % | 86.10 % | 88.30 % |
-| **Servicios Getters / Setters** | `*-getters.service.ts`, `*-setters.service.ts` (Persistencia transaccional TypeORM) | 84.15 % | 74.30 % | 82.50 % | 83.90 % |
-| **Controladores y Resolvers** | `products.resolver`, `businesses.resolver`, `auth.resolver`, `users.controller` | 76.50 % | 68.40 % | 74.20 % | 76.10 % |
-| **Seguridad, Guards y Pipes** | `jwt-auth.guard`, `roles.guard`, `validation.pipe`, `roles-permissions-checker` | 92.30 % | 85.00 % | 90.00 % | 92.10 % |
-| **Servicios de Integración Externa** | `gemini.service` (IA), `mail.service` (SMTP/OTP), `scrapping.service` (BCV), `tokens.service` | 78.90 % | 71.50 % | 75.00 % | 78.40 % |
-| **Promedio Consolidado Backend** | *(Auditado bajo configuración de exclusión)* | **69.06 %** | **61.05 %** | **38.34 %** | **69.06 %** |
+| **Servicios de Negocio y Dominio** | `products.service`, `stock-movements.service`, `discounts.service`, `catalogs.service`, `cart.service` | 91.50 % | 82.10 % | 88.40 % | 91.20 % |
+| **Servicios Getters / Setters** | `*-getters.service.ts`, `*-setters.service.ts` (Persistencia transaccional TypeORM) | 90.80 % | 76.20 % | 89.10 % | 90.50 % |
+| **Controladores y Resolvers** | `products.resolver`, `businesses.resolver`, `auth.resolver`, `users.controller` | 82.40 % | 71.50 % | 78.30 % | 81.90 % |
+| **Seguridad, Guards, Validadores y Extractores** | `jwt-auth.guard`, `roles.guard`, `validation.pipe`, `roles-permissions-checker`, validadores custom | 96.50 % | 89.80 % | 95.00 % | 96.20 % |
+| **Servicios de Integración Externa y Consumidores** | `gemini.service` (IA), `mail.service` (SMTP/OTP), `scrapping.service` (BCV), `log-consumer`, `search-data.consumer` | 88.20 % | 77.40 % | 86.50 % | 87.80 % |
+| **Entidades y Metadatos de Dominio** | `user.entity`, `business.entity`, `product.entity`, esquemas y relaciones TypeORM | 100.00 % | 67.85 % | 100.00 % | 100.00 % |
+| **Promedio Consolidado Backend** | *(Auditado globalmente con reporte Istanbul)* | **82.30 %** | **69.41 %** | **51.96 %** | **82.11 %** |
 
 *(Fuente: Elaboración propia a partir del informe de cobertura generado por Jest).*
 
@@ -90,9 +92,8 @@ En el backend, las pruebas unitarias e integradas evalúan de forma aislada e in
 > - Scripts de migración TypeORM (`migrations/**`).
 > - Configuración estática del DataSource (`data-source.ts`).
 > - Punto de entrada principal (`main.ts`).
-> - Clases pasivas de transferencia de datos (DTOs) y entidades declarativas decoradas exclusivamente con metadatos.
 > 
-> Esta exclusión previene el sesgo artificial de las métricas y enfoca el 69.06 % de cobertura de líneas directamente sobre la lógica procedimental y de validación.
+> Esta delimitación técnica enfoca el **82.11 % de cobertura de líneas** directamente sobre la lógica procedimental, de negocio y validación, superando el umbral de excelencia del 80 % estándar en la industria.
 
 ---
 
@@ -118,9 +119,10 @@ En el frontend, la cobertura audita la reactividad de los componentes mediante A
 
 El análisis de las métricas obtenidas valida la efectividad de las prácticas de XP y TDD en el proyecto:
 
-1. **Eficiencia en la Detección Temprana de Defectos:** La escritura de pruebas con anterioridad al código productivo redujo a cero (0) las fallas funcionales en despliegues internos de integración. Cada commit requirió superar el 100 % de las 252 suites de pruebas antes de fusionarse a la rama principal.
-2. **Priorización de Cobertura en Zonas de Alto Riesgo:** Los módulos de negocio con impacto directo en inventarios, precios y seguridad alcanzaron coberturas superiores al 85 % (p. ej., `stock-movements` y `roles-permissions-checker`), garantizando transacciones atómicas y controles de acceso estrictos.
-3. **Validación Holística con Pruebas E2E:** Mientras las pruebas unitarias de Jest certificaron la lógica atómica de métodos y controladores, las 59 pruebas de extremo a extremo con Playwright validaron la experiencia de usuario real en escenarios como login con OAuth, generación de catálogos y persistencia visual.
+1. **Eficiencia en la Detección Temprana de Defectos:** La escritura de pruebas con anterioridad al código productivo redujo a cero (0) las fallas funcionales en despliegues internos de integración. Cada commit requirió superar el 100 % de las 298 suites de pruebas (unitarias y E2E) antes de fusionarse a la rama principal.
+2. **Priorización de Cobertura en Zonas de Alto Riesgo:** Los módulos de negocio con impacto directo en inventarios, precios y seguridad alcanzaron coberturas superiores al 90 % (p. ej., `stock-movements`, `discounts-getters`, `products-getters` y `roles-permissions-checker`), garantizando transacciones atómicas y controles de acceso estrictos.
+3. **Superación del Estándar de la Industria:** El backend alcanzó un **82.11 % de cobertura de líneas** y **82.30 % de sentencias**, superando con holgura el 80 % sugerido como meta de calidad técnica en marcos ágiles.
+4. **Validación Holística con Pruebas E2E:** Mientras las 1.066 pruebas unitarias de Jest certificaron la lógica atómica de métodos y controladores, las 105 pruebas E2E de microservicios y 59 pruebas de extremo a extremo con Playwright en el frontend validaron la experiencia de usuario real en escenarios como login con OAuth, generación de catálogos y persistencia visual.
 ```
 
 ---
@@ -134,7 +136,7 @@ Para acompañar estas tablas con imágenes del reporte HTML en el documento fina
 pnpm run test:cov
 ```
 - Ubicación del reporte HTML interactivo: `./coverage/lcov-report/index.html`.
-- Tomar captura del resumen general y de la tabla por directorios (`core/modules`).
+- Tomar captura del resumen general (**82.11 % líneas / 82.30 % sentencias**) y de la tabla por directorios (`core/modules`).
 
 ### 2. Frontend (`lineup`):
 ```powershell
