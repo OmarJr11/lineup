@@ -35,7 +35,7 @@ export class UpdateProductInput {
 
   @Field({ nullable: true })
   @IsOptional()
-  @IsNotEmpty()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MinLength(3)
   @MaxLength(255)
   @IsString()
