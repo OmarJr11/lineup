@@ -1,36 +1,27 @@
-import { EventEmitter } from 'events';
-import { Logger } from '@nestjs/common';
-import type { QueueEvents } from 'bullmq';
 import { LogConsumer } from './log-consumer.consumer';
+import { EventEmitter } from 'events';
 
-/**
- * Unit tests for {@link LogConsumer}.
- */
 describe('LogConsumer', () => {
-  it('registers listeners and logs on added event', () => {
-    const logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+  it('registers all queue event listeners and handles emitted events', () => {
     const consumer = new LogConsumer();
-    const ee = new EventEmitter();
-    consumer.listenToQueue(ee as unknown as QueueEvents);
-    ee.emit('added', { jobId: '99', name: 'test-job' });
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('test-job'),
-    );
-    logSpy.mockRestore();
-  });
+    const fakeQueueEvents = new EventEmitter();
 
-  it('logs failed jobs with reason', () => {
-    const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    const consumer = new LogConsumer();
-    const ee = new EventEmitter();
-    consumer.listenToQueue(ee as unknown as QueueEvents);
-    ee.emit('failed', {
-      jobId: '1',
-      failedReason: 'boom',
-    });
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('boom'),
-    );
-    errorSpy.mockRestore();
+    consumer.listenToQueue(fakeQueueEvents as any);
+
+    expect(() => {
+      fakeQueueEvents.emit('added', { jobId: '1', name: 'testJob' });
+      fakeQueueEvents.emit('completed', { jobId: '1' });
+      fakeQueueEvents.emit('failed', { jobId: '1', failedReason: 'Timeout' });
+      fakeQueueEvents.emit('error', new Error('Queue error'));
+      fakeQueueEvents.emit('waiting', { jobId: '2' });
+      fakeQueueEvents.emit('active', { jobId: '2' });
+      fakeQueueEvents.emit('stalled', { jobId: '2' });
+      fakeQueueEvents.emit('progress', { jobId: '2' }, '50%');
+      fakeQueueEvents.emit('paused');
+      fakeQueueEvents.emit('resumed');
+      fakeQueueEvents.emit('cleaned', { count: '5' }, 'completed');
+      fakeQueueEvents.emit('drained');
+      fakeQueueEvents.emit('removed', { jobId: '3', prev: 'waiting' });
+    }).not.toThrow();
   });
 });

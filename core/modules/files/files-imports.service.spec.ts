@@ -86,5 +86,154 @@ describe('FilesImportsService', () => {
         service.uploadDocumentFile(makeFile({ originalname: 'a.txt' })),
       ).rejects.toThrow(InternalServerErrorException);
     });
+
+    it('processes binary documents (pdf, xlsx) using base64 encoding', async () => {
+      geminiServiceMock.generateContent.mockResolvedValue({
+        text: '[{"title":"PDF Product","idCatalog":2}]',
+      });
+      const result = await service.uploadDocumentFile(
+        makeFile({
+          originalname: 'catalogo.pdf',
+          mimetype: 'application/pdf',
+          buffer: Buffer.from('binary-pdf-content'),
+        }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('PDF Product');
+      expect(geminiServiceMock.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contents: expect.stringContaining('encoding: base64'),
+        }),
+      );
+    });
+
+    it('returns empty array when CSV has 1 or fewer rows', async () => {
+      const result = await service.uploadDocumentFile(
+        makeFile({
+          originalname: 'single_row.csv',
+          mimetype: 'text/csv',
+          buffer: Buffer.from('title,price,idCatalog\n'),
+        }),
+      );
+      expect(result).toEqual([]);
+    });
+
+    it('processes CSV rows in chunks and returns imported products', async () => {
+      const csv = 'title,idCatalog\nProduct 1,1\nProduct 2,1';
+      geminiServiceMock.generateContent.mockResolvedValue({
+        text: '[{"title":"Product 1","idCatalog":1},{"title":"Product 2","idCatalog":1}]',
+      });
+      const result = await service.uploadDocumentFile(
+        makeFile({
+          originalname: 'items.csv',
+          mimetype: 'text/csv',
+          buffer: Buffer.from(csv),
+        }),
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].title).toBe('Product 1');
+      expect(result[1].title).toBe('Product 2');
+    });
+
+    it('handles CSV chunk fallback when product count mismatches and splits chunk', async () => {
+      const csv = 'title,idCatalog\nItem A,1\nItem B,1';
+      // First call for chunk of 2 returns only 1 product (triggering mismatch)
+      // Next calls for subchunks of 1 return 1 product each
+      geminiServiceMock.generateContent
+        .mockResolvedValueOnce({
+          text: '[{"title":"Item A","idCatalog":1}]', // length 1 != 2
+        })
+        .mockResolvedValueOnce({
+          text: '[{"title":"Item A","idCatalog":1}]',
+        })
+        .mockResolvedValueOnce({
+          text: '[{"title":"Item B","idCatalog":1}]',
+        });
+
+      const result = await service.uploadDocumentFile(
+        makeFile({
+          originalname: 'items.csv',
+          mimetype: 'text/csv',
+          buffer: Buffer.from(csv),
+        }),
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].title).toBe('Item A');
+      expect(result[1].title).toBe('Item B');
+    });
+
+    it('parses products wrapped in an object { products: [...] }', async () => {
+      const json =
+        '{"products":[{"title":"Wrapped Item","subtitle":"Sub","idCatalog":5}]}';
+      geminiServiceMock.generateContent.mockResolvedValue({ text: json });
+
+      const result = await service.uploadDocumentFile(
+        makeFile({ originalname: 'doc.txt' }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('Wrapped Item');
+    });
+
+    it('parses products wrapped in { items: [...] } or { data: [...] }', async () => {
+      const json =
+        '{"items":[{"title":"Item from items","idCatalog":"10"}]}';
+      geminiServiceMock.generateContent.mockResolvedValue({ text: json });
+
+      const result = await service.uploadDocumentFile(
+        makeFile({ originalname: 'doc.txt' }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('Item from items');
+      expect(result[0].idCatalog).toBe(10);
+    });
+
+    it('parses products with variations and variation options', async () => {
+      const json = JSON.stringify([
+        {
+          title: 'Shoes',
+          idCatalog: 3,
+          variations: [
+            {
+              title: 'Size',
+              options: [{ value: '42' }, { value: '43' }],
+            },
+          ],
+        },
+      ]);
+      geminiServiceMock.generateContent.mockResolvedValue({ text: json });
+
+      const result = await service.uploadDocumentFile(
+        makeFile({ originalname: 'shoes.txt' }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].variations).toBeDefined();
+      expect(result[0].variations?.[0].title).toBe('Size');
+      expect(result[0].variations?.[0].options).toHaveLength(2);
+    });
+
+    it('throws NotAcceptableException when Gemini output has no JSON structure', async () => {
+      geminiServiceMock.generateContent.mockResolvedValue({
+        text: 'Sorry, I cannot parse this document into products.',
+      });
+
+      await expect(
+        service.uploadDocumentFile(makeFile({ originalname: 'invalid.txt' })),
+      ).rejects.toThrow(NotAcceptableException);
+    });
+
+    it('repairs malformed JSON via Gemini repair when initial parse fails', async () => {
+      const brokenJson = '[{"title": "Unclosed quote, idCatalog: 1]';
+      const fixedJson = '[{"title": "Fixed Product", "idCatalog": 1}]';
+
+      geminiServiceMock.generateContent
+        .mockResolvedValueOnce({ text: brokenJson })
+        .mockResolvedValueOnce({ text: fixedJson });
+
+      const result = await service.uploadDocumentFile(
+        makeFile({ originalname: 'broken.txt' }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('Fixed Product');
+    });
   });
 });

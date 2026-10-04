@@ -85,4 +85,95 @@ describe('ScrappingCacheService', () => {
       );
     });
   });
+
+  describe('parseToVenezuelaDate', () => {
+    it('returns a new date when dateStr is null', () => {
+      const fn = (service as any).parseToVenezuelaDate.bind(service);
+      const res = fn(null);
+      expect(res).toBeInstanceOf(Date);
+    });
+
+    it('returns date parsed directly when offset or Z is provided', () => {
+      const fn = (service as any).parseToVenezuelaDate.bind(service);
+      const res = fn('2026-04-09T14:30:00Z');
+      expect(res.toISOString()).toBe('2026-04-09T14:30:00.000Z');
+
+      const res2 = fn('2026-04-09T10:30:00-04:00');
+      expect(res2.toISOString()).toBe('2026-04-09T14:30:00.000Z');
+    });
+
+    it('appends -04:00 when dateStr contains T but no offset', () => {
+      const fn = (service as any).parseToVenezuelaDate.bind(service);
+      const res = fn('2026-04-09T10:30:00');
+      expect(res.toISOString()).toBe('2026-04-09T14:30:00.000Z');
+    });
+
+    it('appends T00:00:00-04:00 when dateStr has no T and no offset', () => {
+      const fn = (service as any).parseToVenezuelaDate.bind(service);
+      const res = fn('2026-04-09');
+      expect(res.toISOString()).toBe('2026-04-09T04:00:00.000Z');
+    });
+  });
+
+  describe('isSameCalendarDayInTimeZone', () => {
+    it('compares local dates in specified time zone correctly', () => {
+      const fn = (service as any).isSameCalendarDayInTimeZone.bind(service);
+      const d1 = new Date('2026-04-09T12:00:00Z');
+      const d2 = new Date('2026-04-09T16:00:00Z');
+      const d3 = new Date('2026-04-10T12:00:00Z');
+
+      expect(fn(d1, d2, 'America/Caracas')).toBe(true);
+      expect(fn(d1, d3, 'America/Caracas')).toBe(false);
+    });
+  });
+
+  describe('getExchangeDivs error handling', () => {
+    it('throws InternalServerErrorException when puppeteer fails', async () => {
+      const puppeteer = require('puppeteer');
+      const launchSpy = jest
+        .spyOn(puppeteer, 'launch')
+        .mockRejectedValue(new Error('Puppeteer launch failed'));
+
+      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
+        'Error extracting exchange data from BCV',
+      );
+
+      launchSpy.mockRestore();
+    });
+
+    it('attempts to close browser when page operations fail', async () => {
+      const puppeteer = require('puppeteer');
+      const browserMock = {
+        newPage: jest.fn().mockRejectedValue(new Error('Page open fail')),
+        close: jest.fn().mockResolvedValue(undefined),
+      };
+      const launchSpy = jest
+        .spyOn(puppeteer, 'launch')
+        .mockResolvedValue(browserMock as any);
+
+      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
+        'Error extracting exchange data from BCV',
+      );
+      expect(browserMock.close).toHaveBeenCalled();
+
+      launchSpy.mockRestore();
+    });
+
+    it('throws InternalServerErrorException if closing browser also fails', async () => {
+      const puppeteer = require('puppeteer');
+      const browserMock = {
+        newPage: jest.fn().mockRejectedValue(new Error('Page open fail')),
+        close: jest.fn().mockRejectedValue(new Error('Close fail')),
+      };
+      const launchSpy = jest
+        .spyOn(puppeteer, 'launch')
+        .mockResolvedValue(browserMock as any);
+
+      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
+        'Error closing browser after failure',
+      );
+
+      launchSpy.mockRestore();
+    });
+  });
 });
