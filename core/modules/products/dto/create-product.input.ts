@@ -26,8 +26,9 @@ export class CreateProductInput {
   @IsString()
   title: string;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @MinLength(3)
   @MaxLength(255)
   @IsString()
