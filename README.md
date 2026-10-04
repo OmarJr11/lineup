@@ -51,8 +51,18 @@ $ pnpm run start:prod
 # unit tests
 $ pnpm run test
 
-# e2e tests
+# test infrastructure (PostgreSQL & Redis for e2e)
+$ pnpm run test:infra:up
+$ pnpm run test:infra:down
+
+# all e2e tests
 $ pnpm run test:e2e
+
+# specific e2e tests per app
+$ pnpm run test:e2e:users
+$ pnpm run test:e2e:businesses
+$ pnpm run test:e2e:admin
+$ pnpm run test:e2e:background-processes
 
 # test coverage
 $ pnpm run test:cov

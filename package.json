@@ -41,6 +41,7 @@
     "test:background-processes": "jest apps/background-processes --maxWorkers=2",
     "test:core": "jest core/ --maxWorkers=2",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "pnpm run test:e2e:users && pnpm run test:e2e:businesses && pnpm run test:e2e:admin && pnpm run test:e2e:background-processes",
     "test:e2e:admin": "jest --config ./apps/admin/test/jest-e2e.json --maxWorkers=2",
     "test:e2e:businesses": "jest --config ./apps/businesses/test/jest-e2e.json --maxWorkers=2",
     "test:e2e:users": "jest --config ./apps/users/test/jest-e2e.json --maxWorkers=2",

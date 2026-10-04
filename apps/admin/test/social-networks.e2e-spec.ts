@@ -64,7 +64,7 @@ describe('Admin SocialNetworks e2e', () => {
       app,
       query: createSocialNetworkMutation,
       variables: {
-        data: { name: 'Instagram', code: 'instagram', imageCode: 'img-1' },
+        data: { name: 'Instagram', code: 'INSTAGRAM', imageCode: 'img-1' },
       },
     });
     expect(response.body.errors).toBeUndefined();

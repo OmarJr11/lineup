@@ -17,7 +17,7 @@ export class CreateSocialNetworkInput {
   @IsString()
   name: string;
 
-  @Field()
+  @Field(() => SocialMediasEnum)
   @IsNotEmpty()
   @IsEnum(SocialMediasEnum)
   code: SocialMediasEnum;

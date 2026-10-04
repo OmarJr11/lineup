@@ -27,7 +27,7 @@ export class UpdateSocialNetworkInput {
   @IsString()
   name?: string;
 
-  @Field({ nullable: true })
+  @Field(() => SocialMediasEnum, { nullable: true })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(SocialMediasEnum)
