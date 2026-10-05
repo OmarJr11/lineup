@@ -90,9 +90,9 @@ describe('NotificationsGettersService', () => {
   describe('findOneForUserOrFail', () => {
     it('throws NotFoundException when row is missing', async () => {
       repositoryMock.findOneOrFail.mockRejectedValue(new Error('nf'));
-      await expect(
-        service.findOneForUserOrFail(1, 2),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOneForUserOrFail(1, 2)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

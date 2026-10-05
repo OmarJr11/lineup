@@ -12,7 +12,9 @@ describe('Businesses Locations e2e', () => {
     update: jest.fn(),
     remove: jest.fn(),
   };
-  const providers = [{ provide: LocationsService, useValue: locationsServiceMock }];
+  const providers = [
+    { provide: LocationsService, useValue: locationsServiceMock },
+  ];
   const createLocationMutation = `mutation CreateLocation($data: CreateLocationInput!) { createLocation(data: $data) { id } }`;
   const findAllMyLocationsQuery = `query FindAllMyLocations { findAllMyLocations { id } }`;
   const findOneLocationQuery = `query FindOneLocation($id: Int!) { findOneLocation(id: $id) { id } }`;
@@ -47,7 +49,10 @@ describe('Businesses Locations e2e', () => {
   });
   it('covers findAllMyLocations', async () => {
     locationsServiceMock.findAllMyLocations.mockResolvedValue([{ id: 1 }]);
-    const response = await executeGraphql({ app, query: findAllMyLocationsQuery });
+    const response = await executeGraphql({
+      app,
+      query: findAllMyLocationsQuery,
+    });
     expect(response.body.data.findAllMyLocations).toHaveLength(1);
   });
   it('covers findOneLocation', async () => {

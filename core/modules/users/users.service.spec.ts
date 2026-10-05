@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -26,10 +25,7 @@ jest.mock('../../common/helpers/generators.helper', () => ({
 }));
 
 import * as argon2 from 'argon2';
-import {
-  ForbiddenException,
-  NotAcceptableException,
-} from '@nestjs/common';
+import { ForbiddenException, NotAcceptableException } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import type { Repository } from 'typeorm';
 import type { Request } from 'express';
@@ -87,7 +83,9 @@ describe('UsersService', () => {
     add: jest.fn(),
   };
   const userReq: IUserReq = { userId: 10, username: 'self' };
-  const argon2VerifyMock = argon2.verify as jest.MockedFunction<typeof argon2.verify>;
+  const argon2VerifyMock = argon2.verify as jest.MockedFunction<
+    typeof argon2.verify
+  >;
   const generateRandomCodeByLengthMock =
     generateRandomCodeByLength as jest.MockedFunction<
       typeof generateRandomCodeByLength
@@ -181,17 +179,17 @@ describe('UsersService', () => {
       const data = baseInput();
       data.username = 'a@';
       data.email = 'other@mail.com';
-      await expect(
-        service.create(data, ProvidersEnum.LineUp),
-      ).rejects.toThrow(NotAcceptableException);
+      await expect(service.create(data, ProvidersEnum.LineUp)).rejects.toThrow(
+        NotAcceptableException,
+      );
     });
 
     it('throws ForbiddenException when username fails format validation', async () => {
       const data = baseInput();
       data.username = 'bad__name';
-      await expect(
-        service.create(data, ProvidersEnum.LineUp),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.create(data, ProvidersEnum.LineUp)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('creates user, assigns role, and strips password from result', async () => {
@@ -266,7 +264,10 @@ describe('UsersService', () => {
     });
 
     it('throws when username belongs to another user', async () => {
-      gettersMock.findOne.mockResolvedValue({ id: 10, username: 'self' } as User);
+      gettersMock.findOne.mockResolvedValue({
+        id: 10,
+        username: 'self',
+      } as User);
       gettersMock.findByUsername.mockResolvedValue({
         id: 99,
         username: 'taken',

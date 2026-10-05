@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MakeProductSkuQuantityNullable1773600000000
-  implements MigrationInterface
-{
+export class MakeProductSkuQuantityNullable1773600000000 implements MigrationInterface {
   name = 'MakeProductSkuQuantityNullable1773600000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

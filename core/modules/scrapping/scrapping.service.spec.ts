@@ -20,11 +20,18 @@ describe('ScrappingCacheService', () => {
 
   describe('fetchBcvOfficialRatesFromSite', () => {
     it('returns dollar, euro, and sourceDate from scraper', async () => {
-      jest.spyOn(service as never as { getExchangeDivs: (u: string) => Promise<unknown> }, 'getExchangeDivs').mockResolvedValue({
-        euro: 48.5,
-        dollar: 46.2,
-        date: '2026-04-09',
-      });
+      jest
+        .spyOn(
+          service as never as {
+            getExchangeDivs: (u: string) => Promise<unknown>;
+          },
+          'getExchangeDivs',
+        )
+        .mockResolvedValue({
+          euro: 48.5,
+          dollar: 46.2,
+          date: '2026-04-09',
+        });
       await expect(service.fetchBcvOfficialRatesFromSite()).resolves.toEqual({
         dollar: 46.2,
         euro: 48.5,
@@ -35,11 +42,18 @@ describe('ScrappingCacheService', () => {
 
   describe('syncBcvOfficialRatesToCache', () => {
     it('skips cache when source date is not the same calendar day in Caracas', async () => {
-      jest.spyOn(service as never as { getExchangeDivs: (u: string) => Promise<unknown> }, 'getExchangeDivs').mockResolvedValue({
-        euro: 1,
-        dollar: 1,
-        date: '2020-01-01',
-      });
+      jest
+        .spyOn(
+          service as never as {
+            getExchangeDivs: (u: string) => Promise<unknown>;
+          },
+          'getExchangeDivs',
+        )
+        .mockResolvedValue({
+          euro: 1,
+          dollar: 1,
+          date: '2020-01-01',
+        });
       jest
         .spyOn(
           service as never as {
@@ -56,11 +70,18 @@ describe('ScrappingCacheService', () => {
       expect(pyCacheServiceMock.setCache).not.toHaveBeenCalled();
     });
     it('writes snapshot to Redis when calendar day matches', async () => {
-      jest.spyOn(service as never as { getExchangeDivs: (u: string) => Promise<unknown> }, 'getExchangeDivs').mockResolvedValue({
-        euro: 40,
-        dollar: 36.5,
-        date: '2026-04-09',
-      });
+      jest
+        .spyOn(
+          service as never as {
+            getExchangeDivs: (u: string) => Promise<unknown>;
+          },
+          'getExchangeDivs',
+        )
+        .mockResolvedValue({
+          euro: 40,
+          dollar: 36.5,
+          date: '2026-04-09',
+        });
       jest
         .spyOn(
           service as never as {
@@ -134,9 +155,9 @@ describe('ScrappingCacheService', () => {
         .spyOn(puppeteer, 'launch')
         .mockRejectedValue(new Error('Puppeteer launch failed'));
 
-      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
-        'Error extracting exchange data from BCV',
-      );
+      await expect(
+        (service as any).getExchangeDivs('http://example.com'),
+      ).rejects.toThrow('Error extracting exchange data from BCV');
 
       launchSpy.mockRestore();
     });
@@ -151,9 +172,9 @@ describe('ScrappingCacheService', () => {
         .spyOn(puppeteer, 'launch')
         .mockResolvedValue(browserMock as any);
 
-      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
-        'Error extracting exchange data from BCV',
-      );
+      await expect(
+        (service as any).getExchangeDivs('http://example.com'),
+      ).rejects.toThrow('Error extracting exchange data from BCV');
       expect(browserMock.close).toHaveBeenCalled();
 
       launchSpy.mockRestore();
@@ -169,9 +190,9 @@ describe('ScrappingCacheService', () => {
         .spyOn(puppeteer, 'launch')
         .mockResolvedValue(browserMock as any);
 
-      await expect((service as any).getExchangeDivs('http://example.com')).rejects.toThrow(
-        'Error closing browser after failure',
-      );
+      await expect(
+        (service as any).getExchangeDivs('http://example.com'),
+      ).rejects.toThrow('Error closing browser after failure');
 
       launchSpy.mockRestore();
     });

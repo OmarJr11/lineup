@@ -9,7 +9,9 @@ describe('Businesses Currencies e2e', () => {
     findAll: jest.fn(),
     findBcvOfficialRatesFromCache: jest.fn(),
   };
-  const providers = [{ provide: CurrenciesService, useValue: currenciesServiceMock }];
+  const providers = [
+    { provide: CurrenciesService, useValue: currenciesServiceMock },
+  ];
 
   const findAllCurrenciesQuery = `query FindAllCurrencies { findAllCurrencies { id } }`;
   const findBcvOfficialRatesQuery = `query FindBcvOfficialRates { findBcvOfficialRates { __typename } }`;
@@ -25,7 +27,10 @@ describe('Businesses Currencies e2e', () => {
 
   it('covers findAllCurrencies', async () => {
     currenciesServiceMock.findAll.mockResolvedValue([{ id: 1 }]);
-    const response = await executeGraphql({ app, query: findAllCurrenciesQuery });
+    const response = await executeGraphql({
+      app,
+      query: findAllCurrenciesQuery,
+    });
     expect(response.body.data.findAllCurrencies).toHaveLength(1);
   });
 
@@ -36,7 +41,10 @@ describe('Businesses Currencies e2e', () => {
       source: 'BCV',
       fetchedAt: new Date().toISOString(),
     });
-    const response = await executeGraphql({ app, query: findBcvOfficialRatesQuery });
+    const response = await executeGraphql({
+      app,
+      query: findBcvOfficialRatesQuery,
+    });
     expect(response.status).toBe(200);
     expect(response.body.errors).toBeUndefined();
   });

@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -70,7 +69,11 @@ describe('SocialNetworksService', () => {
   describe('create', () => {
     it('creates then reloads by id', async () => {
       const created = { id: 8, name: 'Ig' } as SocialNetwork;
-      const loaded = { id: 8, name: 'Ig', code: SocialMediasEnum.INSTAGRAM } as SocialNetwork;
+      const loaded = {
+        id: 8,
+        name: 'Ig',
+        code: SocialMediasEnum.INSTAGRAM,
+      } as SocialNetwork;
       settersMock.create.mockResolvedValue(created);
       gettersMock.findById.mockResolvedValue(loaded);
       const data = {

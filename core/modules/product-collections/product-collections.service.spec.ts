@@ -133,9 +133,13 @@ describe('ProductCollectionsService', () => {
       productVisitsGettersServiceMock.getTagIdsFromVisitedProducts.mockResolvedValue(
         [7],
       );
-      productsGettersServiceMock.findProductIdsByTagIds.mockResolvedValue([100]);
+      productsGettersServiceMock.findProductIdsByTagIds.mockResolvedValue([
+        100,
+      ]);
       const loaded = [{ id: 100 }] as Product[];
-      productsGettersServiceMock.findManyWithRelations.mockResolvedValue(loaded);
+      productsGettersServiceMock.findManyWithRelations.mockResolvedValue(
+        loaded,
+      );
       productReactionsGettersServiceMock.getTagIdsFromLikedProducts.mockResolvedValue(
         [],
       );
@@ -146,9 +150,9 @@ describe('ProductCollectionsService', () => {
         username: 'user5',
       } as any);
       expect(result.some((c) => c.id === 'visited-tags')).toBe(true);
-      expect(
-        result.find((c) => c.id === 'visited-tags')?.products,
-      ).toEqual(loaded);
+      expect(result.find((c) => c.id === 'visited-tags')?.products).toEqual(
+        loaded,
+      );
     });
 
     it('includes searches-based collection when user has search terms', async () => {
@@ -170,7 +174,9 @@ describe('ProductCollectionsService', () => {
         ],
       });
       const loaded = [productEntity] as Product[];
-      productsGettersServiceMock.findManyWithRelations.mockResolvedValue(loaded);
+      productsGettersServiceMock.findManyWithRelations.mockResolvedValue(
+        loaded,
+      );
       const result = await service.getCollections({
         userId: 2,
         username: 'user2',

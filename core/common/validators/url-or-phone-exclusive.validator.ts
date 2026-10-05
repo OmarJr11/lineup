@@ -5,9 +5,7 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'UrlOrPhoneExclusive', async: false })
-export class UrlOrPhoneExclusiveValidator
-  implements ValidatorConstraintInterface
-{
+export class UrlOrPhoneExclusiveValidator implements ValidatorConstraintInterface {
   validate(_value: unknown, args: ValidationArguments): boolean {
     const obj = args.object as { url?: string; phone?: string };
     const hasUrl =

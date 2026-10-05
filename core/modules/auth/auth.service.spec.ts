@@ -159,16 +159,16 @@ describe('AuthService', () => {
 
   describe('checkUserLogged', () => {
     it('throws when user is missing', async () => {
-      await expect(service.checkUserLogged(null as unknown as User, 'x')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.checkUserLogged(null as unknown as User, 'x'),
+      ).rejects.toThrow(UnauthorizedException);
     });
     it('throws when password does not match', async () => {
       argon2VerifyMock.mockRejectedValueOnce(new Error('verify fail'));
       const user = buildActiveUser();
-      await expect(
-        service.checkUserLogged(user, 'wrong'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.checkUserLogged(user, 'wrong')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -190,7 +190,9 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('returns tokens when credentials and status are valid', async () => {
       const user = buildActiveUser();
-      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(user);
+      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(
+        user,
+      );
       const body: LoginDto = { email: user.email, password: 'secret' };
       const result = await service.validateUser(body);
       expect(result.token).toBe('access');
@@ -224,7 +226,9 @@ describe('AuthService', () => {
           },
         },
       ] as User['userRoles'];
-      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(user);
+      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(
+        user,
+      );
       await expect(
         service.validateUserAdmin({
           email: user.email,
@@ -244,7 +248,9 @@ describe('AuthService', () => {
           },
         },
       ] as User['userRoles'];
-      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(user);
+      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(
+        user,
+      );
       const result = await service.validateUserAdmin({
         email: user.email,
         password: 'secret',
@@ -328,7 +334,9 @@ describe('AuthService', () => {
     it('logs in an existing user verified by Google', async () => {
       const user = buildActiveUser();
       user.email = 'google@test.com';
-      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(user);
+      usersGettersServiceMock.findOneByEmailWithPassword.mockResolvedValue(
+        user,
+      );
       const result = await service.loginWithGoogle({ token: 'id-token' });
       expect(result.user).toBeDefined();
       expect(result.token).toBe('access');
@@ -371,9 +379,9 @@ describe('AuthService', () => {
     it('throws when no refresh cookie is present', async () => {
       const req = { cookies: {} } as never;
       const res = { cookie: jest.fn() } as never;
-      await expect(
-        service.refreshAndSetCookies(req, res, ''),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshAndSetCookies(req, res, '')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

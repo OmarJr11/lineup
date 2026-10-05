@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateEntityProductReviews1772417007645
-  implements MigrationInterface
-{
+export class CreateEntityProductReviews1772417007645 implements MigrationInterface {
   name = 'CreateEntityProductReviews1772417007645';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

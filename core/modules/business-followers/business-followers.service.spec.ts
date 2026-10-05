@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -26,7 +25,10 @@ import { BusinessFollowersSettersService } from './business-followers-setters.se
 import { BusinessesGettersService } from '../businesses/businesses-getters.service';
 import { BusinessesSettersService } from '../businesses/businesses-setters.service';
 import { BusinessFollower, Business } from '../../entities';
-import { QueueNamesEnum, SearchDataConsumerEnum } from '../../common/enums/consumers';
+import {
+  QueueNamesEnum,
+  SearchDataConsumerEnum,
+} from '../../common/enums/consumers';
 
 /**
  * Unit tests for {@link BusinessFollowersService} (follow / unfollow orchestration).
@@ -119,10 +121,9 @@ describe('BusinessFollowersService', () => {
         { idBusiness: 7, idCreationUser: 42 },
         userReq,
       );
-      expect(businessesSettersServiceMock.incrementFollowers).toHaveBeenCalledWith(
-        business,
-        userReq,
-      );
+      expect(
+        businessesSettersServiceMock.incrementFollowers,
+      ).toHaveBeenCalledWith(business, userReq);
       expect(searchDataQueueMock.add).toHaveBeenCalledWith(
         SearchDataConsumerEnum.SearchDataBusinessFollowRecord,
         { idBusiness: 7, action: 'follow' },
@@ -154,10 +155,9 @@ describe('BusinessFollowersService', () => {
         row,
         userReq,
       );
-      expect(businessesSettersServiceMock.decrementFollowers).toHaveBeenCalledWith(
-        business,
-        userReq,
-      );
+      expect(
+        businessesSettersServiceMock.decrementFollowers,
+      ).toHaveBeenCalledWith(business, userReq);
       expect(searchDataQueueMock.add).toHaveBeenCalledWith(
         SearchDataConsumerEnum.SearchDataBusinessFollowRecord,
         { idBusiness: 7, action: 'unfollow' },

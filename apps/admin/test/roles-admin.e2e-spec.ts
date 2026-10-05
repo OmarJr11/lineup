@@ -35,7 +35,10 @@ describe('Admin RolesAdmin e2e', () => {
     { provide: BusinessRolesService, useValue: businessRolesServiceMock },
     { provide: RolesService, useValue: rolesServiceMock },
     { provide: UsersGettersService, useValue: usersGettersServiceMock },
-    { provide: BusinessesGettersService, useValue: businessesGettersServiceMock },
+    {
+      provide: BusinessesGettersService,
+      useValue: businessesGettersServiceMock,
+    },
   ];
 
   const assignRoleToUserMutation = `
@@ -138,7 +141,9 @@ describe('Admin RolesAdmin e2e', () => {
 
   it('covers getRolesByUser', async () => {
     usersGettersServiceMock.findOne.mockResolvedValue({ id: 1 });
-    userRolesServiceMock.findAllByUserId.mockResolvedValue([{ role: { id: 1 } }]);
+    userRolesServiceMock.findAllByUserId.mockResolvedValue([
+      { role: { id: 1 } },
+    ]);
     const response = await executeGraphql({
       app,
       query: getRolesByUserQuery,

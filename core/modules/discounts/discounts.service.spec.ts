@@ -115,7 +115,9 @@ describe('DiscountsService', () => {
       } as Discount;
       businessesGettersMock.findOne.mockResolvedValue({ id: 5 } as never);
       discountsSettersMock.createDiscount.mockResolvedValue(created);
-      productsGettersMock.findProductIdsByBusiness.mockResolvedValue([101, 102]);
+      productsGettersMock.findProductIdsByBusiness.mockResolvedValue([
+        101, 102,
+      ]);
       discountsSettersMock.upsertDiscountProduct.mockResolvedValue({} as never);
       discountsGettersMock.findOne.mockResolvedValue(loaded);
       const data = {
@@ -157,9 +159,7 @@ describe('DiscountsService', () => {
     it('delegates to findAllByBusiness', async () => {
       const list: Discount[] = [];
       discountsGettersMock.findAllByBusiness.mockResolvedValue(list);
-      await expect(service.findAllMyDiscounts(businessReq)).resolves.toBe(
-        list,
-      );
+      await expect(service.findAllMyDiscounts(businessReq)).resolves.toBe(list);
       expect(discountsGettersMock.findAllByBusiness).toHaveBeenCalledWith(5);
     });
   });
@@ -176,9 +176,7 @@ describe('DiscountsService', () => {
           businessReq,
         ),
       ).resolves.toBe(paginated);
-      expect(
-        discountsGettersMock.findAllByScopePaginated,
-      ).toHaveBeenCalledWith(
+      expect(discountsGettersMock.findAllByScopePaginated).toHaveBeenCalledWith(
         DiscountScopeEnum.BUSINESS,
         5,
         pagination,

@@ -31,13 +31,15 @@ describe('pyn-pon-coordinates.lib', () => {
           types: ['administrative_area_level_1'],
         },
       ];
-      expect(
-        getAddressComponentByType(components, 'locality'),
-      )?.toEqual(components[0]);
+      expect(getAddressComponentByType(components, 'locality'))?.toEqual(
+        components[0],
+      );
       expect(
         getAddressComponentByType(components, 'administrative_area_level_1'),
       )?.toEqual(components[1]);
-      expect(getAddressComponentByType(components, 'non_existent')).toBeUndefined();
+      expect(
+        getAddressComponentByType(components, 'non_existent'),
+      ).toBeUndefined();
     });
   });
 
@@ -65,8 +67,12 @@ describe('pyn-pon-coordinates.lib', () => {
     });
 
     it('returns null if latitude or longitude is invalid', () => {
-      expect(getCoordinateFromObject({ latitude: 'abc', longitude: '-66.9' })).toBeNull();
-      expect(getCoordinateFromObject({ latitude: '10.5', longitude: 'xyz' })).toBeNull();
+      expect(
+        getCoordinateFromObject({ latitude: 'abc', longitude: '-66.9' }),
+      ).toBeNull();
+      expect(
+        getCoordinateFromObject({ latitude: '10.5', longitude: 'xyz' }),
+      ).toBeNull();
     });
   });
 
@@ -78,7 +84,9 @@ describe('pyn-pon-coordinates.lib', () => {
 
     it('returns null for malformed string', () => {
       expect(getCoordinateFromDatabaseField('invalid')).toBeNull();
-      expect(getCoordinateFromDatabaseField('10.4806,-66.9036,extra')).toBeNull();
+      expect(
+        getCoordinateFromDatabaseField('10.4806,-66.9036,extra'),
+      ).toBeNull();
       expect(getCoordinateFromDatabaseField('abc,def')).toBeNull();
     });
 
@@ -96,7 +104,10 @@ describe('pyn-pon-coordinates.lib', () => {
     });
 
     it('returns null fields when object contains non-numeric coordinates', () => {
-      const result = getCoordinateFromDatabaseField({ x: 'abc', y: 'def' } as any);
+      const result = getCoordinateFromDatabaseField({
+        x: 'abc',
+        y: 'def',
+      } as any);
       expect(result).toEqual({ latitude: null, longitude: null });
     });
   });

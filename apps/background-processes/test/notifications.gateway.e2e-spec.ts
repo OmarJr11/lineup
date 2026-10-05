@@ -9,7 +9,10 @@ import {
   NOTIFICATION_SOCKET_NAMESPACE,
   NOTIFICATION_SOCKET_SUBSCRIBE_MESSAGE,
 } from '../../../core/common/constants/notifications.constants';
-import { NotificationSocketSubscribeType, NotificationTypeEnum } from '../../../core/common/enums';
+import {
+  NotificationSocketSubscribeType,
+  NotificationTypeEnum,
+} from '../../../core/common/enums';
 import type { Notification } from '../../../core/entities';
 
 /**
@@ -31,7 +34,8 @@ describe('NotificationsGateway (E2E)', () => {
     await app.listen(0);
 
     const address = app.getHttpServer().address();
-    port = typeof address === 'object' && address !== null ? address.port : 3003;
+    port =
+      typeof address === 'object' && address !== null ? address.port : 3003;
     gateway = app.get(NotificationsGateway);
   });
 
@@ -54,10 +58,13 @@ describe('NotificationsGateway (E2E)', () => {
       idCreationUser: userId,
     } as unknown as Notification;
 
-    clientSocket = io(`http://localhost:${port}${NOTIFICATION_SOCKET_NAMESPACE}`, {
-      transports: ['websocket'],
-      forceNew: true,
-    });
+    clientSocket = io(
+      `http://localhost:${port}${NOTIFICATION_SOCKET_NAMESPACE}`,
+      {
+        transports: ['websocket'],
+        forceNew: true,
+      },
+    );
 
     clientSocket.on('connect', () => {
       clientSocket.emit(NOTIFICATION_SOCKET_SUBSCRIBE_MESSAGE, {
@@ -100,10 +107,13 @@ describe('NotificationsGateway (E2E)', () => {
       idCreationBusiness: businessId,
     } as unknown as Notification;
 
-    const socket = io(`http://localhost:${port}${NOTIFICATION_SOCKET_NAMESPACE}`, {
-      transports: ['websocket'],
-      forceNew: true,
-    });
+    const socket = io(
+      `http://localhost:${port}${NOTIFICATION_SOCKET_NAMESPACE}`,
+      {
+        transports: ['websocket'],
+        forceNew: true,
+      },
+    );
 
     socket.on('connect', () => {
       socket.emit(NOTIFICATION_SOCKET_SUBSCRIBE_MESSAGE, {

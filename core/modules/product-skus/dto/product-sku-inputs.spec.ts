@@ -6,7 +6,8 @@ import { InitialStockItemInput } from './initial-stock-item.input';
 
 describe('Product SKU Inputs', () => {
   beforeAll(() => {
-    const map: Map<any, any[]> = (LazyMetadataStorage as any).lazyMetadataByTarget;
+    const map: Map<any, any[]> = (LazyMetadataStorage as any)
+      .lazyMetadataByTarget;
     if (map) {
       map.forEach((fns) => {
         fns?.forEach((fn) => {
@@ -17,9 +18,6 @@ describe('Product SKU Inputs', () => {
       });
     }
   });
-
-
-
 
   describe('UpdateProductSkuInput', () => {
     it('validates valid input successfully', async () => {

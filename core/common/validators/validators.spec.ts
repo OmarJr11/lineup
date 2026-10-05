@@ -7,7 +7,9 @@ describe('Common Validators', () => {
     const validator = new PriceCurrencyPairValidator();
 
     it('returns true when both price and idCurrency are provided', () => {
-      const args = { object: { price: 100, idCurrency: 1 } } as ValidationArguments;
+      const args = {
+        object: { price: 100, idCurrency: 1 },
+      } as ValidationArguments;
       expect(validator.validate(null, args)).toBe(true);
     });
 
@@ -37,7 +39,9 @@ describe('Common Validators', () => {
     const validator = new UrlOrPhoneExclusiveValidator();
 
     it('returns true when only url is provided', () => {
-      const args = { object: { url: 'https://example.com' } } as ValidationArguments;
+      const args = {
+        object: { url: 'https://example.com' },
+      } as ValidationArguments;
       expect(validator.validate(null, args)).toBe(true);
     });
 

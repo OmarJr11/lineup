@@ -39,9 +39,7 @@ describe('LocationsGettersService', () => {
       };
       repositoryMock.createQueryBuilder.mockReturnValue(qb);
       const businessReq = { path: '/b', businessId: 5 };
-      await expect(service.findAllMyLocations(businessReq)).resolves.toBe(
-        rows,
-      );
+      await expect(service.findAllMyLocations(businessReq)).resolves.toBe(rows);
       expect(qb.andWhere).toHaveBeenCalledWith(
         'l.idCreationBusiness = :idCreationBusiness',
         { idCreationBusiness: 5 },

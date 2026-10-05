@@ -46,7 +46,8 @@ describe('QueueLogsConsumer', () => {
     new QueueLogsConsumer();
 
     const queueNames = Object.values(QueueNamesEnum);
-    const instance = LogConsumer.mock.results[LogConsumer.mock.results.length - 1].value;
+    const instance =
+      LogConsumer.mock.results[LogConsumer.mock.results.length - 1].value;
     expect(instance.listenToQueue).toHaveBeenCalledTimes(queueNames.length);
   });
 });

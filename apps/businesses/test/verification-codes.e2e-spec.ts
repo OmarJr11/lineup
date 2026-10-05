@@ -10,7 +10,10 @@ describe('Businesses VerificationCodes e2e', () => {
     verifyCode: jest.fn(),
   };
   const providers = [
-    { provide: VerificationCodesService, useValue: verificationCodesServiceMock },
+    {
+      provide: VerificationCodesService,
+      useValue: verificationCodesServiceMock,
+    },
   ];
 
   const sendBusinessVerificationCodeMutation = `mutation SendBusinessVerificationCode($data: CreateVerificationCodeDto!) { sendBusinessVerificationCode(data: $data) { status } }`;
@@ -29,7 +32,9 @@ describe('Businesses VerificationCodes e2e', () => {
   });
 
   it('covers sendBusinessVerificationCode', async () => {
-    verificationCodesServiceMock.createVerificationCode.mockResolvedValue(undefined);
+    verificationCodesServiceMock.createVerificationCode.mockResolvedValue(
+      undefined,
+    );
     const response = await executeGraphql({
       app,
       query: sendBusinessVerificationCodeMutation,

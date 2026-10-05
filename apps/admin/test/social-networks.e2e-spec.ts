@@ -52,7 +52,10 @@ describe('Admin SocialNetworks e2e', () => {
   let app: INestApplication;
   beforeEach(async () => {
     jest.clearAllMocks();
-    app = await createTestApp({ resolvers: [SocialNetworksResolver], providers });
+    app = await createTestApp({
+      resolvers: [SocialNetworksResolver],
+      providers,
+    });
   });
   afterEach(async () => {
     if (app) await app.close();
@@ -95,7 +98,10 @@ describe('Admin SocialNetworks e2e', () => {
 
   it('covers findAllSocialNetworks', async () => {
     socialNetworksServiceMock.findAll.mockResolvedValue([{ id: 1 }]);
-    const response = await executeGraphql({ app, query: findAllSocialNetworksQuery });
+    const response = await executeGraphql({
+      app,
+      query: findAllSocialNetworksQuery,
+    });
     expect(response.body.errors).toBeUndefined();
     expect(response.body.data.findAllSocialNetworks).toHaveLength(1);
   });

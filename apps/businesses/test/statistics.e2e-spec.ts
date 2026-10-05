@@ -94,15 +94,19 @@ describe('Businesses Statistics e2e', () => {
     expect(response.body.data.inventoryStats.__typename).toBeDefined();
   });
   it('covers businessSalesInTimePeriod', async () => {
-    businessStatisticsGettersServiceMock.getSalesInTimePeriod.mockResolvedValue({
-      totalSales: 10,
-      sales: [],
-    });
+    businessStatisticsGettersServiceMock.getSalesInTimePeriod.mockResolvedValue(
+      {
+        totalSales: 10,
+        sales: [],
+      },
+    );
     const response = await executeGraphql({
       app,
       query: businessSalesInTimePeriodQuery,
       variables: { timePeriod },
     });
-    expect(response.body.data.businessSalesInTimePeriod.__typename).toBeDefined();
+    expect(
+      response.body.data.businessSalesInTimePeriod.__typename,
+    ).toBeDefined();
   });
 });

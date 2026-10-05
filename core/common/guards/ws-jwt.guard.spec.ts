@@ -78,7 +78,10 @@ describe('WsJwtGuard', () => {
       // canActivate calls super.canActivate which requires passport setup,
       // so we only verify it sets the URL correctly on the request
       jest
-        .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+        .spyOn(
+          Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+          'canActivate',
+        )
         .mockReturnValue(true);
 
       guard.canActivate(context);

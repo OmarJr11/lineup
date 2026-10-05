@@ -15,9 +15,7 @@ describe('ProductVisitsGettersService', () => {
     setParameters: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
-    getRawMany: jest.fn().mockResolvedValue([
-      { idProduct: 1, visits: '4' },
-    ]),
+    getRawMany: jest.fn().mockResolvedValue([{ idProduct: 1, visits: '4' }]),
   };
   const repositoryMock = {
     createQueryBuilder: jest.fn(),
@@ -53,9 +51,9 @@ describe('ProductVisitsGettersService', () => {
           .mockResolvedValue([{ idTag: '2' }, { idTag: '2' }, { idTag: '3' }]),
       };
       repositoryMock.createQueryBuilder.mockReturnValue(qb);
-      await expect(service.getTagIdsFromVisitedProducts(7, 2)).resolves.toEqual([
-        2, 3,
-      ]);
+      await expect(service.getTagIdsFromVisitedProducts(7, 2)).resolves.toEqual(
+        [2, 3],
+      );
     });
   });
 
@@ -72,9 +70,7 @@ describe('ProductVisitsGettersService', () => {
         getParameters: jest.fn().mockReturnValue({ idBusiness: 1 }),
       };
       repositoryMock.createQueryBuilder.mockReturnValue(subQb);
-      managerQb.getRawMany.mockResolvedValue([
-        { idProduct: 10, visits: '7' },
-      ]);
+      managerQb.getRawMany.mockResolvedValue([{ idProduct: 10, visits: '7' }]);
       await expect(
         service.getTopProductsByVisits(1, undefined),
       ).resolves.toEqual([{ idProduct: 10, visits: 7 }]);

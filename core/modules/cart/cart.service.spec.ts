@@ -81,7 +81,10 @@ describe('CartService', () => {
 
     productsServiceMock.findOne.mockResolvedValue({ idCreationBusiness: 9 });
     cartGettersServiceMock.getCartByUserAndBusiness.mockResolvedValue(cart);
-    productSkusServiceMock.findOne.mockResolvedValue({ idProduct: 10, price: 30 });
+    productSkusServiceMock.findOne.mockResolvedValue({
+      idProduct: 10,
+      price: 30,
+    });
     cartGettersServiceMock.findExistingCartItem.mockResolvedValue(null);
     cartSettersServiceMock.createCartItem.mockResolvedValue(createdItem);
     cartGettersServiceMock.getCartById.mockResolvedValue(cart);
@@ -125,7 +128,10 @@ describe('CartService', () => {
 
     productsServiceMock.findOne.mockResolvedValue({ idCreationBusiness: 9 });
     cartGettersServiceMock.getCartByUserAndBusiness.mockResolvedValue(cart);
-    productSkusServiceMock.findOne.mockResolvedValue({ idProduct: 10, price: 15 });
+    productSkusServiceMock.findOne.mockResolvedValue({
+      idProduct: 10,
+      price: 15,
+    });
     cartGettersServiceMock.findExistingCartItem.mockResolvedValue(existingItem);
     cartSettersServiceMock.updateCartItem.mockResolvedValue({
       ...existingItem,
@@ -162,7 +168,9 @@ describe('CartService', () => {
         user,
       ),
     ).rejects.toThrow(BadRequestException);
-    expect(cartGettersServiceMock.getCartByUserAndBusiness).not.toHaveBeenCalled();
+    expect(
+      cartGettersServiceMock.getCartByUserAndBusiness,
+    ).not.toHaveBeenCalled();
   });
 
   it('updates an item only when user owns the cart item', async () => {
@@ -202,9 +210,11 @@ describe('CartService', () => {
     });
     cartSettersServiceMock.updateCartTotals.mockResolvedValue(updatedCart);
 
-    await expect(
-      service.removeCartItem({ cartItemId: 5 }, user),
-    ).resolves.toBe(updatedCart);
-    expect(cartSettersServiceMock.removeCartItem).toHaveBeenCalledWith(cartItem);
+    await expect(service.removeCartItem({ cartItemId: 5 }, user)).resolves.toBe(
+      updatedCart,
+    );
+    expect(cartSettersServiceMock.removeCartItem).toHaveBeenCalledWith(
+      cartItem,
+    );
   });
 });

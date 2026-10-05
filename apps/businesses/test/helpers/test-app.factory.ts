@@ -3,7 +3,12 @@ import { INestApplication } from '@nestjs/common';
 import { Type } from '@nestjs/common/interfaces/type.interface';
 import { Provider } from '@nestjs/common/interfaces/modules/provider.interface';
 import { ExecutionContext } from '@nestjs/common/interfaces/features/execution-context.interface';
-import { GraphQLModule, GqlExecutionContext, Query, Resolver } from '@nestjs/graphql';
+import {
+  GraphQLModule,
+  GqlExecutionContext,
+  Query,
+  Resolver,
+} from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import {
   JwtAuthGuard,
@@ -127,7 +132,9 @@ export const createTestApp = async (
 
   moduleBuilder
     .overrideGuard(JwtAuthGuard)
-    .useValue(createGuardMock(params.guardOverrides?.jwt ?? defaultGuardBehavior));
+    .useValue(
+      createGuardMock(params.guardOverrides?.jwt ?? defaultGuardBehavior),
+    );
   moduleBuilder
     .overrideGuard(TokenGuard)
     .useValue(

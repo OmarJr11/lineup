@@ -44,7 +44,9 @@ describe('RolesService', () => {
     it('returns role when repository resolves', async () => {
       const role = { id: 1, code: RolesCodesEnum.ADMIN } as Role;
       repositoryMock.findOneOrFail.mockResolvedValue(role);
-      await expect(service.findByCode(RolesCodesEnum.ADMIN)).resolves.toBe(role);
+      await expect(service.findByCode(RolesCodesEnum.ADMIN)).resolves.toBe(
+        role,
+      );
     });
     it('throws NotFoundException when role is missing', async () => {
       repositoryMock.findOneOrFail.mockRejectedValue(new Error('nf'));
@@ -57,22 +59,21 @@ describe('RolesService', () => {
   describe('userHasPermission', () => {
     it('delegates to RolesPermissionsCheckerService', async () => {
       rolesPermissionsCheckerMock.userHasPermission.mockResolvedValue(true);
-      await expect(
-        service.userHasPermission(5, ['code1']),
-      ).resolves.toBe(true);
-      expect(rolesPermissionsCheckerMock.userHasPermission).toHaveBeenCalledWith(
-        5,
-        ['code1'],
-      );
+      await expect(service.userHasPermission(5, ['code1'])).resolves.toBe(true);
+      expect(
+        rolesPermissionsCheckerMock.userHasPermission,
+      ).toHaveBeenCalledWith(5, ['code1']);
     });
   });
 
   describe('businessHasPermission', () => {
     it('delegates to RolesPermissionsCheckerService', async () => {
-      rolesPermissionsCheckerMock.businessHasPermission.mockResolvedValue(false);
-      await expect(
-        service.businessHasPermission(9, ['x']),
-      ).resolves.toBe(false);
+      rolesPermissionsCheckerMock.businessHasPermission.mockResolvedValue(
+        false,
+      );
+      await expect(service.businessHasPermission(9, ['x'])).resolves.toBe(
+        false,
+      );
       expect(
         rolesPermissionsCheckerMock.businessHasPermission,
       ).toHaveBeenCalledWith(9, ['x']);

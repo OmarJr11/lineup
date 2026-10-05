@@ -2,7 +2,10 @@ import { UsersResolver } from './users.resolver';
 import { UsersService } from '../../../../core/modules/users/users.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
-import { CookiesPrefixEnum, ProvidersEnum } from '../../../../core/common/enums';
+import {
+  CookiesPrefixEnum,
+  ProvidersEnum,
+} from '../../../../core/common/enums';
 import type { CreateUserInput } from '../../../../core/modules/users/dto/create-user.input';
 import type { IUserReq } from '../../../../core/common/interfaces';
 

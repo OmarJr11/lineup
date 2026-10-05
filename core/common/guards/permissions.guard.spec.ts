@@ -66,9 +66,7 @@ describe('PermissionsGuard', () => {
       .mockReturnValueOnce([{ noPermission: 'Forbidden' }]);
     checkerMock.businessHasPermission.mockResolvedValue(true);
 
-    const result = await guard.canActivate(
-      buildContext({ businessId: 10 }),
-    );
+    const result = await guard.canActivate(buildContext({ businessId: 10 }));
 
     expect(result).toBe(true);
     expect(checkerMock.businessHasPermission).toHaveBeenCalledWith(10, [

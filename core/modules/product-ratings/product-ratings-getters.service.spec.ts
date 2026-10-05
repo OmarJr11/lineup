@@ -47,9 +47,7 @@ describe('ProductRatingsGettersService', () => {
   describe('findOneByProductAndUser', () => {
     it('returns null when no row exists', async () => {
       repositoryMock.findOne.mockResolvedValue(undefined);
-      await expect(
-        service.findOneByProductAndUser(1, 2),
-      ).resolves.toBeNull();
+      await expect(service.findOneByProductAndUser(1, 2)).resolves.toBeNull();
     });
     it('returns formatted rating when a row exists', async () => {
       const row = {
@@ -108,7 +106,9 @@ describe('ProductRatingsGettersService', () => {
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         offset: jest.fn().mockReturnThis(),
-        getQuery: jest.fn().mockReturnValue('SELECT sub.id FROM product_ratings sub'),
+        getQuery: jest
+          .fn()
+          .mockReturnValue('SELECT sub.id FROM product_ratings sub'),
         getParameters: jest.fn().mockReturnValue({}),
       };
       const mainQb = {

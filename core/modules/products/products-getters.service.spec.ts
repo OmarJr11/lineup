@@ -186,7 +186,9 @@ describe('ProductsGettersService', () => {
       };
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
 
-      await expect(service.getTotalLikesByProductIds([1, 2, 3])).resolves.toBe(125);
+      await expect(service.getTotalLikesByProductIds([1, 2, 3])).resolves.toBe(
+        125,
+      );
     });
 
     it('getTopByVisitsForStatistics returns empty array when visitData is empty', async () => {
@@ -225,9 +227,9 @@ describe('ProductsGettersService', () => {
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 1, title: 'Popular', likes: 99 },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 1, title: 'Popular', likes: 99 }]),
       };
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
 
@@ -243,7 +245,9 @@ describe('ProductsGettersService', () => {
       };
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
 
-      await expect(service.getWithoutVisitsCountForStatistics(1)).resolves.toBe(7);
+      await expect(service.getWithoutVisitsCountForStatistics(1)).resolves.toBe(
+        7,
+      );
     });
 
     it('getProductIdsAndLikesForStatistics calls repository find', async () => {
@@ -260,9 +264,11 @@ describe('ProductsGettersService', () => {
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 1, title: 'Top Rated', ratingAverage: 4.8 },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 1, title: 'Top Rated', ratingAverage: 4.8 },
+          ]),
       };
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
 
@@ -477,7 +483,9 @@ describe('ProductsGettersService', () => {
 
     it('getNonDeletedProductsCountForAdminStatistics calls repository count', async () => {
       productRepositoryMock.count = jest.fn().mockResolvedValue(15);
-      await expect(service.getNonDeletedProductsCountForAdminStatistics()).resolves.toBe(15);
+      await expect(
+        service.getNonDeletedProductsCountForAdminStatistics(),
+      ).resolves.toBe(15);
     });
 
     it('getGlobalProductsWithoutStockCountForAdminStatistics calculates count globally', async () => {
@@ -495,13 +503,16 @@ describe('ProductsGettersService', () => {
       };
       productRepositoryMock.createQueryBuilder.mockReturnValue(qb);
 
-      const res = await service.getGlobalProductsWithoutStockCountForAdminStatistics();
+      const res =
+        await service.getGlobalProductsWithoutStockCountForAdminStatistics();
       expect(res).toBe(2);
     });
 
     it('resetStockNotifiedForRestockedProducts executes query on repository', async () => {
       productRepositoryMock.query = jest.fn().mockResolvedValue(undefined);
-      await expect(service.resetStockNotifiedForRestockedProducts()).resolves.toBeUndefined();
+      await expect(
+        service.resetStockNotifiedForRestockedProducts(),
+      ).resolves.toBeUndefined();
       expect(productRepositoryMock.query).toHaveBeenCalled();
     });
 
@@ -521,14 +532,18 @@ describe('ProductsGettersService', () => {
 
     it('findOneActiveSummaryForLowStockJob returns summary or null', async () => {
       jest.spyOn(service, 'findOneWithOptions').mockResolvedValueOnce(null);
-      await expect(service.findOneActiveSummaryForLowStockJob(1)).resolves.toBeNull();
+      await expect(
+        service.findOneActiveSummaryForLowStockJob(1),
+      ).resolves.toBeNull();
 
       jest.spyOn(service, 'findOneWithOptions').mockResolvedValueOnce({
         id: 2,
         title: 'Low stock item',
         idCreationBusiness: 5,
       } as any);
-      await expect(service.findOneActiveSummaryForLowStockJob(2)).resolves.toEqual({
+      await expect(
+        service.findOneActiveSummaryForLowStockJob(2),
+      ).resolves.toEqual({
         id: 2,
         title: 'Low stock item',
         idCreationBusiness: 5,
@@ -536,4 +551,3 @@ describe('ProductsGettersService', () => {
     });
   });
 });
-

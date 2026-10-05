@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateEntitiesPermissionsAndRolePermissions1749606744296
-  implements MigrationInterface
-{
+export class CreateEntitiesPermissionsAndRolePermissions1749606744296 implements MigrationInterface {
   name = 'CreateEntitiesPermissionsAndRolePermissions1749606744296';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

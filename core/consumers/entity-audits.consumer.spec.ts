@@ -2,10 +2,7 @@ import { Job } from 'bullmq';
 import { EntityAuditsConsumer } from './entity-audits.consumer';
 import { EntityAuditsSettersService } from '../modules/entity-audits/entity-audits-setters.service';
 import { EntityAuditsConsumerEnum } from '../common/enums/consumers';
-import {
-  AuditOperationEnum,
-  AuditableEntityNameEnum,
-} from '../common/enums';
+import { AuditOperationEnum, AuditableEntityNameEnum } from '../common/enums';
 
 /**
  * Unit tests for {@link EntityAuditsConsumer}.

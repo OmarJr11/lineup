@@ -80,7 +80,10 @@ describe('CartResolver', () => {
   });
 
   it('getUserCarts maps all carts to GraphQL schema objects', async () => {
-    const carts = [{ id: 1, items: [{ id: 10 }] }, { id: 2, items: [] }];
+    const carts = [
+      { id: 1, items: [{ id: 10 }] },
+      { id: 2, items: [] },
+    ];
     cartServiceMock.getUserCarts.mockResolvedValue(carts);
 
     await expect(resolver.getUserCarts(user)).resolves.toEqual([

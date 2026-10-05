@@ -15,7 +15,9 @@ describe('VisitsResolver', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    resolver = new VisitsResolver(visitsServiceMock as unknown as VisitsService);
+    resolver = new VisitsResolver(
+      visitsServiceMock as unknown as VisitsService,
+    );
   });
 
   describe('recordVisit', () => {

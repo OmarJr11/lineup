@@ -281,10 +281,12 @@ describe('Users Products interactions e2e', () => {
   });
 
   it('returns hasLikedProduct state', async () => {
-    productReactionsGettersServiceMock.findOneByProductAndUser.mockResolvedValue({
-      id: 7,
-      status: 'active',
-    });
+    productReactionsGettersServiceMock.findOneByProductAndUser.mockResolvedValue(
+      {
+        id: 7,
+        status: 'active',
+      },
+    );
 
     const response = await executeGraphql({
       app,
@@ -326,13 +328,15 @@ describe('Users Products interactions e2e', () => {
   });
 
   it('returns paginated ratings for a product', async () => {
-    productRatingsGettersServiceMock.findAllByProductPaginated.mockResolvedValue([
-      {
-        id: 90,
-        idProduct: 25,
-        stars: 5,
-      },
-    ]);
+    productRatingsGettersServiceMock.findAllByProductPaginated.mockResolvedValue(
+      [
+        {
+          id: 90,
+          idProduct: 25,
+          stars: 5,
+        },
+      ],
+    );
 
     const response = await executeGraphql({
       app,

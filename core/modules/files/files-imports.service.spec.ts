@@ -47,9 +47,7 @@ describe('FilesImportsService', () => {
   describe('uploadDocumentFile', () => {
     it('throws BadRequestException when file payload is incomplete', async () => {
       await expect(
-        service.uploadDocumentFile(
-          makeFile({ buffer: undefined as never }),
-        ),
+        service.uploadDocumentFile(makeFile({ buffer: undefined as never })),
       ).rejects.toThrow(BadRequestException);
     });
     it('throws NotAcceptableException for blocked mime types', async () => {
@@ -175,8 +173,7 @@ describe('FilesImportsService', () => {
     });
 
     it('parses products wrapped in { items: [...] } or { data: [...] }', async () => {
-      const json =
-        '{"items":[{"title":"Item from items","idCatalog":"10"}]}';
+      const json = '{"items":[{"title":"Item from items","idCatalog":"10"}]}';
       geminiServiceMock.generateContent.mockResolvedValue({ text: json });
 
       const result = await service.uploadDocumentFile(

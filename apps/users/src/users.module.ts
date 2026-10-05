@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from '../../../core/entities/entities';
@@ -9,8 +10,16 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { UsersModule as UsersModuleCore } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { configuration, ValidatingEnv } from '../../../core/common/config';
+import {
+  configuration,
+  ValidatingEnv,
+  throttlerAsyncConfig,
+} from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { GqlThrottlerGuard } from '../../../core/common/guards';
+import { ThrottlerModule } from '@nestjs/throttler';
+import * as depthLimitLib from 'graphql-depth-limit';
+const depthLimit = (depthLimitLib as any).default || depthLimitLib;
 import { FilesModule } from './files/files.module';
 import { ProductsModule } from './products/products.module';
 import { BusinessesModule } from './businesses/businesses.module';
@@ -56,9 +65,10 @@ import { CartModule } from './cart/cart.module';
       playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       sortSchema: true,
-      introspection: true,
+      introspection: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: false,
+      validationRules: [depthLimit(Number(process.env.GQL_DEPTH_LIMIT) || 6)],
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
@@ -80,6 +90,9 @@ import { CartModule } from './cart/cart.module';
             case 'NOT_FOUND':
               code = 404;
               break;
+            case 'TOO_MANY_REQUESTS':
+              code = 429;
+              break;
             default:
               code = 500;
           }
@@ -88,6 +101,7 @@ import { CartModule } from './cart/cart.module';
         return { code, status, message };
       },
     }),
+    ThrottlerModule.forRootAsync(throttlerAsyncConfig),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
@@ -109,6 +123,12 @@ import { CartModule } from './cart/cart.module';
     BusinessHoursModule,
     NotificationsGraphqlModule,
     CartModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard,
+    },
   ],
 })
 export class UsersModule implements NestModule {

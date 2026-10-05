@@ -15,7 +15,9 @@ describe('Businesses Discounts e2e', () => {
     findAuditByProduct: jest.fn(),
     findAuditByDiscount: jest.fn(),
   };
-  const providers = [{ provide: DiscountsService, useValue: discountsServiceMock }];
+  const providers = [
+    { provide: DiscountsService, useValue: discountsServiceMock },
+  ];
 
   const createDiscountMutation = `mutation CreateDiscount($data: CreateDiscountInput!) { createDiscount(data: $data) { id } }`;
   const updateDiscountMutation = `mutation UpdateDiscount($data: UpdateDiscountInput!) { updateDiscount(data: $data) { id } }`;
@@ -89,12 +91,17 @@ describe('Businesses Discounts e2e', () => {
     const response = await executeGraphql({
       app,
       query: findAllMyDiscountsByScopeQuery,
-      variables: { data: { scope: 'BUSINESS' }, pagination: { page: 1, limit: 10 } },
+      variables: {
+        data: { scope: 'BUSINESS' },
+        pagination: { page: 1, limit: 10 },
+      },
     });
     expect(response.body.data.findAllMyDiscountsByScope.total).toBe(1);
   });
   it('covers findActiveDiscountByProduct', async () => {
-    discountsServiceMock.findActiveDiscountByProduct.mockResolvedValue({ id: 1 });
+    discountsServiceMock.findActiveDiscountByProduct.mockResolvedValue({
+      id: 1,
+    });
     const response = await executeGraphql({
       app,
       query: findActiveDiscountByProductQuery,

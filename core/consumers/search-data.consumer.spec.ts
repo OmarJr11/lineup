@@ -94,9 +94,9 @@ describe('SearchDataConsumer', () => {
       data: { type: VisitTypeEnum.BUSINESS, id: 9 },
     } as Job;
     await consumer.process(job);
-    expect(
-      searchIndexServiceMock.incrementBusinessVisits,
-    ).toHaveBeenCalledWith(9);
+    expect(searchIndexServiceMock.incrementBusinessVisits).toHaveBeenCalledWith(
+      9,
+    );
   });
 
   it('SearchDataBusiness handles missing id or upserts index', async () => {
@@ -112,7 +112,9 @@ describe('SearchDataConsumer', () => {
       name: SearchDataConsumerEnum.SearchDataBusiness,
       data: { idBusiness: 10 },
     } as Job);
-    expect(searchIndexServiceMock.upsertBusinessSearchIndex).toHaveBeenCalledWith(business);
+    expect(
+      searchIndexServiceMock.upsertBusinessSearchIndex,
+    ).toHaveBeenCalledWith(business);
   });
 
   it('SearchDataCatalog handles missing id or upserts index', async () => {
@@ -128,7 +130,9 @@ describe('SearchDataConsumer', () => {
       name: SearchDataConsumerEnum.SearchDataCatalog,
       data: { idCatalog: 20 },
     } as Job);
-    expect(searchIndexServiceMock.upsertCatalogSearchIndex).toHaveBeenCalledWith(catalog);
+    expect(
+      searchIndexServiceMock.upsertCatalogSearchIndex,
+    ).toHaveBeenCalledWith(catalog);
   });
 
   it('SearchDataVisitRecord handles CATALOG type', async () => {
@@ -141,8 +145,12 @@ describe('SearchDataConsumer', () => {
     } as Job;
     await consumer.process(job);
 
-    expect(searchIndexServiceMock.incrementCatalogVisits).toHaveBeenCalledWith(5);
-    expect(searchIndexServiceMock.incrementBusinessCatalogVisitsTotal).toHaveBeenCalledWith(12);
+    expect(searchIndexServiceMock.incrementCatalogVisits).toHaveBeenCalledWith(
+      5,
+    );
+    expect(
+      searchIndexServiceMock.incrementBusinessCatalogVisitsTotal,
+    ).toHaveBeenCalledWith(12);
   });
 
   it('SearchDataVisitRecord handles PRODUCT type', async () => {
@@ -155,9 +163,15 @@ describe('SearchDataConsumer', () => {
     } as Job;
     await consumer.process(job);
 
-    expect(searchIndexServiceMock.incrementProductVisits).toHaveBeenCalledWith(8);
-    expect(searchIndexServiceMock.incrementCatalogProductVisitsTotal).toHaveBeenCalledWith(3);
-    expect(searchIndexServiceMock.incrementBusinessProductVisitsTotal).toHaveBeenCalledWith(15);
+    expect(searchIndexServiceMock.incrementProductVisits).toHaveBeenCalledWith(
+      8,
+    );
+    expect(
+      searchIndexServiceMock.incrementCatalogProductVisitsTotal,
+    ).toHaveBeenCalledWith(3);
+    expect(
+      searchIndexServiceMock.incrementBusinessProductVisitsTotal,
+    ).toHaveBeenCalledWith(15);
   });
 
   it('SearchDataBusinessFollowRecord decrements on unfollow', async () => {
@@ -166,7 +180,9 @@ describe('SearchDataConsumer', () => {
       data: { idBusiness: 5, action: 'unfollow' },
     } as Job;
     await consumer.process(job);
-    expect(searchIndexServiceMock.decrementBusinessFollowers).toHaveBeenCalledWith(5);
+    expect(
+      searchIndexServiceMock.decrementBusinessFollowers,
+    ).toHaveBeenCalledWith(5);
   });
 
   it('SearchDataProductLikeRecord handles like and unlike', async () => {
@@ -177,17 +193,29 @@ describe('SearchDataConsumer', () => {
       name: SearchDataConsumerEnum.SearchDataProductLikeRecord,
       data: { idProduct: 4, action: 'like' },
     } as Job);
-    expect(searchIndexServiceMock.incrementProductLikes).toHaveBeenCalledWith(4);
-    expect(searchIndexServiceMock.incrementCatalogProductLikesTotal).toHaveBeenCalledWith(2);
-    expect(searchIndexServiceMock.incrementBusinessProductLikesTotal).toHaveBeenCalledWith(9);
+    expect(searchIndexServiceMock.incrementProductLikes).toHaveBeenCalledWith(
+      4,
+    );
+    expect(
+      searchIndexServiceMock.incrementCatalogProductLikesTotal,
+    ).toHaveBeenCalledWith(2);
+    expect(
+      searchIndexServiceMock.incrementBusinessProductLikesTotal,
+    ).toHaveBeenCalledWith(9);
 
     await consumer.process({
       name: SearchDataConsumerEnum.SearchDataProductLikeRecord,
       data: { idProduct: 4, action: 'unlike' },
     } as Job);
-    expect(searchIndexServiceMock.decrementProductLikes).toHaveBeenCalledWith(4);
-    expect(searchIndexServiceMock.decrementCatalogProductLikesTotal).toHaveBeenCalledWith(2);
-    expect(searchIndexServiceMock.decrementBusinessProductLikesTotal).toHaveBeenCalledWith(9);
+    expect(searchIndexServiceMock.decrementProductLikes).toHaveBeenCalledWith(
+      4,
+    );
+    expect(
+      searchIndexServiceMock.decrementCatalogProductLikesTotal,
+    ).toHaveBeenCalledWith(2);
+    expect(
+      searchIndexServiceMock.decrementBusinessProductLikesTotal,
+    ).toHaveBeenCalledWith(9);
   });
 
   it('ignores unknown job name', async () => {

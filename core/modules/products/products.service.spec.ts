@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -180,7 +179,9 @@ describe('ProductsService', () => {
   describe('getAllByCatalogPaginated', () => {
     it('delegates to getters.getAllByCatalogPaginated', async () => {
       const list: Product[] = [];
-      productsGettersServiceMock.getAllByCatalogPaginated.mockResolvedValue(list);
+      productsGettersServiceMock.getAllByCatalogPaginated.mockResolvedValue(
+        list,
+      );
       await expect(
         service.getAllByCatalogPaginated(3, { page: 1, limit: 10 }, null),
       ).resolves.toBe(list);
@@ -200,7 +201,9 @@ describe('ProductsService', () => {
   describe('findAllByBusinessAndIsPrimary', () => {
     it('delegates to getters.findAllByBusinessAndIsPrimary', async () => {
       const list: Product[] = [];
-      productsGettersServiceMock.findAllByBusinessAndIsPrimary.mockResolvedValue(list);
+      productsGettersServiceMock.findAllByBusinessAndIsPrimary.mockResolvedValue(
+        list,
+      );
       await expect(
         service.findAllByBusinessAndIsPrimary({ idBusiness: 7 } as any, true),
       ).resolves.toBe(list);
@@ -231,25 +234,26 @@ describe('ProductsService', () => {
       const reloadedProduct = { id: 1, idCatalog: 10, name: 'Prod' } as Product;
 
       productsSettersServiceMock.create.mockResolvedValue(createdProduct);
-      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(reloadedProduct);
+      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(
+        reloadedProduct,
+      );
 
       const result = await service.create(
         { idCatalog: 10, name: 'Prod' } as any,
         businessReq,
       );
 
-      expect(catalogsGettersServiceMock.checkIfExistsByIdAndBusinessId).toHaveBeenCalledWith(
-        10,
-        businessReq.businessId,
-      );
+      expect(
+        catalogsGettersServiceMock.checkIfExistsByIdAndBusinessId,
+      ).toHaveBeenCalledWith(10, businessReq.businessId);
       expect(productsSettersServiceMock.create).toHaveBeenCalled();
       expect(productSkusSettersServiceMock.create).toHaveBeenCalled();
-      expect(productsSettersServiceMock.queueForIdProduct).toHaveBeenCalledWith(1);
-      expect(catalogsSettersServiceMock.updateProductsCountJob).toHaveBeenCalledWith(
-        10,
-        'increment',
-        businessReq,
+      expect(productsSettersServiceMock.queueForIdProduct).toHaveBeenCalledWith(
+        1,
       );
+      expect(
+        catalogsSettersServiceMock.updateProductsCountJob,
+      ).toHaveBeenCalledWith(10, 'increment', businessReq);
       expect(result).toBe(reloadedProduct);
     });
 
@@ -258,7 +262,9 @@ describe('ProductsService', () => {
       const reloadedProduct = { id: 2, idCatalog: 10 } as Product;
 
       productsSettersServiceMock.create.mockResolvedValue(createdProduct);
-      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(reloadedProduct);
+      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(
+        reloadedProduct,
+      );
       filesGettersServiceMock.getImageByNames.mockResolvedValue([
         { tags: ['fashion', 'sale'] },
       ]);
@@ -280,23 +286,31 @@ describe('ProductsService', () => {
 
       expect(productFilesSettersServiceMock.create).toHaveBeenCalled();
       expect(productVariationsSettersServiceMock.create).toHaveBeenCalled();
-      expect(productTagsServiceMock.processAndUpdateProductTags).toHaveBeenCalledWith(
-        2,
-        ['fashion', 'sale'],
-        businessReq,
-      );
+      expect(
+        productTagsServiceMock.processAndUpdateProductTags,
+      ).toHaveBeenCalledWith(2, ['fashion', 'sale'], businessReq);
       expect(result).toBe(reloadedProduct);
     });
   });
 
   describe('update', () => {
     it('updates product with new catalog and syncs variations', async () => {
-      const existingProduct = { id: 5, idCatalog: 10, hasVariations: true } as Product;
+      const existingProduct = {
+        id: 5,
+        idCatalog: 10,
+        hasVariations: true,
+      } as Product;
       const reloadedProduct = { id: 5, idCatalog: 20 } as Product;
 
-      productsGettersServiceMock.findOneByBusinessId.mockResolvedValue(existingProduct);
-      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(reloadedProduct);
-      productVariationsGettersServiceMock.findAllByProduct.mockResolvedValue([]);
+      productsGettersServiceMock.findOneByBusinessId.mockResolvedValue(
+        existingProduct,
+      );
+      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(
+        reloadedProduct,
+      );
+      productVariationsGettersServiceMock.findAllByProduct.mockResolvedValue(
+        [],
+      );
       productSkusGettersServiceMock.findAllByProduct.mockResolvedValue([]);
       productFilesGettersServiceMock.findByProductId.mockResolvedValue([]);
 
@@ -316,21 +330,29 @@ describe('ProductsService', () => {
       );
 
       expect(productsSettersServiceMock.update).toHaveBeenCalled();
-      expect(catalogsSettersServiceMock.updateProductsCountJob).toHaveBeenCalledWith(
-        10,
-        'decrement',
-        businessReq,
-      );
+      expect(
+        catalogsSettersServiceMock.updateProductsCountJob,
+      ).toHaveBeenCalledWith(10, 'decrement', businessReq);
       expect(result).toBe(reloadedProduct);
     });
 
     it('updates product without variations payload when product has variations', async () => {
-      const existingProduct = { id: 6, idCatalog: 10, hasVariations: true } as Product;
+      const existingProduct = {
+        id: 6,
+        idCatalog: 10,
+        hasVariations: true,
+      } as Product;
       const reloadedProduct = { id: 6, idCatalog: 10 } as Product;
 
-      productsGettersServiceMock.findOneByBusinessId.mockResolvedValue(existingProduct);
-      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(reloadedProduct);
-      productSkusGettersServiceMock.findAllByProduct.mockResolvedValue([{ id: 100 }]);
+      productsGettersServiceMock.findOneByBusinessId.mockResolvedValue(
+        existingProduct,
+      );
+      productsGettersServiceMock.findOneWithRelations.mockResolvedValue(
+        reloadedProduct,
+      );
+      productSkusGettersServiceMock.findAllByProduct.mockResolvedValue([
+        { id: 100 },
+      ]);
 
       const result = await service.update(
         { id: 6, name: 'Only Name Update' } as any,
@@ -346,21 +368,28 @@ describe('ProductsService', () => {
     it('removes product files, skus, variations, and updates catalog count', async () => {
       const product = { id: 9, idCatalog: 15 } as Product;
       productsGettersServiceMock.findOne.mockResolvedValue(product);
-      productFilesGettersServiceMock.findByProductId.mockResolvedValue([{ id: 50 }]);
-      productSkusGettersServiceMock.findAllByProduct.mockResolvedValue([{ id: 60 }]);
-      productVariationsGettersServiceMock.findAllByProduct.mockResolvedValue([{ id: 70 }]);
+      productFilesGettersServiceMock.findByProductId.mockResolvedValue([
+        { id: 50 },
+      ]);
+      productSkusGettersServiceMock.findAllByProduct.mockResolvedValue([
+        { id: 60 },
+      ]);
+      productVariationsGettersServiceMock.findAllByProduct.mockResolvedValue([
+        { id: 70 },
+      ]);
 
       const result = await service.remove(9, businessReq);
 
       expect(productFilesSettersServiceMock.remove).toHaveBeenCalled();
       expect(productSkusSettersServiceMock.remove).toHaveBeenCalled();
       expect(productVariationsSettersServiceMock.remove).toHaveBeenCalled();
-      expect(productsSettersServiceMock.remove).toHaveBeenCalledWith(product, businessReq);
-      expect(catalogsSettersServiceMock.updateProductsCountJob).toHaveBeenCalledWith(
-        15,
-        'decrement',
+      expect(productsSettersServiceMock.remove).toHaveBeenCalledWith(
+        product,
         businessReq,
       );
+      expect(
+        catalogsSettersServiceMock.updateProductsCountJob,
+      ).toHaveBeenCalledWith(15, 'decrement', businessReq);
       expect(result).toBe(true);
     });
   });

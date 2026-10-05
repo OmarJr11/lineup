@@ -36,9 +36,9 @@ describe('StatisticsResolver', () => {
   it('productStats delegates to getProductStats', async () => {
     const payload = { total: 1 };
     gettersMock.getProductStats.mockResolvedValue(payload);
-    await expect(
-      resolver.productStats(timePeriod, businessReq),
-    ).resolves.toBe(payload);
+    await expect(resolver.productStats(timePeriod, businessReq)).resolves.toBe(
+      payload,
+    );
     expect(gettersMock.getProductStats).toHaveBeenCalledWith(10, timePeriod);
   });
 

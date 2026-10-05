@@ -50,7 +50,9 @@ describe('ValidationMailsGettersService', () => {
   describe('findLatestByEmail', () => {
     it('delegates to findOneWithOptions', async () => {
       findOneMock.mockResolvedValue(undefined);
-      await expect(service.findLatestByEmail('e@e.com')).resolves.toBeUndefined();
+      await expect(
+        service.findLatestByEmail('e@e.com'),
+      ).resolves.toBeUndefined();
     });
   });
 });

@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddCatalogsPermissionsToBusinessRole1766973380783
-  implements MigrationInterface
-{
+export class AddCatalogsPermissionsToBusinessRole1766973380783 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     //Create permissions
     await queryRunner.query(`

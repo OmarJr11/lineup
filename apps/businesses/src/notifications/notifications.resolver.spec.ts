@@ -27,10 +27,7 @@ describe('NotificationsResolver', () => {
     const pagination = { page: 1, limit: 20 } as InfinityScrollInput;
     const row = { id: 9 };
     notificationsServiceMock.findPaginatedForBusiness.mockResolvedValue([row]);
-    const out = await resolver.myBusinessNotifications(
-      businessReq,
-      pagination,
-    );
+    const out = await resolver.myBusinessNotifications(businessReq, pagination);
     expect(
       notificationsServiceMock.findPaginatedForBusiness,
     ).toHaveBeenCalledWith(2, pagination);

@@ -33,9 +33,7 @@ describe('EntityAuditsGettersService', () => {
     it('returns rows from repository.find', async () => {
       const rows = [{ id: 1 } as EntityAudit];
       repositoryMock.find.mockResolvedValue(rows);
-      await expect(
-        service.findByEntity('Product', 5, 20),
-      ).resolves.toBe(rows);
+      await expect(service.findByEntity('Product', 5, 20)).resolves.toBe(rows);
       expect(repositoryMock.find).toHaveBeenCalledWith({
         where: { entityName: 'Product', entityId: 5 },
         relations: ['creationBusiness', 'creationUser'],

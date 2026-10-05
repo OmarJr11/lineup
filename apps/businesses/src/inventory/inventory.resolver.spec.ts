@@ -64,7 +64,9 @@ describe('InventoryResolver', () => {
     const movements = [{ id: 1 }];
     stockMovementsServiceMock.findAllByBusiness.mockResolvedValue(movements);
     const out = await resolver.getStockHistory(null, 20, 0, businessReq);
-    expect(productsGettersServiceMock.findOneByBusinessId).not.toHaveBeenCalled();
+    expect(
+      productsGettersServiceMock.findOneByBusinessId,
+    ).not.toHaveBeenCalled();
     expect(stockMovementsServiceMock.findAllByBusiness).toHaveBeenCalledWith(
       11,
       20,

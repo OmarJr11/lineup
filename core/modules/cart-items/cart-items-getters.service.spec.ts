@@ -75,7 +75,10 @@ describe('CartItemsGettersService', () => {
   });
 
   it('calculateCartTotal sums subtotals and quantities', async () => {
-    queryBuilderMock.getRawOne.mockResolvedValue({ total: '150', itemsCount: '4' });
+    queryBuilderMock.getRawOne.mockResolvedValue({
+      total: '150',
+      itemsCount: '4',
+    });
 
     await expect(service.calculateCartTotal(1)).resolves.toEqual({
       total: 150,

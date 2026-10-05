@@ -137,10 +137,12 @@ describe('Users Businesses follow e2e', () => {
   });
 
   it('checks if authenticated user is following a business', async () => {
-    businessFollowersGettersServiceMock.findOneByBusinessAndUser.mockResolvedValue({
-      id: 10,
-      status: 'active',
-    });
+    businessFollowersGettersServiceMock.findOneByBusinessAndUser.mockResolvedValue(
+      {
+        id: 10,
+        status: 'active',
+      },
+    );
 
     const response = await executeGraphql({
       app,

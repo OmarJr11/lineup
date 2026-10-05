@@ -2,7 +2,10 @@ import { BusinessesResolver } from './businesses.resolver';
 import { BusinessesService } from '../../../../core/modules/businesses/businesses.service';
 import { TokensService } from '../../../../core/modules/token/token.service';
 import { AuthService } from '../../../../core/modules/auth/auth.service';
-import { CookiesPrefixEnum, ProvidersEnum } from '../../../../core/common/enums';
+import {
+  CookiesPrefixEnum,
+  ProvidersEnum,
+} from '../../../../core/common/enums';
 import type { CreateBusinessInput } from '../../../../core/modules/businesses/dto/create-business.input';
 import type { IBusinessReq } from '../../../../core/common/interfaces';
 

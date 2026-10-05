@@ -119,10 +119,7 @@ describe('RolesAdminResolver', () => {
       rolesServiceMock.findOneOrFail.mockResolvedValue({ id: 2 });
       businessRolesServiceMock.removeBusinessRole.mockResolvedValue(undefined);
       await expect(
-        resolver.removeRoleFromBusiness(
-          { idBusiness: 4, idRole: 2 },
-          admin,
-        ),
+        resolver.removeRoleFromBusiness({ idBusiness: 4, idRole: 2 }, admin),
       ).resolves.toBe(true);
       expect(businessRolesServiceMock.removeBusinessRole).toHaveBeenCalledWith(
         4,

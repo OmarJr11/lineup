@@ -16,7 +16,9 @@ export class TokenGuard implements CanActivate {
   constructor(private readonly tokenGettersService: TokenGettersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    let request: Request | undefined = context.switchToHttp().getRequest<Request>();
+    let request: Request | undefined = context
+      .switchToHttp()
+      .getRequest<Request>();
     if (!request) {
       const gqlCtx = context.getArgByIndex(2);
       request = gqlCtx?.req;

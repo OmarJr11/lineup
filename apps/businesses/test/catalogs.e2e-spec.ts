@@ -15,7 +15,9 @@ describe('Businesses Catalogs e2e', () => {
     update: jest.fn(),
     remove: jest.fn(),
   };
-  const providers = [{ provide: CatalogsService, useValue: catalogsServiceMock }];
+  const providers = [
+    { provide: CatalogsService, useValue: catalogsServiceMock },
+  ];
 
   const createCatalogMutation = `mutation CreateCatalog($data: CreateCatalogInput!) { createCatalog(data: $data) { id } }`;
   const findAllCatalogsQuery = `query FindAllCatalogs($pagination: InfinityScrollInput!) { findAllCatalogs(pagination: $pagination) { total } }`;

@@ -92,7 +92,9 @@ describe('Businesses Products e2e', () => {
   });
 
   it('covers getAllPrimaryProductsByBusiness', async () => {
-    productsServiceMock.findAllByBusinessAndIsPrimary.mockResolvedValue([{ id: 1 }]);
+    productsServiceMock.findAllByBusinessAndIsPrimary.mockResolvedValue([
+      { id: 1 },
+    ]);
     const response = await executeGraphql({
       app,
       query: getAllPrimaryProductsByBusinessQuery,
@@ -192,7 +194,9 @@ describe('Businesses Products e2e', () => {
   });
 
   it('covers getSkusByProduct', async () => {
-    productSkusServiceMock.findAllByProductAndBusiness.mockResolvedValue([{ id: 11 }]);
+    productSkusServiceMock.findAllByProductAndBusiness.mockResolvedValue([
+      { id: 11 },
+    ]);
     const response = await executeGraphql({
       app,
       query: getSkusByProductQuery,
@@ -202,7 +206,9 @@ describe('Businesses Products e2e', () => {
   });
 
   it('covers updateProductSkus', async () => {
-    productSkusServiceMock.updateAllSkusByProduct.mockResolvedValue([{ id: 11 }]);
+    productSkusServiceMock.updateAllSkusByProduct.mockResolvedValue([
+      { id: 11 },
+    ]);
     const response = await executeGraphql({
       app,
       query: updateProductSkusMutation,

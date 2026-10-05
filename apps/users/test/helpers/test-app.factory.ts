@@ -55,7 +55,9 @@ class TestRootResolver {
   }
 }
 
-const createGuardMock = (behavior: GuardBehavior): { canActivate: (context: ExecutionContext) => boolean } => {
+const createGuardMock = (
+  behavior: GuardBehavior,
+): { canActivate: (context: ExecutionContext) => boolean } => {
   return {
     canActivate: (context: ExecutionContext): boolean => {
       if (!behavior.allow) {
@@ -73,7 +75,9 @@ const createGuardMock = (behavior: GuardBehavior): { canActivate: (context: Exec
   };
 };
 
-const getRequestFromContext = (context: ExecutionContext): Record<string, unknown> | undefined => {
+const getRequestFromContext = (
+  context: ExecutionContext,
+): Record<string, unknown> | undefined => {
   try {
     const gqlContext = GqlExecutionContext.create(context).getContext<{
       req?: Record<string, unknown>;
@@ -123,7 +127,9 @@ export const createTestApp = async (
   });
   moduleBuilder
     .overrideGuard(JwtAuthGuard)
-    .useValue(createGuardMock(params.guardOverrides?.jwt ?? defaultGuardBehavior));
+    .useValue(
+      createGuardMock(params.guardOverrides?.jwt ?? defaultGuardBehavior),
+    );
   moduleBuilder
     .overrideGuard(TokenGuard)
     .useValue(

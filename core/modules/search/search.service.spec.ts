@@ -95,7 +95,10 @@ describe('SearchService', () => {
 
     it('returns empty result on query failure', async () => {
       dataSourceMock.query.mockRejectedValue(new Error('fail'));
-      const result = await service.getFeaturedBusinesses({ page: 1, limit: 10 });
+      const result = await service.getFeaturedBusinesses({
+        page: 1,
+        limit: 10,
+      });
       expect(result.items).toEqual([]);
       expect(result.total).toBe(0);
     });
@@ -128,7 +131,9 @@ describe('SearchService', () => {
         .mockResolvedValueOnce([{ id: 8 }])
         .mockResolvedValueOnce([{ total: 1 }]);
       const prod = { id: 8, title: 'Prod 1' } as never;
-      productsGettersServiceMock.findManyWithRelations.mockResolvedValue([prod]);
+      productsGettersServiceMock.findManyWithRelations.mockResolvedValue([
+        prod,
+      ]);
 
       const result = await service.getFeaturedProducts({ page: 1, limit: 10 });
       expect(result.items).toEqual([prod]);

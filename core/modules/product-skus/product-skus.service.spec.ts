@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -106,15 +105,17 @@ describe('ProductSkusService', () => {
       productSkusGettersServiceMock.findAllByProductAndBusiness.mockResolvedValue(
         list,
       );
-      await expect(
-        service.findAllByProductAndBusiness(5, 99),
-      ).resolves.toBe(list);
+      await expect(service.findAllByProductAndBusiness(5, 99)).resolves.toBe(
+        list,
+      );
     });
   });
 
   describe('getTotalStock', () => {
     it('delegates to getters.getTotalStockByProduct', async () => {
-      productSkusGettersServiceMock.getTotalStockByProduct.mockResolvedValue(12);
+      productSkusGettersServiceMock.getTotalStockByProduct.mockResolvedValue(
+        12,
+      );
       await expect(service.getTotalStock(8)).resolves.toBe(12);
     });
   });

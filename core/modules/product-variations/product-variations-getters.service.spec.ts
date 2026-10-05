@@ -41,9 +41,7 @@ describe('ProductVariationsGettersService', () => {
         getMany: jest.fn().mockResolvedValue(rows),
       };
       repositoryMock.createQueryBuilder.mockReturnValue(qb);
-      await expect(service.findAll({ page: 1, limit: 10 })).resolves.toBe(
-        rows,
-      );
+      await expect(service.findAll({ page: 1, limit: 10 })).resolves.toBe(rows);
     });
   });
 

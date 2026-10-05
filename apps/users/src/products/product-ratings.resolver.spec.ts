@@ -62,7 +62,9 @@ describe('ProductRatingsResolver', () => {
   it('myProductRatings delegates to findAllByUserPaginated', async () => {
     const user = { userId: 4 } as IUserReq;
     const pagination = { page: 1, limit: 5 } as InfinityScrollInput;
-    productRatingsGettersServiceMock.findAllByUserPaginated.mockResolvedValue([]);
+    productRatingsGettersServiceMock.findAllByUserPaginated.mockResolvedValue(
+      [],
+    );
     await resolver.myProductRatings(pagination, user);
     expect(
       productRatingsGettersServiceMock.findAllByUserPaginated,

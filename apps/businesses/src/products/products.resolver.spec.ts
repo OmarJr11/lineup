@@ -55,10 +55,9 @@ describe('ProductsResolver', () => {
     const rows = [{ id: 1 }];
     productsServiceMock.findAllByBusinessAndIsPrimary.mockResolvedValue(rows);
     const out = await resolver.getAllPrimaryProductsByBusiness(data);
-    expect(productsServiceMock.findAllByBusinessAndIsPrimary).toHaveBeenCalledWith(
-      data,
-      true,
-    );
+    expect(
+      productsServiceMock.findAllByBusinessAndIsPrimary,
+    ).toHaveBeenCalledWith(data, true);
     expect(out).toEqual([{ ...rows[0], price: null }]);
   });
 

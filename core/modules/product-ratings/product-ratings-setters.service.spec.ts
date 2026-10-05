@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -94,7 +93,11 @@ describe('ProductRatingsSettersService', () => {
 
   describe('update', () => {
     it('updates rating via updateEntity', async () => {
-      const rating = { id: 9, idProduct: 1, idCreationUser: 7 } as ProductRating;
+      const rating = {
+        id: 9,
+        idProduct: 1,
+        idCreationUser: 7,
+      } as ProductRating;
       const updated = { ...rating, stars: 3 } as ProductRating;
       repositoryMock.update.mockResolvedValue(undefined);
       repositoryMock.findOneOrFail.mockResolvedValue(updated);

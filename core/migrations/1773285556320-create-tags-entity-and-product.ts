@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateTagsEntityAndProduct1773285556320
-  implements MigrationInterface
-{
+export class CreateTagsEntityAndProduct1773285556320 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     const hasTagsTable = await queryRunner.hasTable('tags');
     if (!hasTagsTable) {

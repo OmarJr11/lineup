@@ -33,4 +33,16 @@ export const ValidatingEnv = Joi.object({
   AWS_BUCKET_SECRET_ACCESS_KEY: Joi.string().required(),
 
   API_CHATGPT_KEY: Joi.string().required(),
+
+  REDIS_HOST: Joi.string().default('localhost'),
+  REDIS_PORT: Joi.number().default(6379),
+  REDIS_PASSWORD: Joi.string().allow('').default(''),
+
+  THROTTLE_TTL_SHORT: Joi.number().default(1000),
+  THROTTLE_LIMIT_SHORT: Joi.number().default(15),
+  THROTTLE_TTL_MEDIUM: Joi.number().default(10000),
+  THROTTLE_LIMIT_MEDIUM: Joi.number().default(60),
+  THROTTLE_TTL_LONG: Joi.number().default(60000),
+  THROTTLE_LIMIT_LONG: Joi.number().default(300),
+  GQL_DEPTH_LIMIT: Joi.number().default(6),
 });

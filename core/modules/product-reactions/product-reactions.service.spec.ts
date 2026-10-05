@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -133,7 +132,9 @@ describe('ProductReactionsService', () => {
         SearchDataConsumerEnum.SearchDataProductLikeRecord,
         { idProduct: 200, action: 'like' },
       );
-      expect(productReactionsGettersServiceMock.findOne).toHaveBeenCalledWith(5);
+      expect(productReactionsGettersServiceMock.findOne).toHaveBeenCalledWith(
+        5,
+      );
     });
   });
 

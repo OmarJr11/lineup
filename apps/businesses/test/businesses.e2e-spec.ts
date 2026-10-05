@@ -97,7 +97,10 @@ describe('Businesses BusinessesResolver e2e', () => {
   });
 
   it('covers findBusinessByPath', async () => {
-    businessesServiceMock.findOneByPath.mockResolvedValue({ id: 1, path: 'biz' });
+    businessesServiceMock.findOneByPath.mockResolvedValue({
+      id: 1,
+      path: 'biz',
+    });
     const response = await executeGraphql({
       app,
       query: findBusinessByPathQuery,
@@ -154,7 +157,10 @@ describe('Businesses BusinessesResolver e2e', () => {
 
   it('covers removeBusiness', async () => {
     businessesServiceMock.remove.mockResolvedValue({ id: 1 });
-    const response = await executeGraphql({ app, query: removeBusinessMutation });
+    const response = await executeGraphql({
+      app,
+      query: removeBusinessMutation,
+    });
     expect(response.body.errors).toBeUndefined();
     expect(response.body.data.removeBusiness.id).toBe(1);
   });

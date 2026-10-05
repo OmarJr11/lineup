@@ -7,6 +7,8 @@ import {
 import { createConnection } from 'typeorm';
 import { join } from 'path';
 import { json, urlencoded } from 'express';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 import * as dotenv from 'dotenv';
 import { ParamOrderPipe, TrimPipe } from '../../../core/common/pipes';
 import * as cookieParser from 'cookie-parser';
@@ -35,7 +37,17 @@ async function bootstrap() {
     entities: [entities],
     synchronize: false,
   });
-  const app = await NestFactory.create(AdminModule, { bodyParser: false });
+  const app = await NestFactory.create<NestExpressApplication>(AdminModule, {
+    bodyParser: false,
+  });
+  app.set('trust proxy', 1);
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production' ? undefined : false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
   app.use(json({ limit: HTTP_BODY_SIZE_LIMIT }));
   app.use(urlencoded({ extended: true, limit: HTTP_BODY_SIZE_LIMIT }));
   app.useGlobalPipes(new TrimPipe(), new ParamOrderPipe());

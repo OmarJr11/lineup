@@ -88,7 +88,9 @@ describe('Admin Statistics e2e', () => {
       },
     });
     expect(response.body.errors).toBeUndefined();
-    expect(response.body.data.adminUserStats.__typename).toBe('AdminUserStatsSchema');
+    expect(response.body.data.adminUserStats.__typename).toBe(
+      'AdminUserStatsSchema',
+    );
   });
 
   it('covers adminBusinessStats', async () => {

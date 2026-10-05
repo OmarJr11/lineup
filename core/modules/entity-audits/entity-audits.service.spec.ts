@@ -72,9 +72,9 @@ describe('EntityAuditsService', () => {
     it('delegates to getters', async () => {
       const rows: EntityAudit[] = [];
       gettersMock.findByDiscountProductByDiscountId.mockResolvedValue(rows);
-      await expect(
-        service.findByDiscountProductByDiscountId(2),
-      ).resolves.toBe(rows);
+      await expect(service.findByDiscountProductByDiscountId(2)).resolves.toBe(
+        rows,
+      );
     });
   });
 

@@ -29,7 +29,11 @@ describe('FilesController (users)', () => {
       const file = {} as IFileInterface;
       const data = {} as UploadFileDto;
       const result = await controller.uploadFile(file, data, user);
-      expect(filesServiceMock.uploadFile).toHaveBeenCalledWith(file, data, user);
+      expect(filesServiceMock.uploadFile).toHaveBeenCalledWith(
+        file,
+        data,
+        user,
+      );
       expect(result).toEqual({
         ...filesResponses.upload.success,
         file: uploaded,

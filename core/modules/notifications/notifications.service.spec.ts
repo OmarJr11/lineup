@@ -77,9 +77,7 @@ describe('NotificationsService', () => {
       };
       const req = { userId: 2, username: 'u' };
       settersMock.createAndDispatch.mockResolvedValue(n);
-      await expect(
-        service.createAndDispatch(params, req),
-      ).resolves.toBe(n);
+      await expect(service.createAndDispatch(params, req)).resolves.toBe(n);
       expect(settersMock.createAndDispatch).toHaveBeenCalledWith(params, req);
     });
   });
@@ -106,14 +104,10 @@ describe('NotificationsService', () => {
       const updated = { id: 5 } as Notification;
       const userReq = { userId: 9, username: 'x' };
       settersMock.markAsReadForUser.mockResolvedValue(updated);
-      await expect(
-        service.markAsReadForUser(5, userReq),
-      ).resolves.toBe(updated);
-      expect(settersMock.markAsReadForUser).toHaveBeenCalledWith(
-        9,
-        5,
-        userReq,
+      await expect(service.markAsReadForUser(5, userReq)).resolves.toBe(
+        updated,
       );
+      expect(settersMock.markAsReadForUser).toHaveBeenCalledWith(9, 5, userReq);
     });
   });
 

@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -96,10 +95,7 @@ describe('ProductFilesSettersService', () => {
     it('throws InternalServerErrorException when save fails', async () => {
       repositoryMock.save.mockRejectedValue(new Error('db'));
       await expect(
-        service.create(
-          { imageCode: 'x', idProduct: 1 },
-          businessReq,
-        ),
+        service.create({ imageCode: 'x', idProduct: 1 }, businessReq),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

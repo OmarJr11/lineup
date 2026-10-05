@@ -63,14 +63,9 @@ describe('CartSettersService', () => {
     await expect(
       service.createCartItem(1, 2, 3, 4, 10.5, { color: 'red' }),
     ).resolves.toBe(item);
-    expect(cartItemsServiceMock.create).toHaveBeenCalledWith(
-      1,
-      2,
-      3,
-      4,
-      10.5,
-      { color: 'red' },
-    );
+    expect(cartItemsServiceMock.create).toHaveBeenCalledWith(1, 2, 3, 4, 10.5, {
+      color: 'red',
+    });
   });
 
   it('updateCartItem delegates to CartItemsService', async () => {

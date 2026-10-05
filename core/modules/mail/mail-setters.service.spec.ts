@@ -33,7 +33,10 @@ function getGmailSendMock(): jest.Mock {
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync, readFileSync } from 'fs';
 import { MailSettersService } from './mail-setters.service';
@@ -174,7 +177,9 @@ describe('MailSettersService', () => {
         ],
       }).compile();
       const service = moduleRef.get(MailSettersService);
-      expect(() => service.onModuleInit()).toThrow(InternalServerErrorException);
+      expect(() => service.onModuleInit()).toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 });

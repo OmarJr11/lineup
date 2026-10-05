@@ -3,9 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Adds has_variations column to products table.
  */
-export class AddHasVariationsToProducts1773523000000
-  implements MigrationInterface
-{
+export class AddHasVariationsToProducts1773523000000 implements MigrationInterface {
   name = 'AddHasVariationsToProducts1773523000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

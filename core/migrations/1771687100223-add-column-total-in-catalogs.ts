@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddColumnTotalInCatalogs1771687100223
-  implements MigrationInterface
-{
+export class AddColumnTotalInCatalogs1771687100223 implements MigrationInterface {
   name = 'AddColumnTotalInCatalogs1771687100223';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

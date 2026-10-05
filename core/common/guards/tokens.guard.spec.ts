@@ -89,9 +89,7 @@ describe('TokenGuard', () => {
       headers: {},
     });
 
-    await expect(guard.canActivate(ctx)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it('falls back to GraphQL context when HTTP request is null', async () => {

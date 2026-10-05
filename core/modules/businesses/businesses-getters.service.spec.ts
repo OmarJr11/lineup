@@ -113,7 +113,9 @@ describe('BusinessesGettersService', () => {
 
   describe('email validation', () => {
     it('checkBusinessExistByEmail returns boolean', async () => {
-      repositoryMock.findOne.mockResolvedValueOnce({ id: 1 }).mockResolvedValueOnce(null);
+      repositoryMock.findOne
+        .mockResolvedValueOnce({ id: 1 })
+        .mockResolvedValueOnce(null);
 
       expect(await service.checkBusinessExistByEmail('a@b.com')).toBe(true);
       expect(await service.checkBusinessExistByEmail('c@d.com')).toBe(false);

@@ -90,7 +90,11 @@ describe('DiscountProductsService', () => {
 
   describe('upsert', () => {
     it('updates when a row already exists for the product', async () => {
-      const existing = { id: 1, idProduct: 7, idDiscount: 10 } as DiscountProduct;
+      const existing = {
+        id: 1,
+        idProduct: 7,
+        idDiscount: 10,
+      } as DiscountProduct;
       const reloaded = {
         ...existing,
         idDiscount: 20,
@@ -109,7 +113,11 @@ describe('DiscountProductsService', () => {
       expect(result).toBe(reloaded);
     });
     it('creates when no row exists for the product', async () => {
-      const created = { id: 2, idProduct: 7, idDiscount: 30 } as DiscountProduct;
+      const created = {
+        id: 2,
+        idProduct: 7,
+        idDiscount: 30,
+      } as DiscountProduct;
       gettersMock.findByProductId.mockResolvedValue(null);
       settersMock.create.mockResolvedValue(created);
       const result = await service.upsert(7, 30, businessReq);

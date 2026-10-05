@@ -41,9 +41,9 @@ describe('BusinessHoursResolver', () => {
     const rows = [{ id: 3 }];
     businessHoursServiceMock.findAllMyBusinessHours.mockResolvedValue(rows);
     const out = await resolver.findAllMyBusinessHours(businessReq);
-    expect(businessHoursServiceMock.findAllMyBusinessHours).toHaveBeenCalledWith(
-      businessReq,
-    );
+    expect(
+      businessHoursServiceMock.findAllMyBusinessHours,
+    ).toHaveBeenCalledWith(businessReq);
     expect(out).toEqual(rows);
   });
 

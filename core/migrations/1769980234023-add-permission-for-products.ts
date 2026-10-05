@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddPermissionForProducts1769980234023
-  implements MigrationInterface
-{
+export class AddPermissionForProducts1769980234023 implements MigrationInterface {
   name = 'AddPermissionForProducts1769980234023';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

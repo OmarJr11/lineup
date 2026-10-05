@@ -5,9 +5,7 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'PriceCurrencyPair', async: false })
-export class PriceCurrencyPairValidator
-  implements ValidatorConstraintInterface
-{
+export class PriceCurrencyPairValidator implements ValidatorConstraintInterface {
   validate(_value: any, args: ValidationArguments) {
     const obj = args.object as { price?: number; idCurrency?: number };
     const hasPrice = obj.price != null;

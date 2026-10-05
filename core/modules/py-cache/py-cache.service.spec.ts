@@ -19,7 +19,9 @@ describe('PyCacheService', () => {
     sendCommand: jest.fn(),
   };
   let service: PyCacheService;
-  const createClientMock = createClient as jest.MockedFunction<typeof createClient>;
+  const createClientMock = createClient as jest.MockedFunction<
+    typeof createClient
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,13 +34,20 @@ describe('PyCacheService', () => {
     it('deletes key then sets value without TTL when ttl omitted', async () => {
       await service.setCache('k1', { a: 1 });
       expect(mockClient.del).toHaveBeenCalledWith('k1');
-      expect(mockClient.set).toHaveBeenCalledWith('k1', JSON.stringify({ a: 1 }));
+      expect(mockClient.set).toHaveBeenCalledWith(
+        'k1',
+        JSON.stringify({ a: 1 }),
+      );
     });
     it('sets value with EX when ttlSeconds is positive', async () => {
       await service.setCache('k2', { b: 2 }, 60);
-      expect(mockClient.set).toHaveBeenCalledWith('k2', JSON.stringify({ b: 2 }), {
-        EX: 60,
-      });
+      expect(mockClient.set).toHaveBeenCalledWith(
+        'k2',
+        JSON.stringify({ b: 2 }),
+        {
+          EX: 60,
+        },
+      );
     });
   });
 
@@ -70,7 +79,11 @@ describe('PyCacheService', () => {
       mockClient.sendCommand.mockResolvedValue(2);
       const deleted = await service.deleteKeysByPrefix('pre:');
       expect(deleted).toEqual(['pre:a', 'pre:b']);
-      expect(mockClient.sendCommand).toHaveBeenCalledWith(['DEL', 'pre:a', 'pre:b']);
+      expect(mockClient.sendCommand).toHaveBeenCalledWith([
+        'DEL',
+        'pre:a',
+        'pre:b',
+      ]);
     });
   });
 

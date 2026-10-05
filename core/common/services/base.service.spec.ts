@@ -122,7 +122,11 @@ describe('BasicService', () => {
       repositoryMock.save.mockImplementation((data: any) =>
         Promise.resolve({ id: 1, ...data }),
       );
-      const dataToSave = { name: 'Item', creationUser: 5, creationIp: '127.0.0.1' };
+      const dataToSave = {
+        name: 'Item',
+        creationUser: 5,
+        creationIp: '127.0.0.1',
+      };
       const saved = await service.save(dataToSave, { userId: 5 } as any);
 
       expect(repositoryMock.save).toHaveBeenCalled();
@@ -151,7 +155,10 @@ describe('BasicService', () => {
 
     it('saveAndGetRelations saves entity and reloads relations', async () => {
       repositoryMock.save.mockResolvedValue({ id: 5 });
-      repositoryMock.findOne.mockResolvedValue({ id: 5, user: { name: 'rel' } });
+      repositoryMock.findOne.mockResolvedValue({
+        id: 5,
+        user: { name: 'rel' },
+      });
 
       const res = await service.saveAndGetRelations(
         { title: 'New' },
@@ -172,7 +179,9 @@ describe('BasicService', () => {
       repositoryMock.findOneOrFail.mockResolvedValue({ id: 1, name: 'Test' });
 
       await (service as any).activateEntity({ id: 1 }, { userId: 1 } as any);
-      await (service as any).activateEntityByStatus({ id: 1 }, { userId: 1 } as any);
+      await (service as any).activateEntityByStatus({ id: 1 }, {
+        userId: 1,
+      } as any);
       expect(repositoryMock.update).toHaveBeenCalled();
     });
 
@@ -181,15 +190,22 @@ describe('BasicService', () => {
       repositoryMock.findOneOrFail.mockResolvedValue({ id: 1, name: 'Test' });
 
       await (service as any).disableEntity({ id: 1 }, { userId: 1 } as any);
-      await (service as any).disableEntityByStatus({ id: 1 }, { userId: 1 } as any);
+      await (service as any).disableEntityByStatus({ id: 1 }, {
+        userId: 1,
+      } as any);
       expect(repositoryMock.update).toHaveBeenCalled();
     });
 
     it('deleteEntityByStatus marks entity as deleted', async () => {
       repositoryMock.update.mockResolvedValue({ affected: 1 });
-      repositoryMock.findOneOrFail.mockResolvedValue({ id: 1, status: StatusEnum.DELETED });
+      repositoryMock.findOneOrFail.mockResolvedValue({
+        id: 1,
+        status: StatusEnum.DELETED,
+      });
 
-      await (service as any).deleteEntityByStatus({ id: 1 }, { userId: 1 } as any);
+      await (service as any).deleteEntityByStatus({ id: 1 }, {
+        userId: 1,
+      } as any);
       expect(repositoryMock.update).toHaveBeenCalled();
     });
 
@@ -204,7 +220,10 @@ describe('BasicService', () => {
 
     it('getPaginatedItems paginates an in-memory array', () => {
       const items = [1, 2, 3, 4, 5];
-      const res = (service as any).getPaginatedItems({ page: 0, limit: 2 }, items);
+      const res = (service as any).getPaginatedItems(
+        { page: 0, limit: 2 },
+        items,
+      );
       expect(res.itemCount).toBe(2);
       expect(res.totalItems).toBe(5);
       expect(res.totalPages).toBe(3);
@@ -239,7 +258,13 @@ describe('BasicService', () => {
     it('paginate paginates an array with where filter and ordering', async () => {
       const list = [{ role: 'admin' }, { role: 'user' }, { role: 'admin' }];
       const res = await (service as any).paginate(
-        { page: 1, limit: 10, order: 'DESC', orderBy: 'role', where: [{ role: 'admin' }] },
+        {
+          page: 1,
+          limit: 10,
+          order: 'DESC',
+          orderBy: 'role',
+          where: [{ role: 'admin' }],
+        },
         list,
       );
       expect(res.totalItems).toBe(2);
@@ -255,7 +280,10 @@ describe('BasicService', () => {
       };
       repositoryMock.update.mockResolvedValue({ affected: 1 });
       repositoryMock.findOneOrFail.mockResolvedValue({ name: 'file1.png' });
-      repositoryMock.find.mockResolvedValue([{ name: 'file1.png' }, { name: 'file2.png' }]);
+      repositoryMock.find.mockResolvedValue([
+        { name: 'file1.png' },
+        { name: 'file2.png' },
+      ]);
 
       const singleRes = await (service as any).updateFile(
         { note: 'test' },

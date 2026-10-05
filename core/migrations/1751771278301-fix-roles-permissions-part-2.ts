@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FixRolesPermissionsPart21751771278301
-  implements MigrationInterface
-{
+export class FixRolesPermissionsPart21751771278301 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             DELETE FROM "system".role_permissions WHERE id_role=4 AND id_permission=1;

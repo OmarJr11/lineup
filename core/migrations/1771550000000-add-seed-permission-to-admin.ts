@@ -3,9 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Adds SEEDBUS permission and assigns it to the admin role.
  */
-export class AddSeedPermissionToAdmin1771550000000
-  implements MigrationInterface
-{
+export class AddSeedPermissionToAdmin1771550000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             INSERT INTO "system"."permissions" (code, description, id_creation_user)

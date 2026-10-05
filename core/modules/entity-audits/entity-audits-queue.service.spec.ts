@@ -7,7 +7,10 @@ import {
   QueueNamesEnum,
 } from '../../common/enums/consumers';
 import type { RecordEntityAuditJobData } from '../../consumers/entity-audits.consumer';
-import { AuditOperationEnum, AuditableEntityNameEnum } from '../../common/enums';
+import {
+  AuditOperationEnum,
+  AuditableEntityNameEnum,
+} from '../../common/enums';
 
 /**
  * Unit tests for {@link EntityAuditsQueueService}.

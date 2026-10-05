@@ -44,7 +44,9 @@ describe('ReviewsConsumer', () => {
       data: { user },
     } as Job;
     await consumer.process(job);
-    expect(productRatingsGettersServiceMock.findAllByProduct).not.toHaveBeenCalled();
+    expect(
+      productRatingsGettersServiceMock.findAllByProduct,
+    ).not.toHaveBeenCalled();
   });
 
   it('computes average, updates product, and enqueues search index job', async () => {

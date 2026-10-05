@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateEntityProductReaction1770168207531
-  implements MigrationInterface
-{
+export class CreateEntityProductReaction1770168207531 implements MigrationInterface {
   name = 'CreateEntityProductReaction1770168207531';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

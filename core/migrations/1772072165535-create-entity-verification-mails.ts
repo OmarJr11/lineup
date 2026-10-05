@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateEntityVerificationMails1772072165535
-  implements MigrationInterface
-{
+export class CreateEntityVerificationMails1772072165535 implements MigrationInterface {
   name = 'CreateEntityVerificationMails1772072165535';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

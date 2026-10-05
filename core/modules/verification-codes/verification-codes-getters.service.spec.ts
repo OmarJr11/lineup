@@ -34,9 +34,9 @@ describe('VerificationCodesGettersService', () => {
     it('returns row when found', async () => {
       const row = { id: 1, code: '123456' } as VerificationCode;
       findOneOrFailMock.mockResolvedValue(row);
-      await expect(service.findActiveByDestinationAndCode('123456')).resolves.toBe(
-        row,
-      );
+      await expect(
+        service.findActiveByDestinationAndCode('123456'),
+      ).resolves.toBe(row);
     });
 
     it('throws NotFoundException when missing', async () => {

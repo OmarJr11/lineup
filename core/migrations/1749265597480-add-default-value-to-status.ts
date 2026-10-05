@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDefaultValueToStatus1749265597480
-  implements MigrationInterface
-{
+export class AddDefaultValueToStatus1749265597480 implements MigrationInterface {
   name = 'AddDefaultValueToStatus1749265597480';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

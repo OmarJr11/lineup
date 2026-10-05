@@ -49,7 +49,9 @@ describe('CurrenciesGettersService', () => {
     });
     it('maps repository failure to NotFoundException', async () => {
       repositoryMock.findOneOrFail.mockRejectedValue(new Error('nf'));
-      await expect(service.findByCode('XXX')).rejects.toThrow(NotFoundException);
+      await expect(service.findByCode('XXX')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

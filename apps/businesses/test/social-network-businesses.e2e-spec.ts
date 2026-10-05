@@ -53,7 +53,9 @@ describe('Businesses SocialNetworkBusinesses e2e', () => {
     expect(response.body.data.createSocialNetworkBusiness.id).toBe(1);
   });
   it('covers findAllMySocialNetworkBusinesses', async () => {
-    socialNetworkBusinessesServiceMock.findByBusiness.mockResolvedValue([{ id: 1 }]);
+    socialNetworkBusinessesServiceMock.findByBusiness.mockResolvedValue([
+      { id: 1 },
+    ]);
     const response = await executeGraphql({
       app,
       query: findAllMySocialNetworkBusinessesQuery,
@@ -61,7 +63,9 @@ describe('Businesses SocialNetworkBusinesses e2e', () => {
     expect(response.body.data.findAllMySocialNetworkBusinesses).toHaveLength(1);
   });
   it('covers findByBusiness', async () => {
-    socialNetworkBusinessesServiceMock.findByBusiness.mockResolvedValue([{ id: 1 }]);
+    socialNetworkBusinessesServiceMock.findByBusiness.mockResolvedValue([
+      { id: 1 },
+    ]);
     const response = await executeGraphql({
       app,
       query: findByBusinessQuery,

@@ -1,7 +1,4 @@
-import {
-  cartesianProduct,
-  generateSkuCode,
-} from './cartesian-product.helper';
+import { cartesianProduct, generateSkuCode } from './cartesian-product.helper';
 
 /**
  * Unit tests for cartesian product and SKU helpers.
@@ -12,7 +9,12 @@ describe('cartesianProduct', () => {
   });
 
   it('returns tuples for two dimensions', () => {
-    expect(cartesianProduct([['a', 'b'], ['1', '2']])).toEqual([
+    expect(
+      cartesianProduct([
+        ['a', 'b'],
+        ['1', '2'],
+      ]),
+    ).toEqual([
       ['a', '1'],
       ['a', '2'],
       ['b', '1'],

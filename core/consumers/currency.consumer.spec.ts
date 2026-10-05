@@ -24,7 +24,9 @@ describe('CurrencyConsumer', () => {
       name: CurrencyConsumerEnum.SaveDataCurrencyBCV,
     } as Job;
     await consumer.process(job);
-    expect(scrappingCacheServiceMock.syncBcvOfficialRatesToCache).toHaveBeenCalled();
+    expect(
+      scrappingCacheServiceMock.syncBcvOfficialRatesToCache,
+    ).toHaveBeenCalled();
   });
 
   it('ignores unknown job names without throwing', async () => {

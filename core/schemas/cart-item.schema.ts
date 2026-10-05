@@ -7,15 +7,15 @@ import { ProductSkuSchema } from './product-sku.schema';
 /** GraphQL representation of a cart line item. */
 export class CartItemSchema extends BaseSchema {
   /** Item identifier. @type {number} */
-    /** Parent cart identifier. @type {number} */
-    /** Product identifier. @type {number} */
-    /** Product relation. @type {ProductSchema | undefined} */
-    /** Optional SKU identifier. @type {number | undefined} */
-    /** SKU relation. @type {ProductSkuSchema | undefined} */
-    /** Selected quantity. @type {number} */
-    /** Unit price. @type {number} */
-    /** Line subtotal. @type {number} */
-    /** Selected variation values. @type {Record<string, string> | undefined} */
+  /** Parent cart identifier. @type {number} */
+  /** Product identifier. @type {number} */
+  /** Product relation. @type {ProductSchema | undefined} */
+  /** Optional SKU identifier. @type {number | undefined} */
+  /** SKU relation. @type {ProductSkuSchema | undefined} */
+  /** Selected quantity. @type {number} */
+  /** Unit price. @type {number} */
+  /** Line subtotal. @type {number} */
+  /** Selected variation values. @type {Record<string, string> | undefined} */
   @Field(() => Int)
   id: number;
 

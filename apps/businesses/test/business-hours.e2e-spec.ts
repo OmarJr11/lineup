@@ -23,7 +23,10 @@ describe('Businesses BusinessHours e2e', () => {
   let app: INestApplication;
   beforeEach(async () => {
     jest.clearAllMocks();
-    app = await createTestApp({ resolvers: [BusinessHoursResolver], providers });
+    app = await createTestApp({
+      resolvers: [BusinessHoursResolver],
+      providers,
+    });
   });
   afterEach(async () => {
     if (app) await app.close();
@@ -68,7 +71,9 @@ describe('Businesses BusinessHours e2e', () => {
     expect(response.body.data.removeBusinessHour).toBe(true);
   });
   it('covers findAllMyBusinessHours', async () => {
-    businessHoursServiceMock.findAllMyBusinessHours.mockResolvedValue([{ id: 1 }]);
+    businessHoursServiceMock.findAllMyBusinessHours.mockResolvedValue([
+      { id: 1 },
+    ]);
     const response = await executeGraphql({
       app,
       query: findAllMyBusinessHoursQuery,

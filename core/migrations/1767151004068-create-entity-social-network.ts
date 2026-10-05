@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateEntitySocialNetwork1767151004068
-  implements MigrationInterface
-{
+export class CreateEntitySocialNetwork1767151004068 implements MigrationInterface {
   name = 'CreateEntitySocialNetwork1767151004068';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

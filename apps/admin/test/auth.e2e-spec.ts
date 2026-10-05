@@ -47,7 +47,9 @@ describe('Admin Auth e2e', () => {
     const response = await executeGraphql({
       app,
       query: loginMutation,
-      variables: { login: { email: 'admin@lineup.com', password: 'Secret123' } },
+      variables: {
+        login: { email: 'admin@lineup.com', password: 'Secret123' },
+      },
     });
     expect(response.status).toBe(200);
     expect(response.body.errors).toBeUndefined();

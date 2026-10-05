@@ -74,7 +74,9 @@ describe('Businesses Inventory e2e', () => {
   });
   it('covers getStockByProduct', async () => {
     productsGettersServiceMock.findOneByBusinessId.mockResolvedValue({ id: 1 });
-    productSkusServiceMock.findAllByProductAndBusiness.mockResolvedValue([{ id: 3 }]);
+    productSkusServiceMock.findAllByProductAndBusiness.mockResolvedValue([
+      { id: 3 },
+    ]);
     const response = await executeGraphql({
       app,
       query: getStockByProductQuery,

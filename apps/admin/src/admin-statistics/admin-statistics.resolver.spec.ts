@@ -48,7 +48,9 @@ describe('AdminStatisticsResolver', () => {
   it('adminPlatformEngagementStats delegates to getters', async () => {
     const payload = { visits: 3 };
     gettersMock.getPlatformEngagementStats.mockResolvedValue(payload);
-    await expect(resolver.adminPlatformEngagementStats()).resolves.toBe(payload);
+    await expect(resolver.adminPlatformEngagementStats()).resolves.toBe(
+      payload,
+    );
   });
 
   it('adminCatalogGlobalStats delegates to getters', async () => {
@@ -69,9 +71,9 @@ describe('AdminStatisticsResolver', () => {
   it('adminDiscountGlobalStats passes custom days from query', async () => {
     const payload = { buckets: [] };
     gettersMock.getDiscountGlobalStats.mockResolvedValue(payload);
-    await expect(
-      resolver.adminDiscountGlobalStats({ days: 14 }),
-    ).resolves.toBe(payload);
+    await expect(resolver.adminDiscountGlobalStats({ days: 14 })).resolves.toBe(
+      payload,
+    );
     expect(gettersMock.getDiscountGlobalStats).toHaveBeenCalledWith(14);
   });
 });

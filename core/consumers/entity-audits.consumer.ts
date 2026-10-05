@@ -11,8 +11,10 @@ import { EntityAuditsSettersService } from '../modules/entity-audits/entity-audi
 import { RecordEntityAuditDto } from '../modules/entity-audits/dto';
 
 /** Payload for RecordAudit job. */
-export interface RecordEntityAuditJobData
-  extends Omit<RecordEntityAuditDto, 'userOrBusinessReq'> {
+export interface RecordEntityAuditJobData extends Omit<
+  RecordEntityAuditDto,
+  'userOrBusinessReq'
+> {
   userOrBusinessReq: IUserOrBusinessReq;
 }
 

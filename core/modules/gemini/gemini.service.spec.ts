@@ -4,7 +4,10 @@ jest.mock('@google/genai', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import { GeminiService } from './gemini.service';
@@ -91,16 +94,16 @@ describe('GeminiService', () => {
     });
 
     it('throws BadRequestException when contents is empty', async () => {
-      await expect(
-        service.generateContent({ contents: '' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.generateContent({ contents: '' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws InternalServerErrorException when Gemini fails', async () => {
       generateContentMock.mockRejectedValueOnce(new Error('api'));
-      await expect(
-        service.generateContent({ contents: 'x' }),
-      ).rejects.toThrow(InternalServerErrorException);
+      await expect(service.generateContent({ contents: 'x' })).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 });

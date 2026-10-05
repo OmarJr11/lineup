@@ -93,7 +93,9 @@ describe('UsersGettersService', () => {
     });
 
     it('findOneByEmail throws NotAcceptableException when not found', async () => {
-      jest.spyOn(service, 'findOneWithOptionsOrFail').mockRejectedValue(new Error('nf'));
+      jest
+        .spyOn(service, 'findOneWithOptionsOrFail')
+        .mockRejectedValue(new Error('nf'));
 
       await expect(service.findOneByEmail('missing@mail.com')).rejects.toThrow(
         NotAcceptableException,
@@ -101,11 +103,17 @@ describe('UsersGettersService', () => {
     });
 
     it('checkUserExistByEmail returns boolean', async () => {
-      jest.spyOn(service, 'findOneWithOptions').mockResolvedValue({ id: 1 } as User);
-      await expect(service.checkUserExistByEmail('a@b.com')).resolves.toBe(true);
+      jest
+        .spyOn(service, 'findOneWithOptions')
+        .mockResolvedValue({ id: 1 } as User);
+      await expect(service.checkUserExistByEmail('a@b.com')).resolves.toBe(
+        true,
+      );
 
       jest.spyOn(service, 'findOneWithOptions').mockResolvedValue(null);
-      await expect(service.checkUserExistByEmail('a@b.com')).resolves.toBe(false);
+      await expect(service.checkUserExistByEmail('a@b.com')).resolves.toBe(
+        false,
+      );
     });
   });
 
@@ -121,7 +129,9 @@ describe('UsersGettersService', () => {
       jest.spyOn(service, 'findOneWithOptionsOrFail').mockResolvedValue(u);
       await expect(service.findByUsernameOrFail('usr')).resolves.toBe(u);
 
-      jest.spyOn(service, 'findOneWithOptionsOrFail').mockRejectedValue(new Error('nf'));
+      jest
+        .spyOn(service, 'findOneWithOptionsOrFail')
+        .mockRejectedValue(new Error('nf'));
       await expect(service.findByUsernameOrFail('bad')).rejects.toThrow(
         NotAcceptableException,
       );
@@ -136,7 +146,9 @@ describe('UsersGettersService', () => {
         service.findOneByIdUserAndToken(1, 'a@b.com', 'active' as any),
       ).resolves.toBe(u);
 
-      jest.spyOn(service, 'findOneWithOptionsOrFail').mockRejectedValue(new Error('err'));
+      jest
+        .spyOn(service, 'findOneWithOptionsOrFail')
+        .mockRejectedValue(new Error('err'));
       await expect(
         service.findOneByIdUserAndToken(1, 'a@b.com', 'active' as any),
       ).rejects.toThrow();
@@ -161,12 +173,21 @@ describe('UsersGettersService', () => {
       const qb = {
         andWhere: jest.fn().mockReturnThis(),
         orWhere: jest.fn().mockReturnThis(),
-        getOne: jest.fn().mockResolvedValue({ id: 2, username: 'usr', email: 'diff@test.com' }),
+        getOne: jest
+          .fn()
+          .mockResolvedValue({
+            id: 2,
+            username: 'usr',
+            email: 'diff@test.com',
+          }),
       };
       createQueryBuilderMock.mockReturnValue(qb);
 
       await expect(
-        service.validateUniqueFields({ email: 'u@test.com', username: 'usr' }, 1),
+        service.validateUniqueFields(
+          { email: 'u@test.com', username: 'usr' },
+          1,
+        ),
       ).rejects.toThrow(NotAcceptableException);
     });
 
@@ -174,7 +195,9 @@ describe('UsersGettersService', () => {
       const qb = {
         andWhere: jest.fn().mockReturnThis(),
         orWhere: jest.fn().mockReturnThis(),
-        getOne: jest.fn().mockResolvedValue({ id: 2, username: 'other', email: 'u@test.com' }),
+        getOne: jest
+          .fn()
+          .mockResolvedValue({ id: 2, username: 'other', email: 'u@test.com' }),
       };
       createQueryBuilderMock.mockReturnValue(qb);
 
@@ -189,7 +212,9 @@ describe('UsersGettersService', () => {
       const countMock = jest.fn().mockResolvedValue(42);
       (service as any).userRepository.count = countMock;
 
-      await expect(service.getNonDeletedUsersCountForAdminStatistics()).resolves.toBe(42);
+      await expect(
+        service.getNonDeletedUsersCountForAdminStatistics(),
+      ).resolves.toBe(42);
     });
 
     it('getUsersGroupedByStatusForAdminStatistics parses status counts', async () => {
@@ -198,7 +223,9 @@ describe('UsersGettersService', () => {
         addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockResolvedValue([{ status: 'active', count: '15' }]),
+        getRawMany: jest
+          .fn()
+          .mockResolvedValue([{ status: 'active', count: '15' }]),
       };
       jest.spyOn(service, 'createQueryBuilder').mockReturnValue(qb as any);
 

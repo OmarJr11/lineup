@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -68,7 +67,10 @@ describe('UserRolesService', () => {
 
   describe('create', () => {
     it('throws BadRequestException when assignment already exists', async () => {
-      gettersMock.findOne.mockResolvedValue({ idUser: 1, idRole: 2 } as UserRole);
+      gettersMock.findOne.mockResolvedValue({
+        idUser: 1,
+        idRole: 2,
+      } as UserRole);
       await expect(service.create(1, 2, userReq)).rejects.toThrow(
         BadRequestException,
       );
@@ -97,7 +99,9 @@ describe('UserRolesService', () => {
       const ur = { idUser: 1, idRole: 2 } as UserRole;
       gettersMock.findOneOrFail.mockResolvedValue(ur);
       removeMock.mockResolvedValue(ur);
-      await expect(service.removeUserRole(1, 2, userReq)).resolves.toBeUndefined();
+      await expect(
+        service.removeUserRole(1, 2, userReq),
+      ).resolves.toBeUndefined();
       expect(removeMock).toHaveBeenCalled();
     });
 

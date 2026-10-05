@@ -4,9 +4,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * Creates Business Premium role with inventory permissions.
  * Admin and Business Premium roles get INVMGMT permission.
  */
-export class AddBusinessPremiumRoleAndInventoryPermissions1772590000000
-  implements MigrationInterface
-{
+export class AddBusinessPremiumRoleAndInventoryPermissions1772590000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             ALTER TYPE "system"."roles_code_enum" RENAME TO "roles_code_enum_old"

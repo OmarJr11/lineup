@@ -212,10 +212,9 @@ describe('BusinessStatisticsGettersService', () => {
       );
       const result = await service.getTopProductsByRating(9);
       expect(result).toBe(rows);
-      expect(productsGettersServiceMock.getTopByRatingForStatistics).toHaveBeenCalledWith(
-        9,
-        10,
-      );
+      expect(
+        productsGettersServiceMock.getTopByRatingForStatistics,
+      ).toHaveBeenCalledWith(9, 10);
     });
   });
 

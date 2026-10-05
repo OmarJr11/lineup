@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -129,7 +128,9 @@ describe('ProductsSettersService', () => {
       const reloaded = { ...product, status: StatusEnum.DELETED } as Product;
       repositoryMock.update.mockResolvedValue(undefined);
       repositoryMock.findOneOrFail.mockResolvedValue(reloaded);
-      await expect(service.remove(product, businessReq)).resolves.toBeUndefined();
+      await expect(
+        service.remove(product, businessReq),
+      ).resolves.toBeUndefined();
     });
   });
 

@@ -38,11 +38,9 @@ describe('NotificationsResolver (users)', () => {
 
   it('markAllNotificationsRead returns true', async () => {
     const user = { userId: 1 } as IUserReq;
-    await expect(
-      resolver.markAllNotificationsRead(user),
-    ).resolves.toBe(true);
-    expect(
-      notificationsServiceMock.markAllAsReadForUser,
-    ).toHaveBeenCalledWith(user);
+    await expect(resolver.markAllNotificationsRead(user)).resolves.toBe(true);
+    expect(notificationsServiceMock.markAllAsReadForUser).toHaveBeenCalledWith(
+      user,
+    );
   });
 });

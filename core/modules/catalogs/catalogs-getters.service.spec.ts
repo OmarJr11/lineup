@@ -81,10 +81,9 @@ describe('CatalogsGettersService', () => {
       };
       repositoryMock.createQueryBuilder.mockReturnValue(qb);
 
-      const res = await service.findAllMyCatalogs(
-        { page: 1, limit: 10 },
-        { businessId: 5 } as any,
-      );
+      const res = await service.findAllMyCatalogs({ page: 1, limit: 10 }, {
+        businessId: 5,
+      } as any);
       expect(res).toEqual(catalogs);
     });
   });
@@ -127,7 +126,9 @@ describe('CatalogsGettersService', () => {
       };
       repositoryMock.createQueryBuilder.mockReturnValue(qb);
 
-      await expect(service.getOneByPath('my-catalog')).resolves.toEqual(catalog);
+      await expect(service.getOneByPath('my-catalog')).resolves.toEqual(
+        catalog,
+      );
     });
 
     it('getOneByPathOrFail throws NotFoundException on failure', async () => {

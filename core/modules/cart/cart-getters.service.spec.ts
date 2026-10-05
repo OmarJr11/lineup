@@ -75,12 +75,9 @@ describe('CartGettersService', () => {
     await expect(
       service.findExistingCartItem(1, 2, 3, { color: 'red' }),
     ).resolves.toBe(cartItem);
-    expect(cartItemsServiceMock.findExisting).toHaveBeenCalledWith(
-      1,
-      2,
-      3,
-      { color: 'red' },
-    );
+    expect(cartItemsServiceMock.findExisting).toHaveBeenCalledWith(1, 2, 3, {
+      color: 'red',
+    });
   });
 
   it('getUserCarts loads carts owned by the user', async () => {

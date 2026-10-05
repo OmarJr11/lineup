@@ -118,7 +118,9 @@ describe('Users Search public e2e', () => {
     expect(response.status).toBe(200);
     expect(response.body.errors).toBeUndefined();
     expect(response.body.data.search.total).toBe(1);
-    expect(response.body.data.search.items[0].__typename).toBe('BusinessSchema');
+    expect(response.body.data.search.items[0].__typename).toBe(
+      'BusinessSchema',
+    );
     expect(userSearchesServiceMock.recordSearch).not.toHaveBeenCalled();
   });
 

@@ -51,7 +51,9 @@ describe('SearchIndexService', () => {
         subtitle: 'Nice',
         description: 'Desc',
         status: 'active',
-        skus: [{ idCurrency: 1, skuCode: 'X', variationOptions: { Size: 'M' } }],
+        skus: [
+          { idCurrency: 1, skuCode: 'X', variationOptions: { Size: 'M' } },
+        ],
         catalog: { title: 'Cat' },
         business: { name: 'Shop' },
         variations: [{ title: 'Color', options: ['Red'] }],
@@ -78,7 +80,9 @@ describe('SearchIndexService', () => {
       } as unknown as Product;
       await service.upsertProductSearchIndex(product);
       expect(dataSourceMock.query).toHaveBeenCalled();
-      const sql = (dataSourceMock.query.mock.calls[0][0] as string).toLowerCase();
+      const sql = (
+        dataSourceMock.query.mock.calls[0][0] as string
+      ).toLowerCase();
       expect(sql).toContain('insert into product_search_index');
     });
   });

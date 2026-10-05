@@ -1,8 +1,6 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddColumnIdCreationBusinessInFiles1766073680253
-  implements MigrationInterface
-{
+export class AddColumnIdCreationBusinessInFiles1766073680253 implements MigrationInterface {
   name = 'AddColumnIdCreationBusinessInFiles1766073680253';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

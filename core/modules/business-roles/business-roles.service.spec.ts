@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -92,7 +91,9 @@ describe('BusinessRolesService', () => {
   describe('findAllByBusinessId', () => {
     it('delegates to getters', async () => {
       const list: BusinessRole[] = [];
-      businessRolesGettersServiceMock.findAllByBusinessId.mockResolvedValue(list);
+      businessRolesGettersServiceMock.findAllByBusinessId.mockResolvedValue(
+        list,
+      );
       const result = await service.findAllByBusinessId(7);
       expect(
         businessRolesGettersServiceMock.findAllByBusinessId,

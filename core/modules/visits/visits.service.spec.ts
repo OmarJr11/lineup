@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -89,10 +88,7 @@ describe('VisitsService', () => {
     it('records product visit', async () => {
       productVisitsMock.create.mockResolvedValue(undefined);
       queueAddMock.mockResolvedValue(undefined);
-      await service.recordVisit(
-        { type: VisitTypeEnum.PRODUCT, id: 3 },
-        null,
-      );
+      await service.recordVisit({ type: VisitTypeEnum.PRODUCT, id: 3 }, null);
       expect(productVisitsMock.create).toHaveBeenCalledWith(
         { idProduct: 3 },
         null,

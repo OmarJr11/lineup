@@ -64,9 +64,9 @@ describe('Users Wishlists e2e', () => {
   });
 
   it('gets followed businesses', async () => {
-    businessFollowersGettersServiceMock.findAllByUserPaginated.mockResolvedValue([
-      { id: 1 },
-    ]);
+    businessFollowersGettersServiceMock.findAllByUserPaginated.mockResolvedValue(
+      [{ id: 1 }],
+    );
 
     const response = await executeGraphql({
       app,

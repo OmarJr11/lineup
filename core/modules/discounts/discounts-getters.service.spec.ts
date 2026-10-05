@@ -157,9 +157,7 @@ describe('DiscountsGettersService', () => {
       discountProductsGettersMock.findByProductIdWithDiscount.mockResolvedValue(
         { idProduct: 1 } as never,
       );
-      await expect(
-        service.findActiveDiscountByProduct(1),
-      ).resolves.toBeNull();
+      await expect(service.findActiveDiscountByProduct(1)).resolves.toBeNull();
     });
     it('returns null when discount is not ACTIVE', async () => {
       const start = new Date(Date.now() - 86_400_000);
@@ -173,9 +171,7 @@ describe('DiscountsGettersService', () => {
           },
         } as never,
       );
-      await expect(
-        service.findActiveDiscountByProduct(1),
-      ).resolves.toBeNull();
+      await expect(service.findActiveDiscountByProduct(1)).resolves.toBeNull();
     });
     it('returns discount when ACTIVE and within date range', async () => {
       const start = new Date(Date.now() - 86_400_000);
@@ -191,9 +187,7 @@ describe('DiscountsGettersService', () => {
           discount: disc,
         } as never,
       );
-      await expect(service.findActiveDiscountByProduct(1)).resolves.toBe(
-        disc,
-      );
+      await expect(service.findActiveDiscountByProduct(1)).resolves.toBe(disc);
     });
   });
 
@@ -255,35 +249,49 @@ describe('DiscountsGettersService', () => {
   describe('findAuditByDiscount and findDiscountDateRangesForAdminStatistics', () => {
     it('findAuditByDiscount delegates to entityAuditsGettersService', async () => {
       const rows = [{ id: 1 }] as never[];
-      entityAuditsGettersMock.findByDiscountProductByDiscountId.mockResolvedValue(rows);
+      entityAuditsGettersMock.findByDiscountProductByDiscountId.mockResolvedValue(
+        rows,
+      );
       await expect(service.findAuditByDiscount(10, 20)).resolves.toBe(rows);
-      expect(entityAuditsGettersMock.findByDiscountProductByDiscountId).toHaveBeenCalledWith(10, 20);
+      expect(
+        entityAuditsGettersMock.findByDiscountProductByDiscountId,
+      ).toHaveBeenCalledWith(10, 20);
     });
 
     it('findDiscountDateRangesForAdminStatistics calls find with select', async () => {
       const rows = [{ startDate: new Date(), endDate: new Date() }] as never[];
       jest.spyOn(service, 'find').mockResolvedValue(rows);
-      await expect(service.findDiscountDateRangesForAdminStatistics()).resolves.toBe(rows);
+      await expect(
+        service.findDiscountDateRangesForAdminStatistics(),
+      ).resolves.toBe(rows);
     });
   });
 
   describe('verifyBusinessOwnership edge cases', () => {
     it('throws NotFoundException if CATALOG scope has no idCatalog', async () => {
       const discount = { scope: DiscountScopeEnum.CATALOG } as Discount;
-      await expect(service.verifyBusinessOwnership(discount, 1)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.verifyBusinessOwnership(discount, 1),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws NotFoundException if PRODUCT scope has no discount products', async () => {
       const discount = { id: 10, scope: DiscountScopeEnum.PRODUCT } as Discount;
       discountProductsGettersMock.findAllByDiscountId.mockResolvedValue([]);
-      await expect(service.verifyBusinessOwnership(discount, 1)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.verifyBusinessOwnership(discount, 1),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findOneByIdAndScope errors', () => {
     it('throws NotFoundException when findOneWithOptionsOrFail fails', async () => {
-      jest.spyOn(service, 'findOneWithOptionsOrFail').mockRejectedValue(new Error('fail'));
-      await expect(service.findOneByIdAndScope(99, DiscountScopeEnum.BUSINESS)).rejects.toThrow(NotFoundException);
+      jest
+        .spyOn(service, 'findOneWithOptionsOrFail')
+        .mockRejectedValue(new Error('fail'));
+      await expect(
+        service.findOneByIdAndScope(99, DiscountScopeEnum.BUSINESS),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -301,7 +309,11 @@ describe('DiscountsGettersService', () => {
       };
       jest.spyOn(service, 'createQueryBuilder').mockReturnValue(qbMock);
 
-      const res = await service.findAllByScopePaginated(DiscountScopeEnum.PRODUCT, 1, { page: 1, limit: 10 });
+      const res = await service.findAllByScopePaginated(
+        DiscountScopeEnum.PRODUCT,
+        1,
+        { page: 1, limit: 10 },
+      );
       expect(res).toEqual({ items: [], total: 0, page: 1, limit: 10 });
     });
 
@@ -312,7 +324,9 @@ describe('DiscountsGettersService', () => {
         select: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        offset: jest.fn().mockReturnFail ? jest.fn() : jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnFail
+          ? jest.fn()
+          : jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([{ id: 1 }]),
         getCount: jest.fn().mockResolvedValue(1),
       };
@@ -323,12 +337,17 @@ describe('DiscountsGettersService', () => {
         orderBy: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(items),
       };
-      jest.spyOn(service, 'createQueryBuilder')
+      jest
+        .spyOn(service, 'createQueryBuilder')
         .mockReturnValueOnce(qbMock1)
         .mockReturnValueOnce(qbMock1)
         .mockReturnValueOnce(qbMock2);
 
-      const res = await service.findAllByScopePaginated(DiscountScopeEnum.BUSINESS, 1, {});
+      const res = await service.findAllByScopePaginated(
+        DiscountScopeEnum.BUSINESS,
+        1,
+        {},
+      );
       expect(res).toEqual({ items, total: 1, page: 1, limit: 10 });
     });
   });
@@ -336,9 +355,27 @@ describe('DiscountsGettersService', () => {
   describe('statistics methods', () => {
     it('getByStatusForStatistics correctly classifies active, pending, expired', async () => {
       const rows = [
-        { id: 1, status: StatusEnum.ACTIVE, startDate: new Date('2025-06-01'), endDate: new Date('2025-07-01'), isExpired: false },
-        { id: 2, status: StatusEnum.PENDING, startDate: new Date('2025-07-01'), endDate: new Date('2025-08-01'), isExpired: false },
-        { id: 3, status: StatusEnum.ACTIVE, startDate: new Date('2025-01-01'), endDate: new Date('2025-05-01'), isExpired: false },
+        {
+          id: 1,
+          status: StatusEnum.ACTIVE,
+          startDate: new Date('2025-06-01'),
+          endDate: new Date('2025-07-01'),
+          isExpired: false,
+        },
+        {
+          id: 2,
+          status: StatusEnum.PENDING,
+          startDate: new Date('2025-07-01'),
+          endDate: new Date('2025-08-01'),
+          isExpired: false,
+        },
+        {
+          id: 3,
+          status: StatusEnum.ACTIVE,
+          startDate: new Date('2025-01-01'),
+          endDate: new Date('2025-05-01'),
+          isExpired: false,
+        },
       ];
       const qbMock: any = {
         where: jest.fn().mockReturnThis(),
@@ -349,7 +386,11 @@ describe('DiscountsGettersService', () => {
       };
       jest.spyOn(service, 'createQueryBuilder').mockReturnValue(qbMock);
 
-      const res = await service.getByStatusForStatistics(1, '2025-06-01', '2025-06-30');
+      const res = await service.getByStatusForStatistics(
+        1,
+        '2025-06-01',
+        '2025-06-30',
+      );
       expect(res).toEqual([
         { label: 'active', count: 1 },
         { label: 'pending', count: 1 },
@@ -394,7 +435,11 @@ describe('DiscountsGettersService', () => {
       };
       jest.spyOn(service, 'createQueryBuilder').mockReturnValue(qbMock);
 
-      const res = await service.getExpiringSoonStatsForStatistics(1, '2025-01-01', '2025-12-31');
+      const res = await service.getExpiringSoonStatsForStatistics(
+        1,
+        '2025-01-01',
+        '2025-12-31',
+      );
       expect(res).toEqual({ total: 1 });
     });
 
@@ -426,10 +471,9 @@ describe('DiscountsGettersService', () => {
       };
       jest.spyOn(service, 'createQueryBuilder').mockReturnValue(qbMock);
 
-      const res = await service.getGlobalExpiringSoonDiscountCountForAdminStatistics(7);
+      const res =
+        await service.getGlobalExpiringSoonDiscountCountForAdminStatistics(7);
       expect(res).toBe(7);
     });
   });
 });
-
-

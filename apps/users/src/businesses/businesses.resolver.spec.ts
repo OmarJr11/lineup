@@ -59,9 +59,7 @@ describe('BusinessesResolver (users)', () => {
     businessFollowersGettersServiceMock.findOneByBusinessAndUser.mockResolvedValue(
       null,
     );
-    await expect(
-      resolver.isFollowingBusiness(3, user),
-    ).resolves.toBe(false);
+    await expect(resolver.isFollowingBusiness(3, user)).resolves.toBe(false);
   });
 
   it('isFollowingBusiness is false when follower is deleted', async () => {
@@ -69,9 +67,7 @@ describe('BusinessesResolver (users)', () => {
     businessFollowersGettersServiceMock.findOneByBusinessAndUser.mockResolvedValue(
       { status: StatusEnum.DELETED },
     );
-    await expect(
-      resolver.isFollowingBusiness(3, user),
-    ).resolves.toBe(false);
+    await expect(resolver.isFollowingBusiness(3, user)).resolves.toBe(false);
   });
 
   it('isFollowingBusiness is true when active follower exists', async () => {
@@ -79,8 +75,6 @@ describe('BusinessesResolver (users)', () => {
     businessFollowersGettersServiceMock.findOneByBusinessAndUser.mockResolvedValue(
       { status: StatusEnum.ACTIVE },
     );
-    await expect(
-      resolver.isFollowingBusiness(3, user),
-    ).resolves.toBe(true);
+    await expect(resolver.isFollowingBusiness(3, user)).resolves.toBe(true);
   });
 });

@@ -4,9 +4,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  * Adds locations_text column to product_search_index for filtering by business location.
  * Denormalized from business.locations.formatted_address.
  */
-export class AddLocationsTextToProductSearchIndex1773365635353
-  implements MigrationInterface
-{
+export class AddLocationsTextToProductSearchIndex1773365635353 implements MigrationInterface {
   name = 'AddLocationsTextToProductSearchIndex1773365635353';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

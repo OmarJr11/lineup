@@ -1,9 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import { NotificationsGateway } from './notifications.gateway';
 import { Notification } from '../../entities';
-import {
-  NOTIFICATION_SOCKET_EVENT,
-} from '../../common/constants/notifications.constants';
+import { NOTIFICATION_SOCKET_EVENT } from '../../common/constants/notifications.constants';
 import { NotificationSocketSubscribeType } from '../../common/enums';
 
 /**
@@ -19,9 +17,7 @@ describe('NotificationsGateway', () => {
 
   describe('afterInit', () => {
     it('runs without throwing', () => {
-      expect(() =>
-        gateway.afterInit({} as unknown as Server),
-      ).not.toThrow();
+      expect(() => gateway.afterInit({} as unknown as Server)).not.toThrow();
     });
   });
 
@@ -33,9 +29,7 @@ describe('NotificationsGateway', () => {
 
   describe('roomNameForBusiness', () => {
     it('returns namespaced business room', () => {
-      expect(gateway.roomNameForBusiness(7)).toBe(
-        'notifications/business/7',
-      );
+      expect(gateway.roomNameForBusiness(7)).toBe('notifications/business/7');
     });
   });
 

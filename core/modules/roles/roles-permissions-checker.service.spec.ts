@@ -43,9 +43,9 @@ describe('RolesPermissionsCheckerService', () => {
         getMany: jest.fn().mockResolvedValue([]),
       };
       roleRepositoryMock.createQueryBuilder.mockReturnValue(qb);
-      await expect(
-        service.userHasPermission(1, ['perm.a']),
-      ).resolves.toBe(false);
+      await expect(service.userHasPermission(1, ['perm.a'])).resolves.toBe(
+        false,
+      );
     });
     it('returns true when a role grants one of the codes', async () => {
       const roleQb = {
@@ -64,9 +64,9 @@ describe('RolesPermissionsCheckerService', () => {
       };
       roleRepositoryMock.createQueryBuilder.mockReturnValue(roleQb);
       rolePermissionRepositoryMock.createQueryBuilder.mockReturnValue(permQb);
-      await expect(
-        service.userHasPermission(2, ['perm.a']),
-      ).resolves.toBe(true);
+      await expect(service.userHasPermission(2, ['perm.a'])).resolves.toBe(
+        true,
+      );
     });
   });
 
@@ -79,9 +79,9 @@ describe('RolesPermissionsCheckerService', () => {
         getMany: jest.fn().mockResolvedValue([]),
       };
       roleRepositoryMock.createQueryBuilder.mockReturnValue(qb);
-      await expect(
-        service.businessHasPermission(3, ['z']),
-      ).resolves.toBe(false);
+      await expect(service.businessHasPermission(3, ['z'])).resolves.toBe(
+        false,
+      );
     });
     it('returns true when a business role grants a matching code', async () => {
       const roleQb = {

@@ -50,7 +50,11 @@ describe('CartItemsSettersService', () => {
 
   it('update recalculates subtotal before saving', async () => {
     const item = { id: 7, quantity: 1, unitPrice: 5, subtotal: 5 } as CartItem;
-    repositoryMock.save.mockResolvedValue({ ...item, quantity: 3, subtotal: 45 });
+    repositoryMock.save.mockResolvedValue({
+      ...item,
+      quantity: 3,
+      subtotal: 45,
+    });
 
     await expect(service.update(item, 3, 15)).resolves.toEqual(
       expect.objectContaining({ quantity: 3, subtotal: 45 }),

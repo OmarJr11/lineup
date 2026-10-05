@@ -23,14 +23,19 @@ describe('Businesses Notifications e2e', () => {
   let app: INestApplication;
   beforeEach(async () => {
     jest.clearAllMocks();
-    app = await createTestApp({ resolvers: [NotificationsResolver], providers });
+    app = await createTestApp({
+      resolvers: [NotificationsResolver],
+      providers,
+    });
   });
   afterEach(async () => {
     if (app) await app.close();
   });
 
   it('covers myBusinessNotifications', async () => {
-    notificationsServiceMock.findPaginatedForBusiness.mockResolvedValue([{ id: 1 }]);
+    notificationsServiceMock.findPaginatedForBusiness.mockResolvedValue([
+      { id: 1 },
+    ]);
     const response = await executeGraphql({
       app,
       query: myBusinessNotificationsQuery,
@@ -56,7 +61,9 @@ describe('Businesses Notifications e2e', () => {
     expect(response.body.data.markBusinessNotificationRead.id).toBe(1);
   });
   it('covers markAllBusinessNotificationsRead', async () => {
-    notificationsServiceMock.markAllAsReadForBusiness.mockResolvedValue(undefined);
+    notificationsServiceMock.markAllAsReadForBusiness.mockResolvedValue(
+      undefined,
+    );
     const response = await executeGraphql({
       app,
       query: markAllBusinessNotificationsReadMutation,

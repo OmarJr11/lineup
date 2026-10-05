@@ -87,9 +87,7 @@ describe('LocationsService', () => {
     it('delegates to getters', async () => {
       const list: Location[] = [];
       gettersMock.findAllMyLocations.mockResolvedValue(list);
-      await expect(service.findAllMyLocations(businessReq)).resolves.toBe(
-        list,
-      );
+      await expect(service.findAllMyLocations(businessReq)).resolves.toBe(list);
     });
   });
 

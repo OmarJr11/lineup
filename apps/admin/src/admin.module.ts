@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { entities } from '../../../core/entities/entities';
@@ -6,11 +7,19 @@ import { LoggerMiddleware } from '../../../core/common/middlewares/logger-middle
 import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './files/files.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { configuration, ValidatingEnv } from '../../../core/common/config';
+import {
+  configuration,
+  ValidatingEnv,
+  throttlerAsyncConfig,
+} from '../../../core/common/config';
 import GraphQLJSON from 'graphql-type-json';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { GqlThrottlerGuard } from '../../../core/common/guards';
+import { ThrottlerModule } from '@nestjs/throttler';
+import * as depthLimitLib from 'graphql-depth-limit';
+const depthLimit = (depthLimitLib as any).default || depthLimitLib;
 import { SocialNetworksModule } from './social-networks/social-networks.module';
 import { SeedModule } from './seed/seed.module';
 import { RolesAdminModule } from './roles-admin/roles-admin.module';
@@ -49,11 +58,12 @@ import { BullModule } from '@nestjs/bullmq';
       playground: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       debug: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       sortSchema: true,
-      introspection: true,
+      introspection: process.env.NODE_ENV !== EnvironmentsEnum.Production,
       // Include both `req` and `res` in the GraphQL context so resolvers
       // can set cookies on the response (used by AuthService.setCookies).
       context: ({ req, res }) => ({ req, res }),
       installSubscriptionHandlers: false,
+      validationRules: [depthLimit(Number(process.env.GQL_DEPTH_LIMIT) || 6)],
       formatError: (error: any) => {
         const message = error?.message || 'Internal server error';
         const extCode = error?.extensions?.code;
@@ -75,6 +85,9 @@ import { BullModule } from '@nestjs/bullmq';
             case 'NOT_FOUND':
               code = 404;
               break;
+            case 'TOO_MANY_REQUESTS':
+              code = 429;
+              break;
             default:
               code = 500;
           }
@@ -83,6 +96,7 @@ import { BullModule } from '@nestjs/bullmq';
         return { code, status, message };
       },
     }),
+    ThrottlerModule.forRootAsync(throttlerAsyncConfig),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
@@ -97,6 +111,12 @@ import { BullModule } from '@nestjs/bullmq';
     RolesAdminModule,
     AdminStatisticsModule,
     BusinessesModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard,
+    },
   ],
 })
 export class AdminModule implements NestModule {

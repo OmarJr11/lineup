@@ -16,7 +16,10 @@ describe('WsJwtStrategy', () => {
 
   describe('validate', () => {
     it('returns user payload when active user is found', async () => {
-      userServiceMock.findOneOrFail.mockResolvedValue({ id: 12, status: StatusEnum.ACTIVE });
+      userServiceMock.findOneOrFail.mockResolvedValue({
+        id: 12,
+        status: StatusEnum.ACTIVE,
+      });
 
       const result = await strategy.validate({
         sub: 12,
@@ -33,7 +36,9 @@ describe('WsJwtStrategy', () => {
     });
 
     it('throws ForbiddenException when active user is not found', async () => {
-      userServiceMock.findOneOrFail.mockRejectedValue(new Error('User not found'));
+      userServiceMock.findOneOrFail.mockRejectedValue(
+        new Error('User not found'),
+      );
 
       await expect(
         strategy.validate({

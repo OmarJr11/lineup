@@ -3,9 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Adds optional price column to product_search_index for filtering search by price range.
  */
-export class AddPriceToProductSearchIndex1773365635351
-  implements MigrationInterface
-{
+export class AddPriceToProductSearchIndex1773365635351 implements MigrationInterface {
   name = 'AddPriceToProductSearchIndex1773365635351';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

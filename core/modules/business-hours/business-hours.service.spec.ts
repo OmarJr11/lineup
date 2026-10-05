@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -76,15 +75,17 @@ describe('BusinessHoursService', () => {
       ];
       const ordered = [{ id: 1 } as BusinessHour];
       businessHoursSettersServiceMock.createMany.mockResolvedValue([]);
-      businessHoursGettersServiceMock.findAllByBusiness.mockResolvedValue(ordered);
+      businessHoursGettersServiceMock.findAllByBusiness.mockResolvedValue(
+        ordered,
+      );
       const result = await service.create({ slots }, businessReq);
       expect(businessHoursSettersServiceMock.createMany).toHaveBeenCalledWith(
         slots,
         businessReq,
       );
-      expect(businessHoursGettersServiceMock.findAllByBusiness).toHaveBeenCalledWith(
-        100,
-      );
+      expect(
+        businessHoursGettersServiceMock.findAllByBusiness,
+      ).toHaveBeenCalledWith(100);
       expect(result).toBe(ordered);
     });
   });
@@ -110,7 +111,9 @@ describe('BusinessHoursService', () => {
   describe('remove', () => {
     it('loads slot by business scope then removes', async () => {
       const row = { id: 8 } as BusinessHour;
-      businessHoursGettersServiceMock.findOneByIdAndBusiness.mockResolvedValue(row);
+      businessHoursGettersServiceMock.findOneByIdAndBusiness.mockResolvedValue(
+        row,
+      );
       businessHoursSettersServiceMock.remove.mockResolvedValue(true);
       const result = await service.remove(8, businessReq);
       expect(
@@ -126,9 +129,9 @@ describe('BusinessHoursService', () => {
       const list: BusinessHour[] = [];
       businessHoursGettersServiceMock.findAllByBusiness.mockResolvedValue(list);
       const result = await service.findAllByBusiness(200);
-      expect(businessHoursGettersServiceMock.findAllByBusiness).toHaveBeenCalledWith(
-        200,
-      );
+      expect(
+        businessHoursGettersServiceMock.findAllByBusiness,
+      ).toHaveBeenCalledWith(200);
       expect(result).toBe(list);
     });
   });
@@ -138,9 +141,9 @@ describe('BusinessHoursService', () => {
       const list: BusinessHour[] = [];
       businessHoursGettersServiceMock.findAllByBusiness.mockResolvedValue(list);
       const result = await service.findAllMyBusinessHours(businessReq);
-      expect(businessHoursGettersServiceMock.findAllByBusiness).toHaveBeenCalledWith(
-        100,
-      );
+      expect(
+        businessHoursGettersServiceMock.findAllByBusiness,
+      ).toHaveBeenCalledWith(100);
       expect(result).toBe(list);
     });
   });

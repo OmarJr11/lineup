@@ -1,8 +1,7 @@
 jest.mock('typeorm-transactional-cls-hooked', () => {
-  const actual =
-    jest.requireActual<typeof import('typeorm-transactional-cls-hooked')>(
-      'typeorm-transactional-cls-hooked',
-    );
+  const actual = jest.requireActual<
+    typeof import('typeorm-transactional-cls-hooked')
+  >('typeorm-transactional-cls-hooked');
   return {
     ...actual,
     Transactional:
@@ -122,9 +121,9 @@ describe('VerificationCodesService', () => {
       const updated = { ...record, isUsed: true } as VerificationCode;
       settersMock.verifyCode.mockResolvedValue(updated);
       const data: VerifyVerificationCodeDto = { code: '654321' };
-      await expect(
-        service.verifyCode(data, userReq, true),
-      ).resolves.toBe(updated);
+      await expect(service.verifyCode(data, userReq, true)).resolves.toBe(
+        updated,
+      );
       expect(settersMock.verifyCode).toHaveBeenCalledWith(record, userReq);
     });
   });

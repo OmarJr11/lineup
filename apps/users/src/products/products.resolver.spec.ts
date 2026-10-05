@@ -80,7 +80,10 @@ describe('ProductsResolver (users)', () => {
     const reaction = { id: 9 };
     productReactionsServiceMock.likeProduct.mockResolvedValue(reaction);
     const out = await resolver.likeProduct(3, user);
-    expect(productReactionsServiceMock.likeProduct).toHaveBeenCalledWith(3, user);
+    expect(productReactionsServiceMock.likeProduct).toHaveBeenCalledWith(
+      3,
+      user,
+    );
     expect(out).toBe(reaction);
   });
 

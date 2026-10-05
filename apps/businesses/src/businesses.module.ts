@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import type { GraphQLFormattedError } from 'graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,8 +13,16 @@ import { FilesModule } from './files/files.module';
 import { BusinessesModule as BusinessesModuleCore } from './businesses/businesses.module';
 import { LocationsModule } from './locations/locations.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { configuration, ValidatingEnv } from '../../../core/common/config';
+import {
+  configuration,
+  ValidatingEnv,
+  throttlerAsyncConfig,
+} from '../../../core/common/config';
 import { EnvironmentsEnum } from '../../../core/common/enums';
+import { GqlThrottlerGuard } from '../../../core/common/guards';
+import { ThrottlerModule } from '@nestjs/throttler';
+import * as depthLimitLib from 'graphql-depth-limit';
+const depthLimit = (depthLimitLib as any).default || depthLimitLib;
 import { ProductsModule } from './products/products.module';
 import { CatalogsModule } from './catalogs/catalogs.module';
 import { SocialNetworksModule } from './social-networks/social-networks.module';
@@ -59,12 +68,14 @@ import { NotificationsModule as NotificationsGraphqlModule } from './notificatio
         process.env.NODE_ENV !== (EnvironmentsEnum.Production as string),
       debug: process.env.NODE_ENV !== (EnvironmentsEnum.Production as string),
       sortSchema: true,
-      introspection: true,
+      introspection:
+        process.env.NODE_ENV !== (EnvironmentsEnum.Production as string),
       context: ({ req, res }: { req: Request; res: Response }) => ({
         req,
         res,
       }),
       installSubscriptionHandlers: false,
+      validationRules: [depthLimit(Number(process.env.GQL_DEPTH_LIMIT) || 6)],
       formatError: (formattedError: GraphQLFormattedError) => {
         const message = formattedError.message || 'Internal server error';
         const extensions = formattedError.extensions;
@@ -106,6 +117,9 @@ import { NotificationsModule as NotificationsGraphqlModule } from './notificatio
             case 'NOT_FOUND':
               code = 404;
               break;
+            case 'TOO_MANY_REQUESTS':
+              code = 429;
+              break;
             default:
               code = 500;
           }
@@ -115,6 +129,7 @@ import { NotificationsModule as NotificationsGraphqlModule } from './notificatio
       },
       path: '/graphql',
     }),
+    ThrottlerModule.forRootAsync(throttlerAsyncConfig),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
@@ -136,6 +151,12 @@ import { NotificationsModule as NotificationsGraphqlModule } from './notificatio
     StatisticsModule,
     BusinessHoursModule,
     NotificationsGraphqlModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard,
+    },
   ],
 })
 export class BusinessesModule implements NestModule {

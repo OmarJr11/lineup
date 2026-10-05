@@ -40,9 +40,9 @@ describe('UsersSettersService', () => {
 
     it('throws InternalServerErrorException when save fails', async () => {
       saveMock.mockRejectedValue(new Error('db'));
-      await expect(
-        service.create({} as CreateUserInput),
-      ).rejects.toThrow(InternalServerErrorException);
+      await expect(service.create({} as CreateUserInput)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 });

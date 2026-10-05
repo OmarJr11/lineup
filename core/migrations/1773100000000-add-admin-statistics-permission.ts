@@ -3,9 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 /**
  * Adds ADMSTATS permission and assigns it to Admin and Moderator roles.
  */
-export class AddAdminStatisticsPermission1773100000000
-  implements MigrationInterface
-{
+export class AddAdminStatisticsPermission1773100000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             INSERT INTO "system"."permissions" (code, description, id_creation_user)
